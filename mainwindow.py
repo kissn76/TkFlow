@@ -1,19 +1,24 @@
-import cv2
-from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog
-from tkinter import messagebox
 from PIL import Image, ImageTk
-import json
-import os
-import maincanvas
+import module
+import widgetbase
 
 
 class Mainwindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.protocol("WM_DELETE_WINDOW", self.quit)
+
+        self.widget_width = 200
+        self.widget_height = 100
+        self.resize_width = 6
+        self.widget_counter = 0
+
+        self.image_move = ImageTk.PhotoImage(Image.open(f"./move.png"))
+
+        self.modules = module.Module()
+
         menubar = tk.Menu(self)
 
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -48,33 +53,57 @@ class Mainwindow(tk.Tk):
         self.frm_available_commands = ttk.LabelFrame(self.frm_sidebar, text="Available commands")
         self.frm_available_commands.grid(row=0, column=0)
 
-        self.frm_sidebar.grid(row=0, column=0, sticky="n, s, w, e")
-        self.frm_main.grid(row=0, column=1, sticky="n, s, w, e")
+        self.frm_main.grid(row=0, column=0, sticky="n, s, w, e")
+        self.frm_sidebar.grid(row=0, column=1, sticky="n, s, w, e")
         self.frm_main.rowconfigure(0, weight=1)
         self.frm_main.columnconfigure(0, weight=1)
 
         self.rowconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        self.modules_load()
 
 
-        self.widget_create()
+    def modules_load(self):
+        for m in self.modules.list_modules():
+            self.available_command_add(module=m)
 
 
-    def widget_create(self, x=100, y=100):
-        self.image_move = ImageTk.PhotoImage(Image.open("move.png"))
+    def available_command_add(self, module):
+        w = ttk.Label(self.frm_available_commands, text=module)
+        w.pack()
+        w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 10, 10))
+
+
+    def widget_create(self, module, x=10, y=10):
+        module_name = f"{module}.{self.widget_counter}"
+
         id_move = self.can_main.create_image(x, y, image=self.image_move, anchor="nw")
-        self.can_main.addtag_withtag("move", id_move)
+        self.can_main.addtag_withtag(f"{module_name}.move", id_move)
 
-        id_command = self.can_main.create_text(x + 24, y, text="Widget", anchor="nw")
-        self.can_main.addtag_withtag("command", id_command)
+        id_widget_name = self.can_main.create_text(x, y, text=module_name, anchor="nw")
+        self.can_main.addtag_withtag(f"{module_name}.widget_name", id_widget_name)
 
-        dv = ttk.Scale(self.can_main, from_=0, to=100, orient='horizontal')
-        id_display_widget = self.can_main.create_window(x, y + 24, window=dv, anchor="nw")
-        self.can_main.addtag_withtag("display_widget", id_display_widget)
+        module = self.modules.new_object(module, self.can_main)
+        id_module = self.can_main.create_window(x, y, window=module, anchor="nw", width=self.widget_width)
+        self.can_main.addtag_withtag(f"{module_name}.module", id_module)
 
-        id_background = self.can_main.create_rectangle(x, y, x + 100, y + 100, fill='red', outline='red')
-        self.can_main.addtag_withtag("background", id_background)
+        id_background = self.can_main.create_rectangle(x, y, x, y, fill='red', outline='red')
+        self.can_main.addtag_withtag(f"{module_name}.background", id_background)
         self.can_main.tag_lower(id_background, id_move)
+
+        id_resize_w = self.can_main.create_line(x, y, x, y, width=self.resize_width)
+        self.can_main.addtag_withtag(f"{module_name}.resize_w", id_resize_w)
+
+        id_resize_h = self.can_main.create_line(x, y, x, y, width=self.resize_width)
+        self.can_main.addtag_withtag(f"{module_name}.resize_h", id_resize_h)
+
+        id_resize_wh = self.can_main.create_rectangle(x, y, x + self.resize_width, y + self.resize_width, fill='black', outline='yellow')
+        self.can_main.addtag_withtag(f"{module_name}.resize_wh", id_resize_wh)
+
+        self.widget_counter += 1
+
+        self.widget_move(module_name, x, y)
 
 
     # DRAG & DROP metódusok
@@ -85,7 +114,18 @@ class Mainwindow(tk.Tk):
 
 
     def widget_dnd_move(self, event):
-        self.widget_move(event.x, event.y)
+        tags = self.can_main.gettags('selected')
+        if len(tags) > 0:
+            module_name, module_counter, widget_function = tags[0].split('.')
+            if widget_function == "move":
+                mouse_x, mouse_y = event.x, event.y
+                self.widget_move(f"{module_name}.{module_counter}", mouse_x, mouse_y)
+            elif widget_function == "resize_w":
+                print("resize w")
+            elif widget_function == "resize_h":
+                print("resize h")
+            elif widget_function == "resize_wh":
+                print("resize w h")
 
 
     def widget_dnd_deselect(self, event):
@@ -93,7 +133,7 @@ class Mainwindow(tk.Tk):
         self.can_main.unbind('<Motion>')
 
 
-    def widget_move(self, x, y):
+    def widget_move(self, widget_name, x, y):
         canvas_x = self.can_main.canvasx(x)
         canvas_y = self.can_main.canvasy(y)
         if x > self.can_main.winfo_width():
@@ -105,53 +145,16 @@ class Mainwindow(tk.Tk):
         if y < 1:
             self.can_main.yview_scroll(-1, 'units')
 
-        self.can_main.coords("move", canvas_x, canvas_y)
-        self.can_main.coords("command", canvas_x + 16, canvas_y)
-        self.can_main.coords("display_widget", canvas_x, canvas_y + 16)
-        self.can_main.coords("background", canvas_x, canvas_y, canvas_x + 100, canvas_y + 100)
-
-        # if bool(move_box):
-        #     move_x0, move_y0, move_x1, move_y1 = move_box
-        #     self.coords(f"{command_name}.settings", move_x0, move_y1 + self.padding)
-        #     settings_x0, settings_y0, settings_x1, settings_y1 = self.bbox(f"{command_name}.settings")
-        #     self.coords(f"{command_name}.delete", settings_x0, settings_y1 + self.padding)
-        #     delete_x0, delete_y0, delete_x1_, delete_y1 = self.bbox(f"{command_name}.delete")
-
-        #     command_y0 = move_y0 - self.padding
-        #     background_x1 = move_x1
-        #     before_input_x0 = move_x1
-        #     for input_key in command_obj.command_model.input.keys():
-        #         command_y0 = move_y1
-        #         self.coords(f"{command_name}.{input_key}", before_input_x0 + self.padding, move_y0)
-        #         _, _, before_input_x0, _ = self.bbox(f"{command_name}.{input_key}")
-
-        #         if background_x1 < before_input_x0:
-        #             background_x1 = before_input_x0
-
-        #     self.coords(f"{command_name}.command", move_x1 + self.padding, command_y0 + self.padding)
-        #     name_x0, _, name_x1, name_y1 = self.bbox(f"{command_name}.command")
-
-        #     self.coords(f"{command_name}.display_widget", move_x1 + self.padding, name_y1 + self.padding)
-
-        #     if background_x1 < name_x1:
-        #         background_x1 = name_x1
-
-        #     background_y1 = delete_y1
-        #     before_output_x0 = move_x1
-        #     for output_name in command_obj.command_model.output.values():
-        #         self.coords(output_name, before_output_x0 + self.padding, name_y1 + self.padding)
-        #         output_x0, output_y0, before_output_x0, output_y1 = self.bbox(output_name)
-        #         self.coords(f"{output_name}.clipboard", output_x0, output_y0, before_output_x0, output_y1)
-        #         self.coords(f"{output_name}.preview", output_x0 - 2, output_y0 - 2, before_output_x0 + 2, output_y1 + 2)
-
-        #         if background_y1 < output_y1:
-        #             background_y1 = output_y1
-        #         if background_x1 < before_output_x0:
-        #             background_x1 = before_output_x0
-
-        #     self.coords(f"{command_name}.background", move_x0 - self.padding, move_y0 - self.padding, background_x1 + self.padding, background_y1 + self.padding)
-
-        #     self.io_widgets_connect(command_name)
+        self.can_main.coords(f"{widget_name}.move", canvas_x, canvas_y)
+        move_box = self.can_main.bbox(f"{widget_name}.move")
+        self.can_main.coords(f"{widget_name}.widget_name", move_box[2], move_box[1])
+        self.can_main.coords(f"{widget_name}.module", move_box[0], move_box[3])
+        module_box = self.can_main.bbox(f"{widget_name}.module")
+        self.can_main.coords(f"{widget_name}.background", move_box[0], move_box[1], module_box[2], module_box[3])
+        background_box = self.can_main.bbox(f"{widget_name}.background")
+        self.can_main.coords(f"{widget_name}.resize_w", background_box[2], background_box[1], background_box[2], background_box[3])
+        self.can_main.coords(f"{widget_name}.resize_h", background_box[0], background_box[3], background_box[2], background_box[3])
+        self.can_main.coords(f"{widget_name}.resize_wh", background_box[2] - self.resize_width / 2, background_box[3] - self.resize_width / 2, background_box[2] + self.resize_width / 2, background_box[3] + self.resize_width / 2)
     # DRAG & DROP metódusok END
 
 
