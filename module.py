@@ -18,7 +18,7 @@ class Module:
         return self.__modules
 
 
-    def new_object(self, module_name, master):
+    def new_object(self, module_name, **kwargs):
         if module_name in self.__modules:
-            return importlib.import_module(module_name, self.modules_dir).Plugin(master=master)
+            return importlib.import_module(module_name, self.modules_dir).Plugin(**kwargs)
 

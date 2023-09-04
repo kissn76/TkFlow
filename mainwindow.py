@@ -9,6 +9,7 @@ class Mainwindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.protocol("WM_DELETE_WINDOW", self.quit)
+        self.geometry("1200x800")
 
         self.widget_width_min = 200
         self.widget_height_min = 0
@@ -93,7 +94,8 @@ class Mainwindow(tk.Tk):
 
         self.can_main.create_text(move_box[2], move_box[1], text=widget_name, anchor="nw", tags=[f"{widget_name}.widget_name"])
 
-        module = self.modules.new_object(module, self.can_main)
+        # module add
+        module = self.modules.new_object(module, master=self.can_main)
         self.can_main.create_window(move_box[0], move_box[3], window=module, anchor="nw", width=self.widget_width_min, tags=[f"{widget_name}.module"])
         module_box = self.can_main.bbox(f"{widget_name}.module")
 
