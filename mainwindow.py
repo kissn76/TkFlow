@@ -11,12 +11,16 @@ class Mainwindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.geometry("1200x800")
 
+        # widget settings
         self.widget_width_min = 200
         self.widget_height_min = 0
-        self.resize_width = 6
+        self.widget_resizer_width = 3
+        self.widget_padding = 6
+        # widget settings end
+
         self.widget_counter = 0
 
-        self.image_move = ImageTk.PhotoImage(Image.open(f"./move.png"))
+        self.image_move = ImageTk.PhotoImage(Image.open(f"./resources/icon/move.png"))
 
         self.modules = module.Module()
 
@@ -73,7 +77,7 @@ class Mainwindow(tk.Tk):
     def available_command_add(self, module):
         w = ttk.Label(self.frm_available_commands, text=module)
         w.pack()
-        w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 10, 10))
+        w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 24, 24))
 
 
     def check_hand_enter(self, cursor="hand1"):
@@ -84,42 +88,35 @@ class Mainwindow(tk.Tk):
         self.can_main.config(cursor="")
 
 
-    def widget_create(self, module, x=10, y=10):
+    def widget_create(self, module, x=24, y=24):
         widget_name = f"{module}.{self.widget_counter}"
 
+        # mover
         self.can_main.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_name}.move"])
         self.can_main.tag_bind(f"{widget_name}.move", "<Enter>", lambda event: self.check_hand_enter(cursor="hand1"))
         self.can_main.tag_bind(f"{widget_name}.move", "<Leave>", lambda event: self.check_hand_leave())
-        move_box = self.can_main.bbox(f"{widget_name}.move")
 
-        self.can_main.create_text(move_box[2], move_box[1], text=widget_name, anchor="nw", tags=[f"{widget_name}.widget_name"])
+        # name
+        self.can_main.create_text(0, 0, text=widget_name, anchor="nw", tags=[f"{widget_name}.widget_name"])
+        self.widget_name_set(widget_name)
 
         # module add
         module = self.modules.new_object(module, master=self.can_main)
-        self.can_main.create_window(move_box[0], move_box[3], window=module, anchor="nw", width=self.widget_width_min, tags=[f"{widget_name}.module"])
-        module_box = self.can_main.bbox(f"{widget_name}.module")
+        self.can_main.create_window(0, 0, window=module, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_name}.module"])
+        self.widget_module_set(widget_name)
 
-        background_box_width = module_box[2] - 1 - move_box[0] - 1
-        background_box_height = module_box[3] - 1 - move_box[1] - 1
-        if background_box_width < self.widget_width_min:
-            background_box_width = self.widget_width_min
-        if background_box_height > self.widget_height_min:
-            pass
-        else:
-            background_box_height = self.widget_height_min
-        self.can_main.create_rectangle(
-                move_box[0], move_box[1],
-                move_box[0] + background_box_width, move_box[1] + background_box_height,
-                fill='red', outline='red', tags=[f"{widget_name}.background"]
-            )
+        # background
+        self.can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_name}.background"])
+        self.widget_background_set(widget_name)
         self.can_main.tag_lower(f"{widget_name}.background", f"{widget_name}.move")
 
-        self.can_main.create_line(0, 0, 0, 0, width=self.resize_width, tags=[f"{widget_name}.resize_w"])
+        # resizer
+        self.can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_name}.resize_w"])
         self.can_main.tag_bind(f"{widget_name}.resize_w", "<Enter>", lambda event: self.check_hand_enter(cursor="right_side"))
         self.can_main.tag_bind(f"{widget_name}.resize_w", "<Leave>", lambda event: self.check_hand_leave())
         self.can_main.tag_bind(f"{widget_name}.resize_w", "<Double-Button-1>", lambda event: self.widget_resize_width(widget_name, 0))
 
-        self.can_main.create_line(0, 0, 0, 0, width=self.resize_width, tags=[f"{widget_name}.resize_h"])
+        self.can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_name}.resize_h"])
         self.can_main.tag_bind(f"{widget_name}.resize_h", "<Enter>", lambda event: self.check_hand_enter(cursor="bottom_side"))
         self.can_main.tag_bind(f"{widget_name}.resize_h", "<Leave>", lambda event: self.check_hand_leave())
         self.can_main.tag_bind(f"{widget_name}.resize_h", "<Double-Button-1>", lambda event: self.widget_resize_height(widget_name, 0))
@@ -134,27 +131,72 @@ class Mainwindow(tk.Tk):
         self.widget_counter += 1
 
 
+    def widget_name_set(self, widget_name):
+        move_box = self.can_main.bbox(f"{widget_name}.move")
+        self.can_main.coords(f"{widget_name}.widget_name", move_box[2] + self.widget_padding, move_box[1])
+
+
+    def widget_module_set(self, widget_name):
+        move_box = self.can_main.bbox(f"{widget_name}.move")
+        self.can_main.coords(f"{widget_name}.module", move_box[0], move_box[3] + self.widget_padding)
+
+
+    def widget_background_set(self, widget_name, move=False, right_side=None, bottom_side=None):
+        move_box = self.can_main.bbox(f"{widget_name}.move")
+        background_box = self.can_main.bbox(f"{widget_name}.background")
+
+        background_box_width = background_box[2] - background_box[0] - 2
+        background_box_height = background_box[3] - background_box[1] - 2
+
+        if not bool(move):
+            module_box = self.can_main.bbox(f"{widget_name}.module")
+
+            if not right_side is None:
+                background_box_width = right_side - background_box[0]
+
+            if not bottom_side is None:
+                background_box_height = bottom_side - background_box[1]
+
+            if background_box_width < self.widget_width_min:
+                background_box_width = self.widget_width_min
+
+            if background_box_height < self.widget_height_min:
+                background_box_height = self.widget_height_min
+            if background_box_height < module_box[3] - move_box[1] - 2 + self.widget_padding * 2:
+                background_box_height = module_box[3] - move_box[1] - 2 + self.widget_padding * 2
+
+        self.can_main.coords(
+                f"{widget_name}.background",
+                move_box[0] - self.widget_padding, move_box[1] - self.widget_padding,
+                move_box[0] - self.widget_padding + background_box_width, move_box[1] - self.widget_padding + background_box_height,
+            )
+
+        return background_box_width, background_box_height
+
+
     def widget_resizer_set(self, widget_name):
         background_box = self.can_main.bbox(f"{widget_name}.background")
 
+        # width resizer line
         self.can_main.coords(
-                f"{widget_name}.resize_w",  # width resizer line
+                f"{widget_name}.resize_w",
                 background_box[2], background_box[1] + 1,
                 background_box[2], background_box[3]
             )
 
+        # height resizer line
         self.can_main.coords(
-                f"{widget_name}.resize_h",  # height resizer line
+                f"{widget_name}.resize_h",
                 background_box[0] + 1, background_box[3],
                 background_box[2], background_box[3]
             )
 
+        # width & height resizer rectangle
         self.can_main.coords(
-                f"{widget_name}.resize_wh", # width & height resizer rectangle
-                background_box[2] - self.resize_width, background_box[3] - self.resize_width,
-                background_box[2] + self.resize_width, background_box[3] + self.resize_width
+                f"{widget_name}.resize_wh",
+                background_box[2] - self.widget_resizer_width, background_box[3] - self.widget_resizer_width,
+                background_box[2] + self.widget_resizer_width, background_box[3] + self.widget_resizer_width
             )
-
 
     # DRAG & DROP metódusok
 
@@ -197,19 +239,9 @@ class Mainwindow(tk.Tk):
         if x < 1:
             self.can_main.xview_scroll(-1, 'units')
 
-        move_box = self.can_main.bbox(f"{widget_name}.move")
-        width = canvas_x - move_box[0]
-        if width < self.widget_width_min:
-            width = self.widget_width_min
+        bg_w, _ = self.widget_background_set(widget_name, right_side=canvas_x)
 
-        background_box = self.can_main.bbox(f"{widget_name}.background")
-        self.can_main.coords(
-                f"{widget_name}.background",
-                move_box[0], move_box[1],
-                move_box[0] + width, background_box[3] - 1
-            )
-
-        self.can_main.itemconfigure(f"{widget_name}.module", width=width)
+        self.can_main.itemconfigure(f"{widget_name}.module", width=bg_w - self.widget_padding * 2)
 
         self.widget_resizer_set(widget_name)
 
@@ -221,23 +253,7 @@ class Mainwindow(tk.Tk):
         if y < 1:
             self.can_main.yview_scroll(-1, 'units')
 
-        move_box = self.can_main.bbox(f"{widget_name}.move")
-        module_box = self.can_main.bbox(f"{widget_name}.module")
-        background_box_height_min = module_box[3] - 1 - move_box[1] - 1
-        height = canvas_y - move_box[1]
-
-        if height < background_box_height_min:
-            height = background_box_height_min
-
-        if height < self.widget_height_min:
-            height = self.widget_height_min
-
-        background_box = self.can_main.bbox(f"{widget_name}.background")
-        self.can_main.coords(
-                f"{widget_name}.background",
-                move_box[0], move_box[1],
-                background_box[2] - 1, move_box[1] + height
-            )
+        self.widget_background_set(widget_name, bottom_side=canvas_y)
 
         self.widget_resizer_set(widget_name)
 
@@ -255,20 +271,10 @@ class Mainwindow(tk.Tk):
             self.can_main.yview_scroll(-1, 'units')
 
         self.can_main.coords(f"{widget_name}.move", canvas_x, canvas_y)
-        move_box = self.can_main.bbox(f"{widget_name}.move")
 
-        self.can_main.coords(f"{widget_name}.widget_name", move_box[2], move_box[1])
-        self.can_main.coords(f"{widget_name}.module", move_box[0], move_box[3])
-
-        background_box = self.can_main.bbox(f"{widget_name}.background")
-        background_box_width = background_box[2] - 1 - background_box[0] - 1
-        background_box_height = background_box[3] - 1 - background_box[1] - 1
-        self.can_main.coords(
-                f"{widget_name}.background",
-                move_box[0], move_box[1],
-                move_box[0] + background_box_width, move_box[1] + background_box_height
-            )
-
+        self.widget_name_set(widget_name)
+        self.widget_module_set(widget_name)
+        self.widget_background_set(widget_name, move=True)
         self.widget_resizer_set(widget_name)
 
     # DRAG & DROP metódusok END
