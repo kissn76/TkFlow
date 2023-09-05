@@ -74,20 +74,12 @@ class Mainwindow(tk.Tk):
             self.available_command_add(module=m)
 
 
-    def lbl_dnd_start(self, event):
-        print(event)
-
-
-    def lbl_dnd_stop(self, event):
-        print(event)
-
-
     def available_command_add(self, module):
         w = ttk.Label(self.frm_available_commands, text=module)
         w.pack()
-        w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 24, 24))
-        w.bind('<Button-1>', lambda event: self.lbl_dnd_start(event))
-        w.bind('<ButtonRelease-1>', lambda event: self.lbl_dnd_stop(event))
+        # w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 24, 24))
+        w.bind('<Button-1>', lambda event: self.widget_dnd_start(event))
+        w.bind('<ButtonRelease-1>', lambda event: self.widget_dnd_stop(event, module))
 
 
     def check_hand_enter(self, cursor="hand1"):
@@ -99,7 +91,8 @@ class Mainwindow(tk.Tk):
 
 
     def widget_create(self, module, x=24, y=24):
-        widget_name = f"{module}.{self.widget_counter}"
+        widget_name = f"widget.{self.widget_counter}"
+        module_name = f"{module}.{self.widget_counter}"
 
         # mover
         self.can_main.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_name}.move"])
@@ -112,7 +105,7 @@ class Mainwindow(tk.Tk):
 
         # module add
         module = self.modules.new_object(module, master=self.can_main)
-        self.can_main.create_window(0, 0, window=module, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_name}.module"])
+        self.can_main.create_window(0, 0, window=module, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_name}.module", f"{module_name}.module"])
         self.widget_module_set(widget_name)
 
         # background
@@ -210,6 +203,38 @@ class Mainwindow(tk.Tk):
 
     # DRAG & DROP metódusok
 
+    def widget_dnd_start(self, event):
+        pass
+        # print(event.x, event.x_root, self.can_main.canvasx(event.x_root))
+
+
+    def widget_dnd_stop(self, event, module):
+        x = self.winfo_pointerx() - self.winfo_rootx()
+        y = self.winfo_pointery() - self.winfo_rooty()
+        canvas_x = self.can_main.canvasx(x)
+        canvas_y = self.can_main.canvasy(y)
+
+        try:
+            widgets = self.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+
+            if len(widgets) == 0:
+                self.widget_create(module=module, x=canvas_x, y=canvas_y)
+            else:
+                widget_ids = set()
+                for id in widgets:
+                    tags = self.can_main.gettags(id)
+                    if len(tags) > 0:
+                        _, widget_counter, widget_function = tags[0].split('.')
+                        widget_ids.add(widget_counter)
+
+                if len(widget_ids) == 1:
+                    print(f"adding module to widget.{list(widget_ids)[0]}")
+                else:
+                    print("too many widget are overlapped:", widget_ids)
+        except:
+            pass
+
+
     def widget_dnd_select(self, move):
         self.can_main.bind('<Motion>', self.widget_dnd_move)
         self.can_main.bind('<ButtonRelease-1>', self.widget_dnd_deselect)
@@ -219,8 +244,8 @@ class Mainwindow(tk.Tk):
     def widget_dnd_move(self, event):
         tags = self.can_main.gettags('selected')
         if len(tags) > 0:
-            module_name, module_counter, widget_function = tags[0].split('.')
-            widget_name = f"{module_name}.{module_counter}"
+            _, widget_counter, widget_function = tags[0].split('.')
+            widget_name = f"widget.{widget_counter}"
             mouse_x, mouse_y = event.x, event.y
             if widget_function == "move":
                 self.widget_move(widget_name, mouse_x, mouse_y)
