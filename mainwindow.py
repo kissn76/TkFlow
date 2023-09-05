@@ -9,7 +9,7 @@ class Mainwindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.protocol("WM_DELETE_WINDOW", self.quit)
-        self.geometry("1200x800")
+        self.geometry("1200x400")
 
         # widget settings
         self.widget_width_min = 200
@@ -74,10 +74,20 @@ class Mainwindow(tk.Tk):
             self.available_command_add(module=m)
 
 
+    def lbl_dnd_start(self, event):
+        print(event)
+
+
+    def lbl_dnd_stop(self, event):
+        print(event)
+
+
     def available_command_add(self, module):
         w = ttk.Label(self.frm_available_commands, text=module)
         w.pack()
         w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 24, 24))
+        w.bind('<Button-1>', lambda event: self.lbl_dnd_start(event))
+        w.bind('<ButtonRelease-1>', lambda event: self.lbl_dnd_stop(event))
 
 
     def check_hand_enter(self, cursor="hand1"):
