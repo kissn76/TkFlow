@@ -76,9 +76,9 @@ class Mainwindow(tk.Tk):
 
     def available_command_add(self, module):
         w = ttk.Label(self.frm_available_commands, text=module)
-        w.pack()
-        # w.bind('<Double-Button-1>', lambda event: self.widget_create(module, 24, 24))
+        w.pack(anchor="nw")
         w.bind('<Button-1>', lambda event: self.widget_dnd_start(event))
+        w.bind('<B1-Motion>', lambda event: self.widget_dnd_motion(event))
         w.bind('<ButtonRelease-1>', lambda event: self.widget_dnd_stop(event, module))
 
 
@@ -208,31 +208,48 @@ class Mainwindow(tk.Tk):
         # print(event.x, event.x_root, self.can_main.canvasx(event.x_root))
 
 
-    def widget_dnd_stop(self, event, module):
+    def widget_dnd_motion(self, event):
         x = self.winfo_pointerx() - self.winfo_rootx()
         y = self.winfo_pointery() - self.winfo_rooty()
         canvas_x = self.can_main.canvasx(x)
         canvas_y = self.can_main.canvasy(y)
+        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.can_main.cget("scrollregion").split()))
 
-        try:
-            widgets = self.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+        if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - self.widget_padding * 2 or canvas_y >= can_main_height - self.widget_padding * 2:
+            self.config(cursor="X_cursor")
+        else:
+            self.config(cursor="")
 
-            if len(widgets) == 0:
-                self.widget_create(module=module, x=canvas_x, y=canvas_y)
-            else:
-                widget_ids = set()
-                for id in widgets:
-                    tags = self.can_main.gettags(id)
-                    if len(tags) > 0:
-                        _, widget_counter, widget_function = tags[0].split('.')
-                        widget_ids.add(widget_counter)
 
-                if len(widget_ids) == 1:
-                    print(f"adding module to widget.{list(widget_ids)[0]}")
-                else:
-                    print("too many widget are overlapped:", widget_ids)
-        except:
-            pass
+    def widget_dnd_stop(self, event, module):
+        self.config(cursor="")
+        if event.x < 0:
+            x = self.winfo_pointerx() - self.winfo_rootx()
+            y = self.winfo_pointery() - self.winfo_rooty()
+            canvas_x = self.can_main.canvasx(x)
+            canvas_y = self.can_main.canvasy(y)
+
+            can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.can_main.cget("scrollregion").split()))
+            if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - self.widget_padding * 2 and canvas_y < can_main_height - self.widget_padding * 2:
+                try:
+                    widgets = self.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+
+                    if len(widgets) == 0:
+                        self.widget_create(module=module, x=canvas_x, y=canvas_y)
+                    else:
+                        widget_ids = set()
+                        for id in widgets:
+                            tags = self.can_main.gettags(id)
+                            if len(tags) > 0:
+                                _, widget_counter, widget_function = tags[0].split('.')
+                                widget_ids.add(widget_counter)
+
+                        if len(widget_ids) == 1:
+                            print(f"adding module to widget.{list(widget_ids)[0]}")
+                        else:
+                            print("too many widget are overlapped:", widget_ids)
+                except:
+                    pass
 
 
     def widget_dnd_select(self, move):
