@@ -5,12 +5,11 @@ import widgetbase
 
 
 class Plugin(widgetbase.WidgetBase):
-    def __init__(self, **kwargs):
-        super(Plugin, self).__init__(**kwargs)
+    def __init__(self, master):
+        super().__init__(master)
 
         # init input, output
-        self.input_init("fesz_p", "fesz_n", "fesz_l")
-        self.output_init("scale_value", "scale_value2")
+        self.output_init("value")
 
         # init own widget
         self.sc = ttk.Scale(self.wiget_parent_get(), from_=0, to=100, orient='horizontal', command=lambda value: self.output_set(value))
@@ -18,16 +17,12 @@ class Plugin(widgetbase.WidgetBase):
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
 
         # position widgets
-        self.sc.pack(fill=tk.X, side="bottom", expand=True)
+        self.sc.pack(fill=tk.BOTH)
 
 
         # set input, output init values
-        self.input_value_set("fesz_p", 134)
-        self.input_value_set("fesz_n", 1.34)
-
         self.output_set(self.sc.get())
 
 
     def output_set(self, value):
-        self.output_value_set("scale_value", int(float(value)))
-        self.output_value_set("scale_value2", int(float(value) * float(value)))
+        self.output_value_set("value", int(float(value)))

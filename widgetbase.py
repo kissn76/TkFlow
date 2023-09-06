@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 
 
 
 class WidgetBase(ttk.Frame):
-    def __init__(self, **kwargs):
-        super(WidgetBase, self).__init__(**kwargs)
+    def __init__(self, master):
+        super().__init__(master)
 
         self.__input_container = {}
         self.__output_container = {}
@@ -47,15 +48,14 @@ class WidgetBase(ttk.Frame):
     def output_init(self, *args):
         row_counter = 0
         for var_name in args:
-            self.__output_container.update({var_name: OutputLabel(self.__output_area, text=var_name)})
-            # self.__output_container[var_name].pack(side="bottom", fill=tk.Y, expand=True)
+            self.__output_container.update({var_name: OutputLabel(self.__output_area)})
             self.__output_container[var_name].grid(row=row_counter, column=0, sticky="nse")
             row_counter += 1
 
 
     def output_value_set(self, output, value):
         try:
-            self.__output_container[output].configure(text=str(value))
+            self.__output_container[output].text_set(text=str(value))
         except:
             pass
 
@@ -68,7 +68,29 @@ class InputLabel(ttk.Label):
 
 
 
-class OutputLabel(ttk.Label):
-    # def __init__(self, **kwargs):
-    #     super(OutputLabel, self).__init__(**kwargs)
-    pass
+class OutputLabel(ttk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        MAX_SIZE = (32, 32)
+        ad = Image.open(f"./resources/icon/anydata.png")
+        d = Image.open(f"./resources/icon/arrow_right.png")
+        ad.thumbnail(MAX_SIZE)
+        d.thumbnail(MAX_SIZE)
+        self.image_anydata = ImageTk.PhotoImage(ad)
+        self.image_data = ImageTk.PhotoImage(d)
+
+        self.lbl_txt = ttk.Label(self, text="a")
+        self.lbl_data_type = ttk.Label(self, image=self.image_anydata)
+        self.lbl_data = ttk.Label(self, image=self.image_data)
+
+        self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
+        self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
+        self.lbl_data.grid(row=0, column=2, sticky="n, s, w, e")
+
+
+    def text_set(self, text):
+        self.lbl_txt.configure(text=text)
+
+
+    def text_get(self):
+        return self.lbl_txt.cget("text")
