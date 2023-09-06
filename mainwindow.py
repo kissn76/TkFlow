@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import time
 import module
-import widgetbase
+
 
 
 class Mainwindow(tk.Tk):

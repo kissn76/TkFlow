@@ -1,19 +1,33 @@
 import tkinter as tk
 from tkinter import ttk
+import widgetbase
 
 
-class Plugin(ttk.Frame):
+
+class Plugin(widgetbase.WidgetBase):
     def __init__(self, **kwargs):
         super(Plugin, self).__init__(**kwargs)
-        lb_1 = ttk.Label(self, text="input")
-        sc = ttk.Scale(self, from_=0, to=100, orient='horizontal', command=lambda value: lb_2.configure(text=int(float(value))))
-        lb_2 = ttk.Label(self, text="output")
 
-        lb_1.grid(row=0, column=0, sticky="n, s, w, e")
-        sc.grid(row=0, column=1, sticky="n, s, w, e")
-        lb_2.grid(row=0, column=2, sticky="n, s, w, e")
+        # init input, output
+        self.input_init("fesz_p", "fesz_n", "fesz_l")
+        self.output_init("scale_value", "scale_value2")
 
-        self.columnconfigure(1, weight=1)
+        # init own widget
+        self.sc = ttk.Scale(self.wiget_parent_get(), from_=0, to=100, orient='horizontal', command=lambda value: self.output_set(value))
+        self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
+        self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
 
-        sc.bind("<Button-4>", lambda _: sc.set(sc.get() + 1))
-        sc.bind("<Button-5>", lambda _: sc.set(sc.get() - 1))
+        # position widgets
+        self.sc.pack(fill=tk.X, side="bottom", expand=True)
+
+
+        # set input, output init values
+        self.input_value_set("fesz_p", 134)
+        self.input_value_set("fesz_n", 1.34)
+
+        self.output_set(self.sc.get())
+
+
+    def output_set(self, value):
+        self.output_value_set("scale_value", int(float(value)))
+        self.output_value_set("scale_value2", int(float(value) * float(value)))
