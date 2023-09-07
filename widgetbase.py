@@ -80,6 +80,9 @@ class InputLabel(ttk.Frame):
         self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
         self.lbl_txt.grid(row=0, column=2, sticky="n, s, w, e")
 
+        self.lbl_data.bind("<Button-1>", lambda event: self.dnd_start(event))
+        self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
+
 
     def text_set(self, text):
         self.lbl_txt.configure(text=text)
@@ -87,6 +90,20 @@ class InputLabel(ttk.Frame):
 
     def text_get(self):
         return self.lbl_txt.cget("text")
+
+
+    def dnd_start(self, event):
+        x = self.winfo_pointerx() - self.winfo_rootx()
+        y = self.winfo_pointery() - self.winfo_rooty()
+
+        print("InputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+
+
+    def dnd_motion(self, event):
+        x = self.winfo_pointerx() - self.winfo_rootx()
+        y = self.winfo_pointery() - self.winfo_rooty()
+
+        print("InputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
 
 
 
@@ -125,11 +142,11 @@ class OutputLabel(ttk.Frame):
         x = self.winfo_pointerx() - self.winfo_rootx()
         y = self.winfo_pointery() - self.winfo_rooty()
 
-        print((event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+        print("OutputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
 
 
     def dnd_motion(self, event):
         x = self.winfo_pointerx() - self.winfo_rootx()
         y = self.winfo_pointery() - self.winfo_rooty()
 
-        print((event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+        print("OutputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
