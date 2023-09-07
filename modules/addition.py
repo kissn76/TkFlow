@@ -12,6 +12,12 @@ class Plugin(widgetbase.WidgetBase):
         self.input_init("one", "two")
         self.output_init("result")
 
+        self.input_value_set("one", 0)
+        self.input_value_set("two", 0)
+        self.output_value_set("result", 0)
 
-    def output_set(self):
+        self.run()
+
+
+    def run(self):
         self.output_value_set("result", float(self.input_value_get("one")) + float(self.input_value_get("two")))
