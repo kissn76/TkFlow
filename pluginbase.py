@@ -11,7 +11,6 @@ class PluginBase(ttk.Frame):
         self.name = id
         self.id = id
 
-
         self.input_row_counter = 0
         self.output_row_counter = 0
 
@@ -23,8 +22,7 @@ class PluginBase(ttk.Frame):
 
 
     def settings(self, event):
-        dialog = SettingDialog(parent=self, title="Settings", name=self.name)
-        self.name = dialog.plugin_name
+        pass
 
 
     def input_init(self, *args):
@@ -67,7 +65,6 @@ class SettingDialog(Dialog):
 
 
     def body(self, frame):
-        # print(type(frame)) # tkinter.Frame
         self.lbl_plugin_name = ttk.Label(frame, width=25, text="Plugin name")
         self.lbl_plugin_name.pack()
         self.ent_plugin_name = ttk.Entry(frame, width=25)
@@ -125,7 +122,7 @@ class InputLabel(ttk.Frame):
 
 
     def settings(self, event):
-        print("setting")
+        print("setting InputLabel")
 
 
     def text_set(self, text):
@@ -178,7 +175,7 @@ class OutputLabel(ttk.Frame):
 
 
     def settings(self, event):
-        print("setting")
+        print("setting OutputLabel")
 
 
     def text_set(self, text):

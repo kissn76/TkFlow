@@ -20,7 +20,6 @@ class Plugin(pluginbase.PluginBase):
         self.sc = ttk.Scale(self, from_=0, to=100, orient='horizontal', command=lambda _: self.run())
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
-        self.sc.bind('<Button-3>', self.settings)
 
         # position plugin
         self.sc.grid(row=0, column=1, sticky="we")
@@ -31,3 +30,7 @@ class Plugin(pluginbase.PluginBase):
 
     def run(self):
         self.output_value_set("value", int(self.sc.get()))
+
+
+    def settings(self, event):
+        print("overwrited")
