@@ -1,12 +1,17 @@
 import tkinter as tk
+from tkinter.simpledialog import Dialog
 from tkinter import ttk
 from PIL import Image, ImageTk
 
 
 
-class WidgetBase(ttk.Frame):
-    def __init__(self, master):
+class PluginBase(ttk.Frame):
+    def __init__(self, master, id):
         super().__init__(master)
+        self.name = id
+        self.id = id
+
+
         self.input_row_counter = 0
         self.output_row_counter = 0
 
@@ -18,7 +23,8 @@ class WidgetBase(ttk.Frame):
 
 
     def settings(self, event):
-        print("setting")
+        dialog = SettingDialog(parent=self, title="Settings", name=self.name)
+        self.name = dialog.plugin_name
 
 
     def input_init(self, *args):
@@ -51,6 +57,44 @@ class WidgetBase(ttk.Frame):
             self.__output_container[output].text_set(text=str(value))
         except:
             pass
+
+
+
+class SettingDialog(Dialog):
+    def __init__(self, parent, title, name):
+        self.plugin_name = name
+        super().__init__(parent, title)
+
+
+    def body(self, frame):
+        # print(type(frame)) # tkinter.Frame
+        self.lbl_plugin_name = ttk.Label(frame, width=25, text="Plugin name")
+        self.lbl_plugin_name.pack()
+        self.ent_plugin_name = ttk.Entry(frame, width=25)
+        self.ent_plugin_name.pack()
+        self.ent_plugin_name.insert(0, self.plugin_name)
+
+        return frame
+
+
+    def ok_pressed(self):
+        # print("ok")
+        self.plugin_name = self.ent_plugin_name.get()
+        self.destroy()
+
+
+    def cancel_pressed(self):
+        # print("cancel")
+        self.destroy()
+
+
+    def buttonbox(self):
+        self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
+        self.ok_button.pack(side="left")
+        cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
+        cancel_button.pack(side="right")
+        self.bind("<Return>", lambda event: self.ok_pressed())
+        self.bind("<Escape>", lambda event: self.cancel_pressed())
 
 
 
@@ -110,7 +154,7 @@ class InputLabel(ttk.Frame):
 class OutputLabel(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        MAX_SIZE = (36, 36)
+        MAX_SIZE = (12, 12)
         datatype_any = Image.open(f"./resources/icon/anydata.png")
         data = Image.open(f"./resources/icon/arrow_right.png")
         datatype_any.thumbnail(MAX_SIZE)

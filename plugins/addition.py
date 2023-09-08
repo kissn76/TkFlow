@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
-import widgetbase
+import pluginbase
 
 
 
-class Plugin(widgetbase.WidgetBase):
+class Plugin(pluginbase.PluginBase):
     def __init__(self, **kwargs):
         super(Plugin, self).__init__(**kwargs)
 
