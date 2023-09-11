@@ -6,10 +6,8 @@ import sys
 sys.path.append('./plugins')
 
 
-mainwindow = mw.Mainwindow()
-
-
 def main():
+    mainwindow = mw.Mainwindow()
     mainwindow.mainloop()
 
 

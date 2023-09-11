@@ -191,7 +191,12 @@ class InputLabel(DataLabel):
         # self.lbl_txt.bind('<Double-Button-1>', self.copy)
         self.lbl_data_type.bind('<Double-Button-1>', self.paste)
         self.lbl_data.bind('<Double-Button-1>', self.paste)
-        self.lbl_data.bind('<B1-Motion>', self.connect)
+        # self.lbl_data.bind('<B1-Motion>', self.connect)
+
+
+    def paste(self, event):
+        super().paste(event)
+        self.connect(event=event)
 
 
     def connect(self, event):

@@ -8,7 +8,6 @@ import plugincontroller
 can_main = None
 
 
-
 class Mainwindow(tk.Tk):
     def __init__(self):
         global can_main
