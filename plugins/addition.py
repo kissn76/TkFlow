@@ -12,12 +12,17 @@ class Plugin(pluginbase.PluginBase):
         self.input_init("one", "two")
         self.output_init("result")
 
-        self.input_value_set("one", 0)
-        self.input_value_set("two", 0)
         self.output_value_set("result", 0)
-
-        self.run()
 
 
     def run(self):
-        self.output_value_set("result", float(self.input_value_get("one")) + float(self.input_value_get("two")))
+        one = self.input_value_get("one")
+        two = self.input_value_get("two")
+
+        if not bool(one):
+            one = 0
+
+        if not bool(two):
+            two = 0
+
+        self.output_value_set("result", float(one) + float(two))

@@ -2,6 +2,40 @@ import tkinter as tk
 from tkinter.simpledialog import Dialog
 from tkinter import ttk
 from PIL import Image, ImageTk
+import mainwindow
+
+
+
+clipboard = None
+
+__input_container = {}
+__output_container = {}
+
+
+def input_get(name):
+    object = None
+    try:
+        object = __input_container[name]
+    except:
+        pass
+    return object
+
+
+def input_add(name, object):
+    __input_container.update({name: object})
+
+
+def output_get(name):
+    object = None
+    try:
+        object = __output_container[name]
+    except:
+        pass
+    return object
+
+
+def output_add(name, object):
+    __output_container.update({name: object})
 
 
 
@@ -14,45 +48,49 @@ class PluginBase(ttk.Frame):
         self.input_row_counter = 0
         self.output_row_counter = 0
 
-        self.__input_container = {}
-        self.__output_container = {}
-
         self.columnconfigure(1, weight=1)
         self.bind('<Button-3>', self.settings)
 
 
     def settings(self, event):
-        pass
+        print(type(self), self.id)
 
 
     def input_init(self, *args):
         for var_name in args:
-            self.__input_container.update({var_name: InputLabel(self)})
-            self.__input_container[var_name].grid(row=self.input_row_counter, column=0)
+            input = f"{self.id}:{var_name}"
+            input_add(input, InputLabel(self, id=input))
+            input_get(input).grid(row=self.input_row_counter, column=0)
             self.input_row_counter += 1
 
 
-    def input_value_set(self, input, value):
+    # get output value that represented by input
+    def input_value_get(self, input):
+        input = f"{self.id}:{input}"
+        result = None
+
         try:
-            self.__input_container[input].text_set(text=str(value))
+            result = output_get(input_get(input).text_get()).text_get()
         except:
             pass
 
-
-    def input_value_get(self, input):
-        return self.__input_container[input].text_get()
+        return result
 
 
     def output_init(self, *args):
         for var_name in args:
-            self.__output_container.update({var_name: OutputLabel(self)})
-            self.__output_container[var_name].grid(row=self.output_row_counter, column=3)
+            output = f"{self.id}:{var_name}"
+            output_object = OutputLabel(self, id=output)
+            output_object.grid(row=self.output_row_counter, column=3)
+            # output_object.bind('<Double-Button-1>', self.settings)
+            output_add(output, output_object)
             self.output_row_counter += 1
 
 
     def output_value_set(self, output, value):
         try:
-            self.__output_container[output].text_set(text=str(value))
+            output = f"{self.id}:{output}"
+            output_get(output).text_set(text=str(value))
         except:
             pass
 
@@ -95,8 +133,8 @@ class SettingDialog(Dialog):
 
 
 
-class InputLabel(ttk.Frame):
-    def __init__(self, master):
+class DataLabel(ttk.Frame):
+    def __init__(self, master, id=None):
         super().__init__(master)
         MAX_SIZE = (12, 12)
         datatype_any = Image.open(f"./resources/icon/anydata.png")
@@ -106,23 +144,24 @@ class InputLabel(ttk.Frame):
         self.image_anydata = ImageTk.PhotoImage(datatype_any)
         self.image_data = ImageTk.PhotoImage(data)
 
+        self.id = id
+
         self.lbl_txt = ttk.Label(self, text="a")
         self.lbl_data_type = ttk.Label(self, image=self.image_anydata)
         self.lbl_data = ttk.Label(self, image=self.image_data)
 
-        self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
-        self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
-        self.lbl_txt.grid(row=0, column=2, sticky="n, s, w, e")
-
-        self.lbl_data.bind("<Button-1>", lambda event: self.dnd_start(event))
-        self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
-        self.lbl_data.bind('<Button-3>', self.settings)
-        self.lbl_data_type.bind('<Button-3>', self.settings)
-        self.lbl_txt.bind('<Button-3>', self.settings)
+        # self.lbl_data.bind("<Button-1>", lambda event: self.dnd_start(event))
+        # self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
 
 
-    def settings(self, event):
-        print("setting InputLabel")
+    def copy(self, event):
+        global clipboard
+        clipboard = self.id
+
+
+    def paste(self, event):
+        global clipboard
+        self.text_set(clipboard)
 
 
     def text_set(self, text):
@@ -134,67 +173,62 @@ class InputLabel(ttk.Frame):
 
 
     def dnd_start(self, event):
-        x = self.winfo_pointerx() - self.winfo_rootx()
-        y = self.winfo_pointery() - self.winfo_rooty()
-
-        print("InputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+        pass
 
 
     def dnd_motion(self, event):
-        x = self.winfo_pointerx() - self.winfo_rootx()
-        y = self.winfo_pointery() - self.winfo_rooty()
-
-        print("InputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+        pass
 
 
 
-class OutputLabel(ttk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
-        MAX_SIZE = (12, 12)
-        datatype_any = Image.open(f"./resources/icon/anydata.png")
-        data = Image.open(f"./resources/icon/arrow_right.png")
-        datatype_any.thumbnail(MAX_SIZE)
-        data.thumbnail(MAX_SIZE)
-        self.image_anydata = ImageTk.PhotoImage(datatype_any)
-        self.image_data = ImageTk.PhotoImage(data)
+class InputLabel(DataLabel):
+    def __init__(self, master, id=None):
+        super().__init__(master, id=id)
+        # self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
+        self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
+        self.lbl_data.grid(row=0, column=2, sticky="n, s, w, e")
 
-        self.lbl_txt = ttk.Label(self, text="a")
-        self.lbl_data_type = ttk.Label(self, image=self.image_anydata)
-        self.lbl_data = ttk.Label(self, image=self.image_data)
+        # self.lbl_txt.bind('<Double-Button-1>', self.copy)
+        self.lbl_data_type.bind('<Double-Button-1>', self.paste)
+        self.lbl_data.bind('<Double-Button-1>', self.paste)
+        self.lbl_data.bind('<B1-Motion>', self.connect)
 
+
+    def connect(self, event):
+        height = 12
+        width = 12
+
+        output_object = output_get(self.text_get())
+        s_x = output_object.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
+        s_y = output_object.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
+        start_x = mainwindow.can_main.canvasx(s_x)
+        start_y = mainwindow.can_main.canvasy(s_y) + (height / 2)
+
+        print((output_object.lbl_data.winfo_rootx(), output_object.lbl_data.winfo_rooty()), (s_x, s_y), (start_x, start_y))
+
+        e_x = self.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
+        e_y = self.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
+        end_x = mainwindow.can_main.canvasx(e_x)
+        end_y = mainwindow.can_main.canvasy(e_y) + (height / 2)
+
+        offset = (end_x - start_x) / 3
+
+        mid_0_x = start_x + offset
+        mid_0_y = start_y
+
+        mid_1_x = end_x - offset
+        mid_1_y = end_y
+        mainwindow.can_main.create_line(start_x,start_y, mid_0_x,mid_0_y, mid_1_x,mid_1_y, end_x,end_y, smooth=True)
+
+
+
+class OutputLabel(DataLabel):
+    def __init__(self, master, id=None):
+        super().__init__(master, id=id)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
         self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
         self.lbl_data.grid(row=0, column=2, sticky="n, s, w, e")
 
-        self.lbl_data.bind("<Button-1>", lambda event: self.dnd_start(event))
-        self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
-        self.lbl_data.bind('<Button-3>', self.settings)
-        self.lbl_data_type.bind('<Button-3>', self.settings)
-        self.lbl_txt.bind('<Button-3>', self.settings)
-
-
-    def settings(self, event):
-        print("setting OutputLabel")
-
-
-    def text_set(self, text):
-        self.lbl_txt.configure(text=text)
-
-
-    def text_get(self):
-        return self.lbl_txt.cget("text")
-
-
-    def dnd_start(self, event):
-        x = self.winfo_pointerx() - self.winfo_rootx()
-        y = self.winfo_pointery() - self.winfo_rooty()
-
-        print("OutputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
-
-
-    def dnd_motion(self, event):
-        x = self.winfo_pointerx() - self.winfo_rootx()
-        y = self.winfo_pointery() - self.winfo_rooty()
-
-        print("OutputLabel", (event.x, event.y), (self.winfo_pointerx(), self.winfo_pointery()), (self.winfo_rootx(), self.winfo_rooty()))
+        self.lbl_txt.bind('<Double-Button-1>', self.copy)
+        self.lbl_data_type.bind('<Double-Button-1>', self.copy)
+        self.lbl_data.bind('<Double-Button-1>', self.copy)

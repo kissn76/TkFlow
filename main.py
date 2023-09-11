@@ -6,8 +6,11 @@ import sys
 sys.path.append('./plugins')
 
 
+mainwindow = mw.Mainwindow()
+
+
 def main():
-    mw.Mainwindow().mainloop()
+    mainwindow.mainloop()
 
 
 if __name__ == '__main__':

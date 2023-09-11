@@ -5,8 +5,13 @@ import plugincontroller
 
 
 
+can_main = None
+
+
+
 class Mainwindow(tk.Tk):
     def __init__(self):
+        global can_main
         super().__init__()
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.geometry("1200x400")
@@ -44,18 +49,18 @@ class Mainwindow(tk.Tk):
         self.config(menu=menubar)
 
         self.frm_main = ttk.Frame(self)
-        self.can_main = tk.Canvas(self.frm_main, scrollregion=(0, 0, 2000, 2000))
+        can_main = tk.Canvas(self.frm_main, scrollregion=(0, 0, 2000, 2000))
         hbar=ttk.Scrollbar(self.frm_main, orient=tk.HORIZONTAL)
         hbar.grid(row=1, column=0, sticky="e, w")
-        hbar.config(command=self.can_main.xview)
+        hbar.config(command=can_main.xview)
         vbar=ttk.Scrollbar(self.frm_main, orient=tk.VERTICAL)
         vbar.grid(row=0, column=1, sticky="n, s")
-        vbar.config(command=self.can_main.yview)
-        self.can_main.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        self.can_main.grid(row=0, column=0, sticky="n, s, w, e")
-        self.can_main.rowconfigure(0, weight=1)
-        self.can_main.columnconfigure(0, weight=1)
-        self.can_main.bind('<Button-1>', self.widget_dnd_select)
+        vbar.config(command=can_main.yview)
+        can_main.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+        can_main.grid(row=0, column=0, sticky="n, s, w, e")
+        can_main.rowconfigure(0, weight=1)
+        can_main.columnconfigure(0, weight=1)
+        can_main.bind('<Button-1>', self.widget_dnd_select)
 
         self.frm_sidebar = ttk.Frame(self)
         self.frm_available_plugins = ttk.LabelFrame(self.frm_sidebar, text="Available plugins")
@@ -72,6 +77,15 @@ class Mainwindow(tk.Tk):
         self.floating_widget = None
 
         self.plugins_load()
+
+        # self.after(0, self.run)
+
+
+    def run(self):
+        for plugin_name, plugin_object in self.plugin_container.items():
+            plugin_object.run()
+
+        self.after(100, self.run)
 
 
     # loop through available plugins
@@ -105,39 +119,39 @@ class Mainwindow(tk.Tk):
         widget_id = f"widget.{self.widget_counter}"
 
         # mover
-        self.can_main.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}:move"])
-        self.can_main.tag_bind(f"{widget_id}:move", "<Enter>", lambda event: self.can_main.config(cursor="hand1"))
-        self.can_main.tag_bind(f"{widget_id}:move", "<Leave>", lambda event: self.can_main.config(cursor=""))
+        can_main.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}:move"])
+        can_main.tag_bind(f"{widget_id}:move", "<Enter>", lambda event: can_main.config(cursor="hand1"))
+        can_main.tag_bind(f"{widget_id}:move", "<Leave>", lambda event: can_main.config(cursor=""))
 
         # name
-        self.can_main.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}:name"])
+        can_main.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}:name"])
 
         # plugin container add
-        plugin_container = ttk.Frame(self.can_main)
+        plugin_container = ttk.Frame(can_main)
         self.widget_container.update({widget_id: plugin_container})
         plugin_id = self.widget_plugin_insert(widget_id, plugin)
-        self.can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_id}:plugincontainer", f"{plugin_id}:plugin"])
+        can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_id}:plugincontainer", f"{plugin_id}:plugin"])
 
 
         # background
-        self.can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
-        self.can_main.tag_lower(f"{widget_id}:background", f"{widget_id}:move")
+        can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
+        can_main.tag_lower(f"{widget_id}:background", f"{widget_id}:move")
 
         # resizer
-        self.can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_id}:resize_w"])
-        self.can_main.tag_bind(f"{widget_id}:resize_w", "<Enter>", lambda event: self.can_main.config(cursor="right_side"))
-        self.can_main.tag_bind(f"{widget_id}:resize_w", "<Leave>", lambda event: self.can_main.config(cursor=""))
-        self.can_main.tag_bind(f"{widget_id}:resize_w", "<Double-Button-1>", lambda event: self.widget_resize_width(widget_id, 0))
+        can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_id}:resize_w"])
+        can_main.tag_bind(f"{widget_id}:resize_w", "<Enter>", lambda event: can_main.config(cursor="right_side"))
+        can_main.tag_bind(f"{widget_id}:resize_w", "<Leave>", lambda event: can_main.config(cursor=""))
+        can_main.tag_bind(f"{widget_id}:resize_w", "<Double-Button-1>", lambda event: self.widget_resize_width(widget_id, 0))
 
-        self.can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_id}:resize_h"])
-        self.can_main.tag_bind(f"{widget_id}:resize_h", "<Enter>", lambda event: self.can_main.config(cursor="bottom_side"))
-        self.can_main.tag_bind(f"{widget_id}:resize_h", "<Leave>", lambda event: self.can_main.config(cursor=""))
-        self.can_main.tag_bind(f"{widget_id}:resize_h", "<Double-Button-1>", lambda event: self.widget_resize_height(widget_id, 0))
+        can_main.create_line(0, 0, 0, 0, width=self.widget_resizer_width, tags=[f"{widget_id}:resize_h"])
+        can_main.tag_bind(f"{widget_id}:resize_h", "<Enter>", lambda event: can_main.config(cursor="bottom_side"))
+        can_main.tag_bind(f"{widget_id}:resize_h", "<Leave>", lambda event: can_main.config(cursor=""))
+        can_main.tag_bind(f"{widget_id}:resize_h", "<Double-Button-1>", lambda event: self.widget_resize_height(widget_id, 0))
 
-        self.can_main.create_rectangle(0, 0, 0, 0, fill='black', outline='yellow', tags=[f"{widget_id}:resize_wh"])
-        self.can_main.tag_bind(f"{widget_id}:resize_wh", "<Enter>", lambda event: self.can_main.config(cursor="bottom_right_corner"))
-        self.can_main.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: self.can_main.config(cursor=""))
-        self.can_main.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
+        can_main.create_rectangle(0, 0, 0, 0, fill='black', outline='yellow', tags=[f"{widget_id}:resize_wh"])
+        can_main.tag_bind(f"{widget_id}:resize_wh", "<Enter>", lambda event: can_main.config(cursor="bottom_right_corner"))
+        can_main.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: can_main.config(cursor=""))
+        can_main.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
         # set position and size of widget's parts
         self.widget_name_set(widget_id)
@@ -150,26 +164,26 @@ class Mainwindow(tk.Tk):
 
     # set position and size of widget name
     def widget_name_set(self, widget_id):
-        move_box = self.can_main.bbox(f"{widget_id}:move")
-        self.can_main.coords(f"{widget_id}:name", move_box[2] + self.widget_padding, move_box[1])
+        move_box = can_main.bbox(f"{widget_id}:move")
+        can_main.coords(f"{widget_id}:name", move_box[2] + self.widget_padding, move_box[1])
 
 
     # set position and size of plugin container
     def widget_plugin_container_set(self, widget_id):
-        move_box = self.can_main.bbox(f"{widget_id}:move")
-        self.can_main.coords(f"{widget_id}:plugincontainer", move_box[0], move_box[3] + self.widget_padding)
+        move_box = can_main.bbox(f"{widget_id}:move")
+        can_main.coords(f"{widget_id}:plugincontainer", move_box[0], move_box[3] + self.widget_padding)
 
 
     # set position and size of background
     def widget_background_set(self, widget_id, move=False, right_side=None, bottom_side=None):
-        move_box = self.can_main.bbox(f"{widget_id}:move")
-        background_box = self.can_main.bbox(f"{widget_id}:background")
+        move_box = can_main.bbox(f"{widget_id}:move")
+        background_box = can_main.bbox(f"{widget_id}:background")
 
         background_box_width = background_box[2] - background_box[0] - 2
         background_box_height = background_box[3] - background_box[1] - 2
 
         if not bool(move):
-            plugin_container_box = self.can_main.bbox(f"{widget_id}:plugincontainer")
+            plugin_container_box = can_main.bbox(f"{widget_id}:plugincontainer")
 
             if not right_side is None:
                 background_box_width = right_side - background_box[0]
@@ -185,7 +199,7 @@ class Mainwindow(tk.Tk):
             if background_box_height < plugin_container_box[3] - move_box[1] - 2 + self.widget_padding * 2:
                 background_box_height = plugin_container_box[3] - move_box[1] - 2 + self.widget_padding * 2
 
-        self.can_main.coords(
+        can_main.coords(
                 f"{widget_id}:background",
                 move_box[0] - self.widget_padding, move_box[1] - self.widget_padding,
                 move_box[0] - self.widget_padding + background_box_width, move_box[1] - self.widget_padding + background_box_height,
@@ -196,24 +210,24 @@ class Mainwindow(tk.Tk):
 
     # set position and size of resizer lines
     def widget_resizer_set(self, widget_id):
-        background_box = self.can_main.bbox(f"{widget_id}:background")
+        background_box = can_main.bbox(f"{widget_id}:background")
 
         # width resizer line
-        self.can_main.coords(
+        can_main.coords(
                 f"{widget_id}:resize_w",
                 background_box[2], background_box[1] + 1,
                 background_box[2], background_box[3]
             )
 
         # height resizer line
-        self.can_main.coords(
+        can_main.coords(
                 f"{widget_id}:resize_h",
                 background_box[0] + 1, background_box[3],
                 background_box[2], background_box[3]
             )
 
         # width & height resizer rectangle
-        self.can_main.coords(
+        can_main.coords(
                 f"{widget_id}:resize_wh",
                 background_box[2] - self.widget_resizer_width, background_box[3] - self.widget_resizer_width,
                 background_box[2] + self.widget_resizer_width, background_box[3] + self.widget_resizer_width
@@ -232,12 +246,12 @@ class Mainwindow(tk.Tk):
     def plugin_dnd_motion(self, event):
         x = self.winfo_pointerx() - self.winfo_rootx()
         y = self.winfo_pointery() - self.winfo_rooty()
-        canvas_x = self.can_main.canvasx(x)
-        canvas_y = self.can_main.canvasy(y)
+        canvas_x = can_main.canvasx(x)
+        canvas_y = can_main.canvasy(y)
 
         self.floating_widget.place(x=x, y=y)
 
-        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.can_main.cget("scrollregion").split()))
+        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, can_main.cget("scrollregion").split()))
 
         if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - self.widget_padding * 2 or canvas_y >= can_main_height - self.widget_padding * 2:
             self.config(cursor="X_cursor")
@@ -253,20 +267,20 @@ class Mainwindow(tk.Tk):
         if event.x < 0:
             x = self.winfo_pointerx() - self.winfo_rootx()
             y = self.winfo_pointery() - self.winfo_rooty()
-            canvas_x = self.can_main.canvasx(x)
-            canvas_y = self.can_main.canvasy(y)
+            canvas_x = can_main.canvasx(x)
+            canvas_y = can_main.canvasy(y)
 
-            can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.can_main.cget("scrollregion").split()))
+            can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, can_main.cget("scrollregion").split()))
             if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - self.widget_padding * 2 and canvas_y < can_main_height - self.widget_padding * 2:
                 try:
-                    widgets = self.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+                    widgets = can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
                     if len(widgets) == 0:
                         self.widget_create(plugin=plugin, x=canvas_x, y=canvas_y)
                     else:
                         widget_ids = set()
                         for id in widgets:
-                            tags = self.can_main.gettags(id)
+                            tags = can_main.gettags(id)
                             if len(tags) > 0:
                                 widget_id, _ = tags[0].split(':')
                                 widget_ids.add(widget_id)
@@ -281,16 +295,15 @@ class Mainwindow(tk.Tk):
 
     # widget methods
     def widget_dnd_select(self, move):
-        self.can_main.bind('<Motion>', self.widget_dnd_move)
-        self.can_main.bind('<ButtonRelease-1>', self.widget_dnd_deselect)
-        self.can_main.addtag_withtag('selected', tk.CURRENT)
+        can_main.bind('<Motion>', self.widget_dnd_move)
+        can_main.bind('<ButtonRelease-1>', self.widget_dnd_deselect)
+        can_main.addtag_withtag('selected', tk.CURRENT)
 
 
     def widget_dnd_move(self, event):
-        tags = self.can_main.gettags('selected')
+        tags = can_main.gettags('selected')
         if len(tags) > 0:
-            _, widget_counter, widget_function = tags[0].split('.')
-            widget_id = f"widget.{widget_counter}"
+            widget_id, widget_function = tags[0].split(':')
             mouse_x, mouse_y = event.x, event.y
             if widget_function == "move":
                 self.widget_move(widget_id, mouse_x, mouse_y)
@@ -303,8 +316,8 @@ class Mainwindow(tk.Tk):
 
 
     def widget_dnd_deselect(self, event):
-        self.can_main.dtag('selected')    # removes the 'selected' tag
-        self.can_main.unbind('<Motion>')
+        can_main.dtag('selected')    # removes the 'selected' tag
+        can_main.unbind('<Motion>')
 
 # DRAG & DROP metódusok END
 
@@ -315,25 +328,25 @@ class Mainwindow(tk.Tk):
 
 
     def widget_resize_width(self, widget_id, x):
-        canvas_x = self.can_main.canvasx(x)
-        if x > self.can_main.winfo_width():
-            self.can_main.xview_scroll(1, 'units')
+        canvas_x = can_main.canvasx(x)
+        if x > can_main.winfo_width():
+            can_main.xview_scroll(1, 'units')
         if x < 1:
-            self.can_main.xview_scroll(-1, 'units')
+            can_main.xview_scroll(-1, 'units')
 
         bg_w, _ = self.widget_background_set(widget_id, right_side=canvas_x)
 
-        self.can_main.itemconfigure(f"{widget_id}:plugincontainer", width=bg_w - self.widget_padding * 2)
+        can_main.itemconfigure(f"{widget_id}:plugincontainer", width=bg_w - self.widget_padding * 2)
 
         self.widget_resizer_set(widget_id)
 
 
     def widget_resize_height(self, widget_id, y):
-        canvas_y = self.can_main.canvasy(y)
+        canvas_y = can_main.canvasy(y)
         if y > self.winfo_height():
-            self.can_main.yview_scroll(1, 'units')
+            can_main.yview_scroll(1, 'units')
         if y < 1:
-            self.can_main.yview_scroll(-1, 'units')
+            can_main.yview_scroll(-1, 'units')
 
         self.widget_background_set(widget_id, bottom_side=canvas_y)
 
@@ -341,18 +354,18 @@ class Mainwindow(tk.Tk):
 
 
     def widget_move(self, widget_id, x, y):
-        canvas_x = self.can_main.canvasx(x)
-        canvas_y = self.can_main.canvasy(y)
-        if x > self.can_main.winfo_width():
-            self.can_main.xview_scroll(1, 'units')
+        canvas_x = can_main.canvasx(x)
+        canvas_y = can_main.canvasy(y)
+        if x > can_main.winfo_width():
+            can_main.xview_scroll(1, 'units')
         if x < 1:
-            self.can_main.xview_scroll(-1, 'units')
+            can_main.xview_scroll(-1, 'units')
         if y > self.winfo_height():
-            self.can_main.yview_scroll(1, 'units')
+            can_main.yview_scroll(1, 'units')
         if y < 1:
-            self.can_main.yview_scroll(-1, 'units')
+            can_main.yview_scroll(-1, 'units')
 
-        self.can_main.coords(f"{widget_id}:move", canvas_x, canvas_y)
+        can_main.coords(f"{widget_id}:move", canvas_x, canvas_y)
 
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
