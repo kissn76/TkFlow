@@ -200,30 +200,81 @@ class InputLabel(DataLabel):
 
 
     def connect(self, event):
-        height = 12
-        width = 12
+        # output_object = output_get(self.text_get())
 
-        output_object = output_get(self.text_get())
-        s_x = output_object.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
-        s_y = output_object.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
-        start_x = mainwindow.can_main.canvasx(s_x)
-        start_y = mainwindow.can_main.canvasy(s_y) + (height / 2)
+        widget, plugin, variable = self.text_get().split(':')
+        start_id = f"{widget}:{plugin}:plugin"
+        start_plugin_container_position = mainwindow.can_main.coords(start_id)
+        start_plugin_box = mainwindow.can_main.bbox(start_id)
 
-        print((output_object.lbl_data.winfo_rootx(), output_object.lbl_data.winfo_rooty()), (s_x, s_y), (start_x, start_y))
+        widget, plugin, variable = self.id.split(':')
+        end_id = f"{widget}:{plugin}:plugin"
+        end_plugin_container_position = mainwindow.can_main.coords(end_id)
+        end_plugin_box = mainwindow.can_main.bbox(end_id)
 
-        e_x = self.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
-        e_y = self.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
-        end_x = mainwindow.can_main.canvasx(e_x)
-        end_y = mainwindow.can_main.canvasy(e_y) + (height / 2)
+        print(start_id, start_plugin_container_position, start_plugin_box)
+        print(end_id, end_plugin_container_position, end_plugin_box)
 
-        offset = (end_x - start_x) / 3
+        # plugin_container_width = output_object.lbl_data.master.master.master.winfo_width()
+        # plugin_container_height = output_object.lbl_data.master.master.master.winfo_height()
 
-        mid_0_x = start_x + offset
-        mid_0_y = start_y
+        # print(output_object.lbl_data, output_object.lbl_data.winfo_reqheight())
+        # print(output_object.lbl_data.master, output_object.lbl_data.master.winfo_height())
+        # print(output_object.lbl_data.master.master, output_object.lbl_data.master.master.winfo_height())
+        # print(output_object.lbl_data.master.master.master, output_object.lbl_data.master.master.master.winfo_height())
+        # print(output_object.lbl_data.master.master.master.master, output_object.lbl_data.master.master.master.master.winfo_height())
 
-        mid_1_x = end_x - offset
-        mid_1_y = end_y
-        mainwindow.can_main.create_line(start_x,start_y, mid_0_x,mid_0_y, mid_1_x,mid_1_y, end_x,end_y, smooth=True)
+        print(self.lbl_data, self.lbl_data.winfo_geometry())
+        print(self.lbl_data.master, self.lbl_data.master.winfo_geometry())
+        print(self.lbl_data.master.master, self.lbl_data.master.master.winfo_geometry())
+        print(self.lbl_data.master.master.master, self.lbl_data.master.master.master.winfo_geometry())
+        print(self.lbl_data.master.master.master.master, self.lbl_data.master.master.master.master.winfo_geometry())
+
+        # start_x = plugin_container_position[0] + plugin_container_width
+        # start_y = plugin_container_position[1] + plugin_container_height / 2
+
+        # widget, plugin, variable = self.id.split(':')
+        # id = f"{widget}:{plugin}:plugin"
+        # plugin_container_position = mainwindow.can_main.coords(id)
+        # plugin_container_height = self.lbl_data.master.master.master.winfo_height()
+
+        # end_x = plugin_container_position[0]
+        # end_y = plugin_container_position[1] + plugin_container_height / 2
+
+        # mainwindow.can_main.create_line(start_x, start_y, end_x, end_y, smooth=True)
+
+        # s_x = output_object.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
+        # s_y = output_object.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
+        # start_x = mainwindow.can_main.canvasx(s_x)
+        # start_y = mainwindow.can_main.canvasy(s_y)
+
+        # print(
+        #     (output_object.lbl_data.winfo_rootx(), output_object.lbl_data.winfo_rooty()),
+        #     (s_x, s_y),
+        #     (start_x, start_y),
+        #     (mainwindow.can_main.canvasx(mainwindow.can_main.winfo_width()), mainwindow.can_main.canvasy(mainwindow.can_main.winfo_height()))
+        #     )
+
+        # e_x = self.lbl_data.winfo_rootx() - self.winfo_toplevel().winfo_rootx()
+        # e_y = self.lbl_data.winfo_rooty() - self.winfo_toplevel().winfo_rooty()
+        # end_x = mainwindow.can_main.canvasx(e_x)
+        # end_y = mainwindow.can_main.canvasy(e_y)
+
+        # print(
+        #     (self.lbl_data.winfo_x(), self.winfo_y()),
+        #     (self.lbl_data.pare().winfo_parent(), self.lbl_data.winfo_parent()),
+        #     (self.lbl_data.winfo_rootx(), self.lbl_data.winfo_rooty()),
+        #     )
+
+
+        # offset = (end_x - start_x) / 3
+
+        # mid_0_x = start_x + offset
+        # mid_0_y = start_y
+
+        # mid_1_x = end_x - offset
+        # mid_1_y = end_y
+        # mainwindow.can_main.create_line(start_x,start_y, mid_0_x,mid_0_y, mid_1_x,mid_1_y, end_x,end_y, smooth=True)
 
 
 

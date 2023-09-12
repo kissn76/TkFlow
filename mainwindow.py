@@ -131,7 +131,6 @@ class Mainwindow(tk.Tk):
         plugin_id = self.widget_plugin_insert(widget_id, plugin)
         can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_id}:plugincontainer", f"{plugin_id}:plugin"])
 
-
         # background
         can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
         can_main.tag_lower(f"{widget_id}:background", f"{widget_id}:move")
