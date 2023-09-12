@@ -128,8 +128,8 @@ class Mainwindow(tk.Tk):
         # plugin container add
         plugin_container = ttk.Frame(can_main)
         self.widget_container.update({widget_id: plugin_container})
-        plugin_id = self.widget_plugin_insert(widget_id, plugin)
         can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=f"{widget_id}:plugincontainer")
+        # self.widget_plugin_insert(widget_id, plugin)
 
         # background
         can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
@@ -151,13 +151,13 @@ class Mainwindow(tk.Tk):
         can_main.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: can_main.config(cursor=""))
         can_main.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
+        self.widget_counter += 1
+
         # set position and size of widget's parts
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
-
-        self.widget_counter += 1
 
 
     # set position and size of widget name
@@ -182,6 +182,7 @@ class Mainwindow(tk.Tk):
 
         if not bool(move):
             plugin_container_box = can_main.bbox(f"{widget_id}:plugincontainer")
+            print(plugin_container_box)
 
             if not right_side is None:
                 background_box_width = right_side - background_box[0]
