@@ -1,11 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.simpledialog import Dialog
-from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_plugin, output_add, output_get, output_get_plugin
-
-
-
-clipboard = None
+from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_by_plugin, output_add, output_get, output_get_by_plugin
 
 
 
@@ -66,11 +62,11 @@ class PluginBase(ttk.Frame):
 
 
     def connect(self):
-        input_container = input_get_plugin(self.id)
+        input_container = input_get_by_plugin(self.id)
         for input_object in input_container:
             input_object.connect()
 
-        output_container = output_get_plugin(self.id)
+        output_container = output_get_by_plugin(self.id)
         for output_object in output_container:
             output_object.connect()
 

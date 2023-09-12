@@ -4,22 +4,25 @@ import mainwindow
 
 
 
+clipboard = None
+
+
 __input_container = {}
 __output_container = {}
 
 
 # get input objects by variable_id (widget_id:plugin_id:variable_id)
-def input_get(variable_id):
+def input_get(input_variable_id):
     object = None
     try:
-        object = __input_container[variable_id]
+        object = __input_container[input_variable_id]
     except:
         pass
     return object
 
 
 # get input objects in a list filtered by plugin_id (widget_id:plugin_id)
-def input_get_plugin(plugin_id):
+def input_get_by_plugin(plugin_id):
     objects = []
     for input_key, input_object in __input_container.items():
         if input_key.startswith(plugin_id):
@@ -34,7 +37,7 @@ def input_add(variable_id, object):
 
 
 # get input objects in a list filtered by object connect to output object variable
-def input_get_output(output_variable_id):
+def input_get_by_output(output_variable_id):
     objects = []
     for input_key, input_object in __input_container.items():
         if input_object.text_get() == output_variable_id:
@@ -52,7 +55,7 @@ def output_get(name):
     return object
 
 
-def output_get_plugin(plugin_id):
+def output_get_by_plugin(plugin_id):
     objects = []
     for output_key, output_object in __output_container.items():
         if output_key.startswith(plugin_id):
@@ -87,11 +90,13 @@ class DataLabel(ttk.Frame):
         # self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
 
 
+    # copy plugin id to clipboard
     def copy(self, event):
         global clipboard
         clipboard = self.id
 
 
+    # paste plugin id from clipboard
     def paste(self, event):
         global clipboard
         self.text_set(clipboard)
@@ -194,7 +199,7 @@ class OutputLabel(DataLabel):
     def connect(self):
         start_variable_id = self.id
         try:
-            for input_object in input_get_output(start_variable_id):
+            for input_object in input_get_by_output(start_variable_id):
                 line_id = f"{start_variable_id}-{input_object.id}"
                 mainwindow.can_main.delete(line_id)
 

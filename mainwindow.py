@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import time
 import plugincontroller
 
 
@@ -115,6 +116,11 @@ class Mainwindow(tk.Tk):
 
     # create new widget
     def widget_create(self, plugin, x=24, y=24):
+        if x < self.widget_padding:
+            x = self.widget_padding
+        if y < self.widget_padding:
+            y = self.widget_padding
+
         widget_id = f"widget.{self.widget_counter}"
 
         # mover
@@ -129,7 +135,7 @@ class Mainwindow(tk.Tk):
         plugin_container = ttk.Frame(can_main)
         self.widget_container.update({widget_id: plugin_container})
         can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=f"{widget_id}:plugincontainer")
-        # self.widget_plugin_insert(widget_id, plugin)
+        self.widget_plugin_insert(widget_id, plugin)
 
         # background
         can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
@@ -152,6 +158,8 @@ class Mainwindow(tk.Tk):
         can_main.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
         self.widget_counter += 1
+
+        self.update()
 
         # set position and size of widget's parts
         self.widget_name_set(widget_id)
@@ -182,7 +190,6 @@ class Mainwindow(tk.Tk):
 
         if not bool(move):
             plugin_container_box = can_main.bbox(f"{widget_id}:plugincontainer")
-            print(plugin_container_box)
 
             if not right_side is None:
                 background_box_width = right_side - background_box[0]
@@ -287,6 +294,9 @@ class Mainwindow(tk.Tk):
                         if len(widget_ids) == 1:
                             target_widget_id = list(widget_ids)[0]
                             self.widget_plugin_insert(target_widget_id, plugin)
+                            self.update()
+                            self.widget_background_set(widget_id)
+                            self.widget_resizer_set(widget_id)
                         else:
                             print("too many widget are overlapped:", widget_ids)
                 except:
@@ -367,6 +377,11 @@ class Mainwindow(tk.Tk):
             can_main.yview_scroll(1, 'units')
         if y < 1:
             can_main.yview_scroll(-1, 'units')
+
+        if canvas_x < self.widget_padding:
+            canvas_x = self.widget_padding
+        if canvas_y < self.widget_padding:
+            canvas_y = self.widget_padding
 
         can_main.coords(f"{widget_id}:move", canvas_x, canvas_y)
 
