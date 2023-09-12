@@ -77,7 +77,7 @@ class Mainwindow(tk.Tk):
 
         self.plugins_load()
 
-        # self.after(0, self.run)
+        self.after(0, self.run)
 
 
     def run(self):
@@ -129,7 +129,7 @@ class Mainwindow(tk.Tk):
         plugin_container = ttk.Frame(can_main)
         self.widget_container.update({widget_id: plugin_container})
         plugin_id = self.widget_plugin_insert(widget_id, plugin)
-        can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=[f"{widget_id}:plugincontainer", f"{plugin_id}:plugin"])
+        can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=f"{widget_id}:plugincontainer")
 
         # background
         can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
@@ -338,6 +338,10 @@ class Mainwindow(tk.Tk):
 
         self.widget_resizer_set(widget_id)
 
+        for plugin_key, plugin_object in self.plugin_container.items():
+            if plugin_key.startswith(widget_id):
+                plugin_object.connect()
+
 
     def widget_resize_height(self, widget_id, y):
         canvas_y = can_main.canvasy(y)
@@ -369,6 +373,10 @@ class Mainwindow(tk.Tk):
         self.widget_plugin_container_set(widget_id)
         self.widget_background_set(widget_id, move=True)
         self.widget_resizer_set(widget_id)
+
+        for plugin_key, plugin_object in self.plugin_container.items():
+            if plugin_key.startswith(widget_id):
+                plugin_object.connect()
 
 
     def quit(self):
