@@ -326,9 +326,10 @@ class Mainwindow(tk.Tk):
         if entry_type == "plugin":
             plugin_id = entry_name.split('.')[0]
 
-            self.floating_widget.place_forget()
-            self.floating_widget.destroy()
-            self.floating_widget = None
+            if bool(self.floating_widget):
+                self.floating_widget.place_forget()
+                self.floating_widget.destroy()
+                self.floating_widget = None
 
             if event.x < 0:
                 x = self.winfo_pointerx() - self.winfo_rootx()

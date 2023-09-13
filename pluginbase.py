@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.simpledialog import Dialog
+from PIL import Image, ImageTk
 from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_by_plugin, output_add, output_get, output_get_by_plugin
 
 
@@ -12,26 +13,43 @@ class PluginBase(ttk.Frame):
         self.name = name
         self.id = id
 
-        self.input_row_counter = 0
-        self.output_row_counter = 0
+        self.__input_row_counter = 0
+        self.__output_row_counter = 0
+        self.__content_row_counter = 0
 
-        self.columnconfigure(1, weight=1)
+        self.__gridcoulmn_input = 0
+        self.__gridcolumn_setting = 1
+        self.__gridcolumn_content = 2
+        self.__gridcolumn_output = 3
 
-        self.btn_config = ttk.Button(self, text="c", command=self.settings)
-        self.btn_config.grid(row=0, column=2)
-        # self.bind('<Button-3>', self.settings)
+        self.__image_setting = Image.open("./resources/icon/setting.png")
+        self.__image_setting.thumbnail((16, 16))
+        self.__image_setting = ImageTk.PhotoImage(self.__image_setting)
+
+        self.columnconfigure(self.__gridcolumn_content, weight=1)
 
 
     def settings(self):
         print("Settings panel start", type(self), self.id)
 
 
+    def content_init(self, content_object):
+        content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
+        self.__content_row_counter += 1
+
+
+    def settings_init(self):
+        self.btn_config = tk.Button(self, image=self.__image_setting, compound="center", width=14, height=14, command=self.settings)
+        self.btn_config.grid(row=0, column=self.__gridcolumn_setting)
+        # self.bind('<Button-3>', self.settings)
+
+
     def input_init(self, *args):
         for var_name in args:
             input = f"{self.id}:{var_name}"
             input_add(input, InputLabel(self, id=input))
-            input_get(input).grid(row=self.input_row_counter, column=0)
-            self.input_row_counter += 1
+            input_get(input).grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
+            self.__input_row_counter += 1
 
 
     # get output value that represented by input
@@ -51,10 +69,10 @@ class PluginBase(ttk.Frame):
         for var_name in args:
             output = f"{self.id}:{var_name}"
             output_object = OutputLabel(self, id=output)
-            output_object.grid(row=self.output_row_counter, column=4)
+            output_object.grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
             # output_object.bind('<Double-Button-1>', self.settings)
             output_add(output, output_object)
-            self.output_row_counter += 1
+            self.__output_row_counter += 1
 
 
     def output_value_set(self, output, value):
