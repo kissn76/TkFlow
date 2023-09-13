@@ -27,5 +27,5 @@ class Plugin(pluginbase.PluginBase):
         self.output_value_set("value", int(self.sc.get()))
 
 
-    def settings(self, event):
-        print("overwrited")
+    # def settings(self, event):
+    #     print("overwrited")

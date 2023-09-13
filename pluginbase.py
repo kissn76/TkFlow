@@ -16,11 +16,14 @@ class PluginBase(ttk.Frame):
         self.output_row_counter = 0
 
         self.columnconfigure(1, weight=1)
-        self.bind('<Button-3>', self.settings)
+
+        self.btn_config = ttk.Button(self, text="c", command=self.settings)
+        self.btn_config.grid(row=0, column=2)
+        # self.bind('<Button-3>', self.settings)
 
 
-    def settings(self, event):
-        print(type(self), self.id)
+    def settings(self):
+        print("Settings panel start", type(self), self.id)
 
 
     def input_init(self, *args):
@@ -48,7 +51,7 @@ class PluginBase(ttk.Frame):
         for var_name in args:
             output = f"{self.id}:{var_name}"
             output_object = OutputLabel(self, id=output)
-            output_object.grid(row=self.output_row_counter, column=3)
+            output_object.grid(row=self.output_row_counter, column=4)
             # output_object.bind('<Double-Button-1>', self.settings)
             output_add(output, output_object)
             self.output_row_counter += 1
