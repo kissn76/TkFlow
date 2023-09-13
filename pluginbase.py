@@ -6,9 +6,10 @@ from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_b
 
 
 class PluginBase(ttk.Frame):
-    def __init__(self, master, id):
-        super().__init__(master)
-        self.name = id
+    def __init__(self, master=None, id=None, name=None, parents=[], **kwargs):
+        super().__init__(master, **kwargs)
+        self.parents = parents
+        self.name = name
         self.id = id
 
         self.input_row_counter = 0

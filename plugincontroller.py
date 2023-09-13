@@ -10,15 +10,15 @@ class Plugincontroller:
         self.__plugins = []
         for plugin in plugins_tmp:
             plugin_path = Path(plugin)
-            plugin_name = plugin_path.stem
-            self.__plugins.append(plugin_name)
+            plugin_id = plugin_path.stem
+            self.__plugins.append(plugin_id)
 
 
     def list_plugins(self):
         return self.__plugins
 
 
-    def new_object(self, plugin_name, **kwargs):
-        if plugin_name in self.__plugins:
-            return importlib.import_module(plugin_name, self.plugins_dir).Plugin(**kwargs)
+    def new_object(self, plugin_id, **kwargs):
+        if plugin_id in self.__plugins:
+            return importlib.import_module(plugin_id, self.plugins_dir).Plugin(**kwargs)
 

@@ -61,13 +61,17 @@ class Mainwindow(tk.Tk):
         can_main.rowconfigure(0, weight=1)
         can_main.columnconfigure(0, weight=1)
         can_main.bind('<Button-1>', self.widget_dnd_select)
+        can_main.bind('<Motion>', self.motion)
 
-        self.frm_sidebar = ttk.Frame(self)
-        self.frm_available_plugins = ttk.LabelFrame(self.frm_sidebar, text="Available plugins")
+        self.sidebar = ttk.Frame(self)
+        self.frm_available_plugins = ttk.LabelFrame(self.sidebar, text="Available plugins")
         self.frm_available_plugins.grid(row=0, column=0)
 
+        self.statusbar = ttk.Label(self, text="Statusbar")
+
         self.frm_main.grid(row=0, column=0, sticky="n, s, w, e")
-        self.frm_sidebar.grid(row=0, column=1, sticky="n, s, w, e")
+        self.sidebar.grid(row=0, column=1, sticky="n, s, w, e")
+        self.statusbar.grid(row=1, column=0, columnspan=2, sticky="n, s, w, e")
         self.frm_main.rowconfigure(0, weight=1)
         self.frm_main.columnconfigure(0, weight=1)
 
@@ -76,6 +80,7 @@ class Mainwindow(tk.Tk):
 
         self.floating_widget = None
 
+        self.plugin_categories = {}
         self.plugins_load()
 
         self.after(0, self.run)
@@ -88,18 +93,43 @@ class Mainwindow(tk.Tk):
         self.after(100, self.run)
 
 
+    def motion(self, event):
+        x, y = can_main.canvasx(event.x), can_main.canvasy(event.y)
+        self.statusbar.configure(text=f"{int(x)}, {int(y)}")
+
+
     # loop through available plugins
     def plugins_load(self):
         # add available plugin to gui
-        def available_plugin_add(plugin):
-            w = ttk.Label(self.frm_available_plugins, text=plugin)
-            w.pack(anchor="nw", fill=tk.BOTH)
-            w.bind('<Button-1>', lambda event: self.plugin_dnd_start(event, plugin))
-            w.bind('<B1-Motion>', lambda event: self.plugin_dnd_motion(event))
-            w.bind('<ButtonRelease-1>', lambda event: self.plugin_dnd_stop(event, plugin))
+        def available_plugin_add(plugin_id):
+            obj = self.plugin.new_object(plugin_id)
+            for parent in obj.parents:
+                parent_path = parent.split('/')
+                parent_path_tmp = ""
+                for p in parent_path:
+                    parent_path_tmp_new = parent_path_tmp
+                    if not parent_path_tmp_new == "":
+                        parent_path_tmp_new += "/"
+                    parent_path_tmp_new += p
+
+                    if not parent_path_tmp_new in self.plugin_categories.keys():
+                        master = self.frm_available_plugins
+                        if not parent_path_tmp == "":
+                            master = self.plugin_categories[parent_path_tmp]
+
+                        self.plugin_categories.update({parent_path_tmp_new: ttk.LabelFrame(master, text=parent_path_tmp_new.split('/')[-1])})
+                        self.plugin_categories[parent_path_tmp_new].pack(anchor="nw", fill=tk.BOTH)
+
+                    parent_path_tmp = parent_path_tmp_new
+
+                w = ttk.Label(self.plugin_categories[parent], text=obj.name)
+                w.pack(anchor="nw", fill=tk.BOTH)
+                w.bind('<Button-1>', lambda event: self.plugin_dnd_start(event, plugin_id))
+                w.bind('<B1-Motion>', lambda event: self.plugin_dnd_motion(event))
+                w.bind('<ButtonRelease-1>', lambda event: self.plugin_dnd_stop(event, plugin_id))
 
         for m in self.plugin.list_plugins():
-            available_plugin_add(plugin=m)
+            available_plugin_add(m)
 
 
     # insert plugin to an existing widget
@@ -362,7 +392,6 @@ class Mainwindow(tk.Tk):
             can_main.yview_scroll(-1, 'units')
 
         self.widget_background_set(widget_id, bottom_side=canvas_y)
-
         self.widget_resizer_set(widget_id)
 
 
