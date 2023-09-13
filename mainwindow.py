@@ -28,9 +28,14 @@ class Mainwindow(tk.Tk):
         self.image_directory = Image.open("./resources/icon/directory.png")
         self.image_directory.thumbnail(MAX_SIZE)
         self.image_directory = ImageTk.PhotoImage(self.image_directory)
+
         self.image_work = Image.open("./resources/icon/scrawdriver.png")
         self.image_work.thumbnail(MAX_SIZE)
         self.image_work = ImageTk.PhotoImage(self.image_work)
+
+        self.image_move = Image.open("./resources/icon/move.png")
+        self.image_move.thumbnail((16, 16))
+        self.image_move = ImageTk.PhotoImage(self.image_move)
         # images end
 
         self.widget_container = {}  # It contains all widget {widget_id: widget_object}
@@ -38,7 +43,6 @@ class Mainwindow(tk.Tk):
         self.widget_counter = 0
         self.plugin_counter = 0
 
-        self.image_move = ImageTk.PhotoImage(Image.open(f"./resources/icon/move.png"))
 
         self.plugin = plugincontroller.Plugincontroller()
 
