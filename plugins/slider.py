@@ -7,7 +7,7 @@ import pluginbase
 
 class Plugin(pluginbase.PluginBase):
     def __init__(self, master=None, id=None, **kwargs):
-        super().__init__(master, id, name="Slider", parents=["Widgets/Atomic"], **kwargs)
+        super().__init__(master, id, name="Slider", parents=["Widgets"], **kwargs)
         # init input, output
         self.output_init("value")
 

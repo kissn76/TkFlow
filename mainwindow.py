@@ -23,6 +23,16 @@ class Mainwindow(tk.Tk):
         self.widget_padding = 6
         # widget settings end
 
+        # images
+        MAX_SIZE = (12, 12)
+        self.image_directory = Image.open("./resources/icon/directory.png")
+        self.image_directory.thumbnail(MAX_SIZE)
+        self.image_directory = ImageTk.PhotoImage(self.image_directory)
+        self.image_work = Image.open("./resources/icon/scrawdriver.png")
+        self.image_work.thumbnail(MAX_SIZE)
+        self.image_work = ImageTk.PhotoImage(self.image_work)
+        # images end
+
         self.widget_container = {}  # It contains all widget {widget_id: widget_object}
         self.plugin_container = {}  # It contains all used plugin {plugin_id: plugin_object}
         self.widget_counter = 0
@@ -61,11 +71,11 @@ class Mainwindow(tk.Tk):
         can_main.rowconfigure(0, weight=1)
         can_main.columnconfigure(0, weight=1)
         can_main.bind('<Button-1>', self.widget_dnd_select)
-        can_main.bind('<Motion>', self.motion)
+        can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(can_main.canvasx(event.x))}, {int(can_main.canvasy(event.y))}"))
 
         self.sidebar = ttk.Frame(self)
-        self.frm_available_plugins = ttk.LabelFrame(self.sidebar, text="Available plugins")
-        self.frm_available_plugins.grid(row=0, column=0)
+        self.available_plugins = ttk.Treeview(self.sidebar)
+        self.available_plugins.pack(fill=tk.BOTH, expand=True)
 
         self.statusbar = ttk.Label(self, text="Statusbar")
 
@@ -80,6 +90,8 @@ class Mainwindow(tk.Tk):
 
         self.floating_widget = None
 
+
+        self.plugin_element_counter = 0
         self.plugin_categories = {}
         self.plugins_load()
 
@@ -93,43 +105,46 @@ class Mainwindow(tk.Tk):
         self.after(100, self.run)
 
 
-    def motion(self, event):
-        x, y = can_main.canvasx(event.x), can_main.canvasy(event.y)
-        self.statusbar.configure(text=f"{int(x)}, {int(y)}")
-
-
     # loop through available plugins
     def plugins_load(self):
-        # add available plugin to gui
+        # # add available plugin to gui
         def available_plugin_add(plugin_id):
-            obj = self.plugin.new_object(plugin_id)
-            for parent in obj.parents:
-                parent_path = parent.split('/')
-                parent_path_tmp = ""
-                for p in parent_path:
-                    parent_path_tmp_new = parent_path_tmp
-                    if not parent_path_tmp_new == "":
-                        parent_path_tmp_new += "/"
-                    parent_path_tmp_new += p
+            plugin_object = self.plugin.new_object(plugin_id)
+            for plugin_parent_path in plugin_object.parents:
+                parent_path = ""
+                for parent_element in plugin_parent_path.split('/'):
+                    parent_path_new = parent_path
+                    if not parent_path_new == "":
+                        parent_path_new += "/"
+                    parent_path_new += parent_element
 
-                    if not parent_path_tmp_new in self.plugin_categories.keys():
-                        master = self.frm_available_plugins
-                        if not parent_path_tmp == "":
-                            master = self.plugin_categories[parent_path_tmp]
+                    if not parent_path_new in self.plugin_categories.keys():
+                        self.plugin_categories.update({parent_path_new: f"category:{self.plugin_element_counter}"})
+                        tree_master = ""
+                        tree_open = True
+                        try:
+                            tree_master = self.plugin_categories[parent_path]
+                            tree_open = False
+                        except:
+                            pass
+                        self.available_plugins.insert(tree_master, 'end', self.plugin_categories[parent_path_new], text=parent_path_new.split('/')[-1], image=self.image_directory, open=tree_open)
+                        self.plugin_element_counter += 1
 
-                        self.plugin_categories.update({parent_path_tmp_new: ttk.LabelFrame(master, text=parent_path_tmp_new.split('/')[-1])})
-                        self.plugin_categories[parent_path_tmp_new].pack(anchor="nw", fill=tk.BOTH)
+                    parent_path = parent_path_new
 
-                    parent_path_tmp = parent_path_tmp_new
+                tree_master = ""
+                try:
+                    tree_master = self.plugin_categories[parent_path]
+                except:
+                    pass
+                self.available_plugins.insert(tree_master, 'end', f"plugin:{plugin_id}.{self.plugin_element_counter}", text=plugin_object.name, image=self.image_work)
+                self.plugin_element_counter += 1
+                self.available_plugins.bind('<<TreeviewSelect>>', lambda event: self.plugin_dnd_start(event, self.available_plugins.selection()))
+                self.available_plugins.bind('<B1-Motion>', lambda event: self.plugin_dnd_motion(event))
+                self.available_plugins.bind('<ButtonRelease-1>', lambda event: self.plugin_dnd_stop(event, self.available_plugins.selection()))
 
-                w = ttk.Label(self.plugin_categories[parent], text=obj.name)
-                w.pack(anchor="nw", fill=tk.BOTH)
-                w.bind('<Button-1>', lambda event: self.plugin_dnd_start(event, plugin_id))
-                w.bind('<B1-Motion>', lambda event: self.plugin_dnd_motion(event))
-                w.bind('<ButtonRelease-1>', lambda event: self.plugin_dnd_stop(event, plugin_id))
-
-        for m in self.plugin.list_plugins():
-            available_plugin_add(m)
+        for plugin_id in self.plugin.list_plugins():
+            available_plugin_add(plugin_id)
 
 
     # insert plugin to an existing widget
@@ -271,66 +286,77 @@ class Mainwindow(tk.Tk):
 
 # DRAG & DROP metódusok
     # plugin list methods
-    def plugin_dnd_start(self, event, text):
+    def plugin_dnd_start(self, event, selection):
         x = self.winfo_pointerx() - self.winfo_rootx()
         y = self.winfo_pointery() - self.winfo_rooty()
 
-        self.floating_widget = ttk.Label(self, text=text)
-        self.floating_widget.place(x=x, y=y)
+        entry_type, entry_name = selection[0].split(':')
+        if entry_type == "plugin":
+            plugin_id = entry_name.split('.')[0]
+
+            self.floating_widget = ttk.Label(self, text=plugin_id)
+            self.floating_widget.place(x=x, y=y)
 
 
     def plugin_dnd_motion(self, event):
-        x = self.winfo_pointerx() - self.winfo_rootx()
-        y = self.winfo_pointery() - self.winfo_rooty()
-        canvas_x = can_main.canvasx(x)
-        canvas_y = can_main.canvasy(y)
-
-        self.floating_widget.place(x=x, y=y)
-
-        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, can_main.cget("scrollregion").split()))
-
-        if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - self.widget_padding * 2 or canvas_y >= can_main_height - self.widget_padding * 2:
-            self.config(cursor="X_cursor")
-        else:
-            self.config(cursor="")
-
-
-    def plugin_dnd_stop(self, event, plugin):
-        self.config(cursor="")
-        self.floating_widget.place_forget()
-        self.floating_widget.destroy()
-
-        if event.x < 0:
+        if bool(self.floating_widget):
             x = self.winfo_pointerx() - self.winfo_rootx()
             y = self.winfo_pointery() - self.winfo_rooty()
             canvas_x = can_main.canvasx(x)
             canvas_y = can_main.canvasy(y)
 
+            self.floating_widget.place(x=x, y=y)
+
             can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, can_main.cget("scrollregion").split()))
-            if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - self.widget_padding * 2 and canvas_y < can_main_height - self.widget_padding * 2:
-                try:
-                    widgets = can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
-                    if len(widgets) == 0:
-                        self.widget_create(plugin=plugin, x=canvas_x, y=canvas_y)
-                    else:
-                        widget_ids = set()
-                        for id in widgets:
-                            tags = can_main.gettags(id)
-                            if len(tags) > 0:
-                                widget_id, _ = tags[0].split(':')
-                                widget_ids.add(widget_id)
+            if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - self.widget_padding * 2 or canvas_y >= can_main_height - self.widget_padding * 2:
+                self.config(cursor="X_cursor")
+            else:
+                self.config(cursor="")
 
-                        if len(widget_ids) == 1:
-                            target_widget_id = list(widget_ids)[0]
-                            self.widget_plugin_insert(target_widget_id, plugin)
-                            self.update()
-                            self.widget_background_set(widget_id)
-                            self.widget_resizer_set(widget_id)
+
+    def plugin_dnd_stop(self, event, selection):
+        self.config(cursor="")
+
+        entry_type, entry_name = selection[0].split(':')
+        if entry_type == "plugin":
+            plugin_id = entry_name.split('.')[0]
+
+            self.floating_widget.place_forget()
+            self.floating_widget.destroy()
+            self.floating_widget = None
+
+            if event.x < 0:
+                x = self.winfo_pointerx() - self.winfo_rootx()
+                y = self.winfo_pointery() - self.winfo_rooty()
+                canvas_x = can_main.canvasx(x)
+                canvas_y = can_main.canvasy(y)
+
+                can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, can_main.cget("scrollregion").split()))
+                if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - self.widget_padding * 2 and canvas_y < can_main_height - self.widget_padding * 2:
+                    try:
+                        widgets = can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+
+                        if len(widgets) == 0:
+                            self.widget_create(plugin=plugin_id, x=canvas_x, y=canvas_y)
                         else:
-                            print("too many widget are overlapped:", widget_ids)
-                except:
-                    pass
+                            widget_ids = set()
+                            for id in widgets:
+                                tags = can_main.gettags(id)
+                                if len(tags) > 0:
+                                    widget_id, _ = tags[0].split(':')
+                                    widget_ids.add(widget_id)
+
+                            if len(widget_ids) == 1:
+                                target_widget_id = list(widget_ids)[0]
+                                self.widget_plugin_insert(target_widget_id, plugin_id)
+                                self.update()
+                                self.widget_background_set(widget_id)
+                                self.widget_resizer_set(widget_id)
+                            else:
+                                print("too many widget are overlapped:", widget_ids)
+                    except:
+                        pass
 
     # widget methods
     def widget_dnd_select(self, move):
