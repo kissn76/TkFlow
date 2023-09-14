@@ -93,6 +93,16 @@ class PluginBase(ttk.Frame):
             output_object.connect()
 
 
+    def datalabels_box_set(self):
+        input_container = input_get_by_plugin(self.id)
+        for input_object in input_container:
+            input_object.box_set()
+
+        output_container = output_get_by_plugin(self.id)
+        for output_object in output_container:
+            output_object.box_set()
+
+
 
 class SettingDialog(Dialog):
     def __init__(self, parent, title, name):

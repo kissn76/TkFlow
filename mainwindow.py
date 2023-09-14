@@ -217,6 +217,10 @@ class Mainwindow(tk.Tk):
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
 
+        for plugin_key, plugin_object in self.plugin_container.items():
+            if plugin_key.startswith(widget_id):
+                plugin_object.datalabels_box_set()
+
 
     # set position and size of widget name
     def widget_name_set(self, widget_id):
@@ -359,6 +363,11 @@ class Mainwindow(tk.Tk):
                                 self.update()
                                 self.widget_background_set(widget_id)
                                 self.widget_resizer_set(widget_id)
+
+                                for plugin_key, plugin_object in self.plugin_container.items():
+                                    if plugin_key.startswith(widget_id):
+                                        plugin_object.datalabels_box_set()
+                                        plugin_object.connect()
                             else:
                                 print("too many widget are overlapped:", widget_ids)
                     except:
@@ -411,8 +420,11 @@ class Mainwindow(tk.Tk):
 
         self.widget_resizer_set(widget_id)
 
+        self.update()
+
         for plugin_key, plugin_object in self.plugin_container.items():
             if plugin_key.startswith(widget_id):
+                plugin_object.datalabels_box_set()
                 plugin_object.connect()
 
 
@@ -425,6 +437,8 @@ class Mainwindow(tk.Tk):
 
         self.widget_background_set(widget_id, bottom_side=canvas_y)
         self.widget_resizer_set(widget_id)
+
+        self.update()
 
 
     def widget_move(self, widget_id, x, y):
@@ -453,6 +467,7 @@ class Mainwindow(tk.Tk):
 
         for plugin_key, plugin_object in self.plugin_container.items():
             if plugin_key.startswith(widget_id):
+                plugin_object.datalabels_box_set()
                 plugin_object.connect()
 
 
