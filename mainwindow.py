@@ -13,8 +13,9 @@ class Mainwindow(tk.Tk):
     def __init__(self):
         global can_main
         super().__init__()
-        self.protocol("WM_DELETE_WINDOW", self.quit)
+        self.title("TkFlow")
         self.geometry("1200x400")
+        self.protocol("WM_DELETE_WINDOW", self.quit)
 
         # widget settings
         self.widget_width_min = 200

@@ -136,6 +136,10 @@ class DataLabel(ttk.Frame):
         end_y = int(end_plugin_container_box[1]) + int(end_plugin_geometry[3]) + int(end_rowframe_geometry[3]) + int(int(end_rowframe_geometry[1]) / 2)
 
         # count and draw line
+        self.draw_connect(start_x, start_y, end_x, end_y, tags)
+
+
+    def draw_connect(self, start_x, start_y, end_x, end_y, tags):
         offset = (end_x - start_x) / 3
         mid_0_x = start_x + offset
         mid_0_y = start_y
@@ -156,11 +160,10 @@ class InputLabel(DataLabel):
     def __init__(self, master, id=None):
         super().__init__(master, id=id)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
-        self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
-
-        self.lbl_data_type.bind('<Double-Button-1>', self.paste)
         self.lbl_data.bind('<Double-Button-1>', self.paste)
-        # self.lbl_data.bind('<B1-Motion>', self.connect)
+
+        # self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
+        # self.lbl_data_type.bind('<Double-Button-1>', self.paste)
 
         self.output_input_line = None
 
@@ -188,12 +191,36 @@ class OutputLabel(DataLabel):
     def __init__(self, master, id=None):
         super().__init__(master, id=id)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
-        self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
-        self.lbl_data.grid(row=0, column=2, sticky="n, s, w, e")
+        # self.lbl_txt.bind('<Double-Button-1>', self.copy)
 
-        self.lbl_txt.bind('<Double-Button-1>', self.copy)
-        self.lbl_data_type.bind('<Double-Button-1>', self.copy)
+        # self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
+        # self.lbl_data_type.bind('<Double-Button-1>', self.copy)
+
+        self.lbl_data.grid(row=0, column=1, sticky="n, s, w, e")
         self.lbl_data.bind('<Double-Button-1>', self.copy)
+        self.lbl_data.bind('<Button-1>', self.dnd_start)
+        self.lbl_data.bind('<Button1-Motion>', self.dnd_motion)
+        self.lbl_data.bind('<ButtonRelease-1>', self.dnd_stop)
+
+
+    def dnd_start(self, event):
+        print("Output dnd start")
+
+
+    def dnd_motion(self, event):
+        start_plugin_container_box = mainwindow.can_main.bbox(f"{self.id.split(':')[0]}:plugincontainer")
+        start_plugin_geometry = self.lbl_data.master.master.winfo_geometry().replace('x', '+').split("+")  # plugin geometry
+        start_rowframe_geometry = self.lbl_data.master.winfo_geometry().replace('x', '+').split("+")   # [width, height, x, y] frame contains icons and value
+
+        start_x = int(start_plugin_container_box[2])
+        start_y = int(start_plugin_container_box[1]) + int(start_plugin_geometry[3]) + int(start_rowframe_geometry[3]) + int(int(start_rowframe_geometry[1]) / 2)
+
+        mainwindow.can_main.delete("drawing")
+        self.draw_connect(start_x, start_y, mainwindow.can_main.canvasx(event.x), mainwindow.can_main.canvasy(event.y), "drawing")
+
+
+    def dnd_stop(self, event):
+        mainwindow.can_main.delete("drawing")
 
 
     def connect(self):
