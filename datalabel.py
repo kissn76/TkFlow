@@ -4,9 +4,6 @@ import mainwindow
 
 
 
-clipboard = None
-
-
 __input_container = {}
 __output_container = {}
 

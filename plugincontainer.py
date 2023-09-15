@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import plugincontroller
 import pluginbase
-import mainwindow
 
 
 
