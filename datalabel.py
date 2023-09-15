@@ -110,14 +110,13 @@ class DataLabel(ttk.Frame):
     # set box in canvas
     def box_set(self, event=None):
         plugin_container_box = mainwindow.can_main.bbox(f"{self.id.split(':')[0]}:plugincontainer")
-        plugin_geometry = self.lbl_data.master.master.winfo_geometry().replace('x', '+').split("+")    # plugin geometry
-        rowframe_geometry = self.lbl_data.master.winfo_geometry().replace('x', '+').split("+")                      # [width, height, x, y] frame contains icons and value
-        geometry = self.lbl_data.winfo_geometry().replace('x', '+').split("+")                      # [width, height, x, y] frame contains icons and value
+        plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
+        datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
-        x1 = int(plugin_container_box[0]) + int(plugin_geometry[2]) + int(rowframe_geometry[2]) + int(geometry[2])
-        y1 = int(plugin_container_box[1]) + int(plugin_geometry[3]) + int(rowframe_geometry[3]) + int(geometry[3])
-        x2 = int(x1 + int(geometry[0]))
-        y2 = int(y1 + int(geometry[1]))
+        x1 = int(plugin_container_box[0]) + int(plugin_geometry[2]) + int(datalabel_geometry[2])
+        y1 = int(plugin_container_box[1]) + int(plugin_geometry[3]) + int(datalabel_geometry[3])
+        x2 = int(x1 + int(datalabel_geometry[0]))
+        y2 = int(y1 + int(datalabel_geometry[1]))
 
         self.box = (x1, y1, x2, y2)
 
