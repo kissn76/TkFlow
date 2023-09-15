@@ -9,6 +9,7 @@ import mainwindow
 class Pluginframe(ttk.Treeview):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.floating_widget = None
         self.load()
 
 
@@ -102,8 +103,6 @@ class Pluginframe(ttk.Treeview):
                 y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
                 canvas_x = mainwindow.can_main.canvasx(x)
                 canvas_y = mainwindow.can_main.canvasy(y)
-
-                print("stop", (x, y), (canvas_x, canvas_y))
 
                 can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
                 if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - mainwindow.widget_padding * 2 and canvas_y < can_main_height - mainwindow.widget_padding * 2:

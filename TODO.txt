@@ -8,6 +8,10 @@ app
 plugin
 ======
 - Settings
+- Delete
+- Reorder in container
+- Delete connection line
+- Move connection line
 
 InputLabel
 ==========

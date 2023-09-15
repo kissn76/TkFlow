@@ -71,7 +71,7 @@ class Mainwindow(tk.Tk):
         can_main.grid(row=0, column=0, sticky="n, s, w, e")
         can_main.rowconfigure(0, weight=1)
         can_main.columnconfigure(0, weight=1)
-        can_main.bind('<Button-1>', can_main.widget_dnd_select)
+        can_main.bind('<Button-1>', can_main.dnd_start)
         can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(can_main.canvasx(event.x))}, {int(can_main.canvasy(event.y))}"))
 
         self.sidebar = ttk.Frame(self)
@@ -91,8 +91,6 @@ class Mainwindow(tk.Tk):
 
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
-
-        self.floating_widget = None
 
         for theme_name in self.style.theme_names():
             rb = ttk.Radiobutton(self.theme_changer, text=theme_name, value=theme_name, variable=self.selected_theme, command=self.change_theme)

@@ -138,15 +138,13 @@ class Maincanvas(tk.Canvas):
             )
 
 
-# DRAG & DROP metódusok
-    # widget methods
-    def widget_dnd_select(self, move):
-        self.bind('<Motion>', self.widget_dnd_move)
-        self.bind('<ButtonRelease-1>', self.widget_dnd_deselect)
+    def dnd_start(self, move):
+        self.bind('<Motion>', self.dnd_motion)
+        self.bind('<ButtonRelease-1>', self.dnd_stop)
         self.addtag_withtag('selected', tk.CURRENT)
 
 
-    def widget_dnd_move(self, event):
+    def dnd_motion(self, event):
         tags = self.gettags('selected')
         if len(tags) > 0:
             widget_id, widget_function = tags[0].split(':')
@@ -161,11 +159,9 @@ class Maincanvas(tk.Canvas):
                 self.widget_resize(widget_id, mouse_x, mouse_y)
 
 
-    def widget_dnd_deselect(self, event):
+    def dnd_stop(self, event):
         self.dtag('selected')    # removes the 'selected' tag
         self.unbind('<Motion>')
-
-# DRAG & DROP metódusok END
 
 
     def widget_resize(self, widget_id, x, y):
