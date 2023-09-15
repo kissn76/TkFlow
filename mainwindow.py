@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import time
+import plugincontainer
 import plugincontroller
+import pluginbase
 
 
 
@@ -38,14 +39,6 @@ class Mainwindow(tk.Tk):
         self.image_move.thumbnail((16, 16))
         self.image_move = ImageTk.PhotoImage(self.image_move)
         # images end
-
-        self.widget_container = {}  # It contains all widget {widget_id: widget_object}
-        self.plugin_container = {}  # It contains all used plugin {plugin_id: plugin_object}
-        self.widget_counter = 0
-        self.plugin_counter = 0
-
-
-        self.plugin = plugincontroller.Plugincontroller()
 
         menubar = tk.Menu(self)
 
@@ -95,16 +88,13 @@ class Mainwindow(tk.Tk):
 
         self.floating_widget = None
 
-
-        self.plugin_element_counter = 0
-        self.plugin_categories = {}
         self.plugins_load()
 
         self.after(0, self.run)
 
 
     def run(self):
-        for plugin_name, plugin_object in self.plugin_container.items():
+        for plugin_object in pluginbase.get_all().values():
             plugin_object.run()
 
         self.after(100, self.run)
@@ -112,9 +102,11 @@ class Mainwindow(tk.Tk):
 
     # loop through available plugins
     def plugins_load(self):
+        self.plugin_categories = {}
+        self.plugin_element_counter = 0
         # # add available plugin to gui
-        def available_plugin_add(plugin_id):
-            plugin_object = self.plugin.new_object(plugin_id)
+        def available_plugin_add(plugin_name):
+            plugin_object = plugincontroller.new_object(plugin_name)
             for plugin_parent_path in plugin_object.parents:
                 parent_path = ""
                 for parent_element in plugin_parent_path.split('/'):
@@ -142,36 +134,25 @@ class Mainwindow(tk.Tk):
                     tree_master = self.plugin_categories[parent_path]
                 except:
                     pass
-                self.available_plugins.insert(tree_master, 'end', f"plugin:{plugin_id}.{self.plugin_element_counter}", text=plugin_object.name, image=self.image_work)
+                self.available_plugins.insert(tree_master, 'end', f"plugin:{plugin_name}.{self.plugin_element_counter}", text=plugin_object.name, image=self.image_work)
                 self.plugin_element_counter += 1
                 self.available_plugins.bind('<<TreeviewSelect>>', lambda event: self.plugin_dnd_start(event, self.available_plugins.selection()))
                 self.available_plugins.bind('<B1-Motion>', lambda event: self.plugin_dnd_motion(event))
                 self.available_plugins.bind('<ButtonRelease-1>', lambda event: self.plugin_dnd_stop(event, self.available_plugins.selection()))
 
-        for plugin_id in self.plugin.list_plugins():
-            available_plugin_add(plugin_id)
-
-
-    # insert plugin to an existing widget
-    def widget_plugin_insert(self, widget_id, plugin):
-        plugin_id = f"{widget_id}:{plugin}.{self.plugin_counter}"
-        plugin_container = self.widget_container[widget_id]
-        plugin = self.plugin.new_object(plugin, master=plugin_container, id=plugin_id)
-        plugin.pack(anchor="nw", fill=tk.BOTH)
-        self.plugin_container.update({plugin_id: plugin})
-        self.plugin_counter += 1
-
-        return plugin_id
+        for plugin_name in plugincontroller.list_plugins():
+            available_plugin_add(plugin_name)
 
 
     # create new widget
-    def widget_create(self, plugin, x=24, y=24):
+    def widget_create(self, plugin_name, x=24, y=24):
         if x < self.widget_padding:
             x = self.widget_padding
         if y < self.widget_padding:
             y = self.widget_padding
 
-        widget_id = f"widget.{self.widget_counter}"
+        plugin_container = plugincontainer.Plugincontainer(can_main)
+        widget_id = plugin_container.id
 
         # mover
         can_main.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}:move"])
@@ -182,10 +163,8 @@ class Mainwindow(tk.Tk):
         can_main.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}:name"])
 
         # plugin container add
-        plugin_container = ttk.Frame(can_main)
-        self.widget_container.update({widget_id: plugin_container})
         can_main.create_window(0, 0, window=plugin_container, anchor="nw", width=self.widget_width_min - self.widget_padding * 2, tags=f"{widget_id}:plugincontainer")
-        self.widget_plugin_insert(widget_id, plugin)
+        plugin_container.plugin_insert(plugin_name)
 
         # background
         can_main.create_rectangle(0, 0, 0, 0, fill='red', outline='red', tags=[f"{widget_id}:background"])
@@ -207,8 +186,6 @@ class Mainwindow(tk.Tk):
         can_main.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: can_main.config(cursor=""))
         can_main.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
-        self.widget_counter += 1
-
         self.update()
 
         # set position and size of widget's parts
@@ -217,9 +194,10 @@ class Mainwindow(tk.Tk):
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
 
-        for plugin_key, plugin_object in self.plugin_container.items():
-            if plugin_key.startswith(widget_id):
-                plugin_object.datalabels_box_set()
+
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.datalabels_box_set()
+            plugin_object.connect()
 
 
     # set position and size of widget name
@@ -348,7 +326,7 @@ class Mainwindow(tk.Tk):
                         widgets = can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
                         if len(widgets) == 0:
-                            self.widget_create(plugin=plugin_id, x=canvas_x, y=canvas_y)
+                            self.widget_create(plugin_name=plugin_id, x=canvas_x, y=canvas_y)
                         else:
                             widget_ids = set()
                             for id in widgets:
@@ -359,15 +337,15 @@ class Mainwindow(tk.Tk):
 
                             if len(widget_ids) == 1:
                                 target_widget_id = list(widget_ids)[0]
-                                self.widget_plugin_insert(target_widget_id, plugin_id)
+                                plugin_container = plugincontainer.get(target_widget_id)
+                                plugin_container.plugin_insert(plugin_id)
                                 self.update()
                                 self.widget_background_set(widget_id)
                                 self.widget_resizer_set(widget_id)
 
-                                for plugin_key, plugin_object in self.plugin_container.items():
-                                    if plugin_key.startswith(widget_id):
-                                        plugin_object.datalabels_box_set()
-                                        plugin_object.connect()
+                                for plugin_object in plugin_container.plugins_get().values():
+                                    plugin_object.datalabels_box_set()
+                                    plugin_object.connect()
                             else:
                                 print("too many widget are overlapped:", widget_ids)
                     except:
@@ -422,10 +400,10 @@ class Mainwindow(tk.Tk):
 
         self.update()
 
-        for plugin_key, plugin_object in self.plugin_container.items():
-            if plugin_key.startswith(widget_id):
-                plugin_object.datalabels_box_set()
-                plugin_object.connect()
+        plugin_container = plugincontainer.get(widget_id)
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.datalabels_box_set()
+            plugin_object.connect()
 
 
     def widget_resize_height(self, widget_id, y):
@@ -465,10 +443,10 @@ class Mainwindow(tk.Tk):
         self.widget_background_set(widget_id, move=True)
         self.widget_resizer_set(widget_id)
 
-        for plugin_key, plugin_object in self.plugin_container.items():
-            if plugin_key.startswith(widget_id):
-                plugin_object.datalabels_box_set()
-                plugin_object.connect()
+        plugin_container = plugincontainer.get(widget_id)
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.datalabels_box_set()
+            plugin_object.connect()
 
 
     def quit(self):

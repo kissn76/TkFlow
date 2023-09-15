@@ -1,0 +1,14 @@
+app
+===
+- Save project to json
+- Open project from json
+- Settings to/from ini
+- Style
+
+plugin
+======
+- Settings
+
+InputLabel
+==========
+- Dizájn megváltozatása, amikor vonal vonszolás közben fölötte van az egér, aztán vissza

@@ -5,13 +5,41 @@ from PIL import Image, ImageTk
 from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_by_plugin, output_add, output_get, output_get_by_plugin
 
 
+__container = {}
+__counter = 0
+
+
+def get(plugin_id):
+    object = None
+    try:
+        object = __container[plugin_id]
+    except:
+        pass
+    return object
+
+
+def get_all():
+    return __container
+
+
+def add(plugin_id, object):
+    __container.update({plugin_id: object})
+
+
+def counter_get():
+    global __counter
+    ret = __counter
+    __counter += 1
+    return ret
+
+
 
 class PluginBase(ttk.Frame):
-    def __init__(self, master=None, id=None, name=None, parents=[], **kwargs):
+    def __init__(self, master, plugin_name, parent_id, name=None, parents=[], **kwargs):
         super().__init__(master, **kwargs)
         self.parents = parents
         self.name = name
-        self.id = id
+        self.id = f"{parent_id}:{plugin_name}.{counter_get()}"
 
         self.__input_row_counter = 0
         self.__output_row_counter = 0

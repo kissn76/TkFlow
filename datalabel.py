@@ -29,6 +29,8 @@ def input_get_by_plugin(plugin_id):
             objects.append(input_object)
 
     return objects
+
+
 def input_get_by_widget(widget_id):
     objects = []
     for input_key, input_object in __input_container.items():
@@ -192,6 +194,19 @@ class OutputLabel(DataLabel):
         self.lbl_data.bind('<Button-1>', self.dnd_start)
         self.lbl_data.bind('<Button1-Motion>', self.dnd_motion)
         self.lbl_data.bind('<ButtonRelease-1>', self.dnd_stop)
+        self.lbl_data.bind("<Enter>", self.enter)
+        self.lbl_data.bind("<Leave>", self.leave)
+
+        self.gui_style = ttk.Style()
+        self.gui_style.configure('My.TLabel', background='#334353')
+
+
+    def enter(self, event):
+        self.lbl_data.configure(style="My.TLabel")
+
+
+    def leave(self, event):
+        self.lbl_data.configure(style="")
 
 
     def dnd_start(self, event):
