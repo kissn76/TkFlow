@@ -6,6 +6,7 @@ import pluginbase
 import pluginframe
 import maincanvas
 import plugincontainer
+import settingswindow
 
 
 
@@ -97,14 +98,18 @@ class Mainwindow(tk.Tk):
 
 
     def settings(self):
-        dlg = tk.Toplevel(self)
+        dlg = settingswindow.SettingsWindow(self)
+        notebook = ttk.Notebook(dlg)
+        notebook.pack(pady=10, expand=True)
 
-        theme_changer = ttk.LabelFrame(dlg, text='Themes')
+        theme_changer = ttk.LabelFrame(notebook, text='Themes')
         theme_changer.pack()
 
         for theme_name in self.style.theme_names():
             rb = ttk.Radiobutton(theme_changer, text=theme_name, value=theme_name, variable=self.selected_theme, command=self.change_theme)
             rb.pack(expand=True, fill='both')
+
+        notebook.add(theme_changer, text="Themes")
 
         dlg.transient(self)   # dialog window is related to main
         dlg.wait_visibility() # can't grab until window appears, so we wait
