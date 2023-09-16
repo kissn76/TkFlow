@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import json
 import pluginbase
 import pluginframe
 import maincanvas
+import plugincontainer
 
 
 
@@ -48,7 +50,7 @@ class Mainwindow(tk.Tk):
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="New project", command=None)
         filemenu.add_command(label="Open project", command=None)
-        filemenu.add_command(label="Save project", command=None)
+        filemenu.add_command(label="Save project", command=self.save)
         filemenu.add_command(label="Save project as...", command=None)
         filemenu.add_command(label="Close project", command=None)
         filemenu.add_separator()
@@ -97,6 +99,33 @@ class Mainwindow(tk.Tk):
             rb.pack(expand=True, fill='both')
 
         self.after(0, self.run)
+
+
+    def save(self):
+        project = self.to_dict()
+        project_json = json.dumps(project, indent = 4)
+        print(project_json)
+
+
+    def to_dict(self):
+        pcs_boxes = {}
+        pcs_plugins = plugincontainer.widget_plugins_get_all()
+        plugins = pluginbase.get_all_as_dict()
+        for key in plugincontainer.get_all().keys():
+            box = can_main.bbox(f"{key}:move")
+            pcs_boxes.update({key: {"x": box[0], "y": box[1]}})
+
+        project = {
+            "plugins": plugins,
+            "widget_plugins": pcs_plugins,
+            "widget_positions": pcs_boxes
+        }
+
+        # print(plugins)
+        # print(pcs_plugins)
+        # print(pcs_boxes)
+
+        return project
 
 
     def change_theme(self):

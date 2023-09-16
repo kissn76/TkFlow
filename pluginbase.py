@@ -23,6 +23,14 @@ def get_all():
     return __container
 
 
+def get_all_as_dict():
+    ret = {}
+    for obj in __container.values():
+        ret.update(obj.to_dict())
+
+    return ret
+
+
 def add(plugin_id, object):
     __container.update({plugin_id: object})
 
@@ -36,11 +44,11 @@ def counter_get():
 
 
 class PluginBase(ttk.Frame):
-    def __init__(self, master, plugin_name, parent_id, name=None, parents=[], **kwargs):
+    def __init__(self, master, plugin_name, name=None, parents=[], **kwargs):
         super().__init__(master, **kwargs)
         self.parents = parents
         self.name = name
-        self.id = f"{parent_id}:{plugin_name}.{counter_get()}"
+        self.id = f"{plugin_name}.{counter_get()}"
 
         self.__input_row_counter = 0
         self.__output_row_counter = 0
@@ -56,6 +64,19 @@ class PluginBase(ttk.Frame):
         self.__image_setting = ImageTk.PhotoImage(self.__image_setting)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
+
+
+    def to_dict(self):
+        inputs = []
+        for inp in input_get_by_plugin(self.id):
+            inputs.append(inp.to_dict())
+
+        outputs = []
+        for out in output_get_by_plugin(self.id):
+            outputs.append(out.to_dict())
+
+        ret = {self.id: {"input": inputs, "output":outputs}}
+        return ret
 
 
     def settings(self):
@@ -87,7 +108,7 @@ class PluginBase(ttk.Frame):
         result = None
 
         try:
-            result = output_get(input_get(input).text_get()).text_get()
+            result = output_get(input_get(input).value_get()).value_get()
         except:
             pass
 
@@ -107,7 +128,7 @@ class PluginBase(ttk.Frame):
     def output_value_set(self, output, value):
         try:
             output = f"{self.id}:{output}"
-            output_get(output).text_set(text=str(value))
+            output_get(output).value_set(text=str(value))
         except:
             pass
 

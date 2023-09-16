@@ -5,8 +5,8 @@ import pluginbase
 
 
 class Plugin(pluginbase.PluginBase):
-    def __init__(self, master, plugin_name, parent_id, **kwargs):
-        super().__init__(master, plugin_name, parent_id, name="Addition", parents=["Mathematical operations"], **kwargs)
+    def __init__(self, master, plugin_name, **kwargs):
+        super().__init__(master, plugin_name, name="Addition", parents=["Mathematical operations"], **kwargs)
 
         # init input, output
         self.input_init("one", "two")

@@ -1,6 +1,7 @@
 from tkinter import ttk
 from PIL import Image, ImageTk
 import mainwindow
+import plugincontainer
 
 
 
@@ -30,8 +31,8 @@ def input_get_by_plugin(plugin_id):
 
 def input_get_by_widget(widget_id):
     objects = []
-    for input_key, input_object in __input_container.items():
-        if input_key.startswith(widget_id):
+    for plugin_id in plugincontainer.widget_plugins_get(widget_id):
+        for input_object in input_get_by_plugin(plugin_id):
             objects.append(input_object)
 
     return objects
@@ -46,7 +47,7 @@ def input_add(variable_id, object):
 def input_get_by_output(output_variable_id):
     objects = []
     for input_key, input_object in __input_container.items():
-        if input_object.text_get() == output_variable_id:
+        if input_object.value_get() == output_variable_id:
             objects.append(input_object)
 
     return objects
@@ -72,8 +73,8 @@ def output_get_by_plugin(plugin_id):
 
 def output_get_by_widget(widget_id):
     objects = []
-    for output_key, output_object in __output_container.items():
-        if output_key.startswith(widget_id):
+    for plugin_id in plugincontainer.widget_plugins_get(widget_id):
+        for output_object in output_get_by_plugin(plugin_id):
             objects.append(output_object)
 
     return objects
@@ -106,9 +107,15 @@ class DataLabel(ttk.Frame):
         # self.lbl_data.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
 
 
+    def to_dict(self):
+        ret = {self.id: {"value": self.value_get()}}
+        return ret
+
+
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = mainwindow.can_main.bbox(f"{self.id.split(':')[0]}:plugincontainer")
+        widget_id = plugincontainer.widget_id_get(self.id.split(':')[0])
+        plugin_container_box = mainwindow.can_main.bbox(f"{widget_id}:plugincontainer")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -120,11 +127,11 @@ class DataLabel(ttk.Frame):
         self.box = (x1, y1, x2, y2)
 
 
-    def text_set(self, text):
+    def value_set(self, text):
         self.lbl_txt.configure(text=text)
 
 
-    def text_get(self):
+    def value_get(self):
         return self.lbl_txt.cget("text")
 
 
@@ -167,7 +174,7 @@ class InputLabel(DataLabel):
 
 
     def connect(self):
-        start_variable_id = self.text_get()
+        start_variable_id = self.value_get()
         try:
             if bool(self.output_input_line):
                 mainwindow.can_main.delete(self.output_input_line)
@@ -251,7 +258,7 @@ class OutputLabel(DataLabel):
                         input_object_list = input_get_by_widget(target_widget_tag)
                         for input_object in input_object_list:
                             if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
-                                input_object.text_set(self.id)
+                                input_object.value_set(self.id)
                                 input_object.connect()
                                 break
                     else:
