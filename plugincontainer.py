@@ -56,7 +56,6 @@ def widget_id_get(plugin_id):
 
 
 
-
 class Plugincontainer(ttk.Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -65,7 +64,7 @@ class Plugincontainer(ttk.Frame):
 
 
     def plugin_insert(self, plugin_name):
-        plugin_object = plugincontroller.new_object(plugin_name, master=self)
+        plugin_object = plugincontroller.new_object(plugin_name, self.id, master=self)
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
         pluginbase.add(plugin_object.id, plugin_object)
         widget_plugin_insert(self.id, plugin_object.id)

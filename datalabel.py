@@ -1,92 +1,12 @@
 from tkinter import ttk
 from PIL import Image, ImageTk
 import mainwindow
-import plugincontainer
-
-
-
-__input_container = {}
-__output_container = {}
-
-
-# get input objects by variable_id (widget_id:plugin_id:variable_id)
-def input_get(input_variable_id):
-    object = None
-    try:
-        object = __input_container[input_variable_id]
-    except:
-        pass
-    return object
-
-
-# get input objects in a list filtered by plugin_id (widget_id:plugin_id)
-def input_get_by_plugin(plugin_id):
-    objects = []
-    for input_key, input_object in __input_container.items():
-        if input_key.startswith(plugin_id):
-            objects.append(input_object)
-
-    return objects
-
-
-def input_get_by_widget(widget_id):
-    objects = []
-    for plugin_id in plugincontainer.widget_plugins_get(widget_id):
-        for input_object in input_get_by_plugin(plugin_id):
-            objects.append(input_object)
-
-    return objects
-
-
-# add input object
-def input_add(variable_id, object):
-    __input_container.update({variable_id: object})
-
-
-# get input objects in a list filtered by object connect to output object variable
-def input_get_by_output(output_variable_id):
-    objects = []
-    for input_key, input_object in __input_container.items():
-        if input_object.value_get() == output_variable_id:
-            objects.append(input_object)
-
-    return objects
-
-
-def output_get(name):
-    object = None
-    try:
-        object = __output_container[name]
-    except:
-        pass
-    return object
-
-
-def output_get_by_plugin(plugin_id):
-    objects = []
-    for output_key, output_object in __output_container.items():
-        if output_key.startswith(plugin_id):
-            objects.append(output_object)
-
-    return objects
-
-
-def output_get_by_widget(widget_id):
-    objects = []
-    for plugin_id in plugincontainer.widget_plugins_get(widget_id):
-        for output_object in output_get_by_plugin(plugin_id):
-            objects.append(output_object)
-
-    return objects
-
-
-def output_add(name, object):
-    __output_container.update({name: object})
+import pluginbase
 
 
 
 class DataLabel(ttk.Frame):
-    def __init__(self, master, id=None):
+    def __init__(self, master, id, plugin_container_id):
         super().__init__(master)
         MAX_SIZE = (12, 12)
         datatype_any = Image.open(f"./resources/icon/anydata.png")
@@ -97,6 +17,7 @@ class DataLabel(ttk.Frame):
         self.image_data = ImageTk.PhotoImage(data)
 
         self.id = id
+        self.plugin_container_id = plugin_container_id
         self.box = ()   # box in canvas
 
         self.lbl_txt = ttk.Label(self, text="")
@@ -114,8 +35,7 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        widget_id = plugincontainer.widget_id_get(self.id.split(':')[0])
-        plugin_container_box = mainwindow.can_main.bbox(f"{widget_id}:plugincontainer")
+        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}:plugincontainer")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -164,8 +84,8 @@ class DataLabel(ttk.Frame):
 
 
 class InputLabel(DataLabel):
-    def __init__(self, master, id=None):
-        super().__init__(master, id=id)
+    def __init__(self, master, id, plugin_container_id):
+        super().__init__(master, id, plugin_container_id)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
 
         # self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
@@ -175,21 +95,22 @@ class InputLabel(DataLabel):
 
     def connect(self):
         start_variable_id = self.value_get()
-        try:
+        if bool(start_variable_id):
             if bool(self.output_input_line):
                 mainwindow.can_main.delete(self.output_input_line)
             self.output_input_line = f"{start_variable_id}-{self.id}"
-            output_object = output_get(start_variable_id)
 
-            super().connect(output_object, self, self.output_input_line)
-        except:
-            pass
+            for plugin_object in pluginbase.get_all().values():
+                for output_object in plugin_object.output_container_get().values():
+                    if output_object.id == start_variable_id:
+                        super().connect(output_object, self, self.output_input_line)
+                        return
 
 
 
 class OutputLabel(DataLabel):
-    def __init__(self, master, id=None):
-        super().__init__(master, id=id)
+    def __init__(self, master, id, plugin_container_id):
+        super().__init__(master, id, plugin_container_id)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
 
         # self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
@@ -255,7 +176,11 @@ class OutputLabel(DataLabel):
 
                     if len(widget_tags) == 1:
                         target_widget_tag = list(widget_tags)[0].split(':')[0]
-                        input_object_list = input_get_by_widget(target_widget_tag)
+                        input_object_list = []
+                        for plugin_object in pluginbase.get_all().values():
+                            for input_object in plugin_object.input_container_get().values():
+                                if input_object.plugin_container_id == target_widget_tag:
+                                    input_object_list.append(input_object)
                         for input_object in input_object_list:
                             if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
                                 input_object.value_set(self.id)
@@ -269,12 +194,9 @@ class OutputLabel(DataLabel):
 
 
     def connect(self):
-        start_variable_id = self.id
-        try:
-            for input_object in input_get_by_output(start_variable_id):
-                line_id = f"{start_variable_id}-{input_object.id}"
-                mainwindow.can_main.delete(line_id)
-
-                super().connect(self, input_object, line_id)
-        except Exception as e:
-            print(e)
+        for plugin_object in pluginbase.get_all().values():
+            for input_object in plugin_object.input_container_get().values():
+                if input_object.value_get() == self.id:
+                    line_id = f"{self.id}-{input_object.id}"
+                    mainwindow.can_main.delete(line_id)
+                    super().connect(self, input_object, line_id)

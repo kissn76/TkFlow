@@ -18,7 +18,7 @@ class Pluginframe(ttk.Treeview):
         self.plugin_element_counter = 0
         # # add available plugin to gui
         def add(plugin_name):
-            plugin_object = plugincontroller.new_object(plugin_name)
+            plugin_object = plugincontroller.new_object(plugin_name, None)
             for plugin_parent_path in plugin_object.parents:
                 parent_path = ""
                 for parent_element in plugin_parent_path.split('/'):

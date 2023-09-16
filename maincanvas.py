@@ -63,7 +63,6 @@ class Maincanvas(tk.Canvas):
 
         for plugin_object in plugin_container.plugins_get().values():
             plugin_object.datalabels_box_set()
-            plugin_object.connect()
 
 
     # set position and size of widget name

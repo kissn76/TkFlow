@@ -39,6 +39,7 @@ class Mainwindow(tk.Tk):
         self.title("TkFlow")
         self.geometry("1200x400")
         self.protocol("WM_DELETE_WINDOW", self.quit)
+        self.attributes("-alpha", 0.6)
         self.style = ttk.Style(self)
 
         image_move = ImageTk.PhotoImage(image_move)
@@ -54,7 +55,7 @@ class Mainwindow(tk.Tk):
         filemenu.add_command(label="Save project as...", command=None)
         filemenu.add_command(label="Close project", command=None)
         filemenu.add_separator()
-        filemenu.add_command(label="Settings", command=None)
+        filemenu.add_command(label="Settings", command=self.settings)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=filemenu)
@@ -79,9 +80,7 @@ class Mainwindow(tk.Tk):
         self.sidebar = ttk.Frame(self)
         self.available_plugins = pluginframe.Pluginframe(self.sidebar)
         self.selected_theme = tk.StringVar()
-        self.theme_changer = ttk.LabelFrame(self.sidebar, text='Themes')
         self.available_plugins.pack(fill=tk.BOTH, expand=True)
-        self.theme_changer.pack()
 
         self.statusbar = ttk.Label(self, text="Statusbar")
 
@@ -94,11 +93,23 @@ class Mainwindow(tk.Tk):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
+        self.after(0, self.run)
+
+
+    def settings(self):
+        dlg = tk.Toplevel(self)
+
+        theme_changer = ttk.LabelFrame(dlg, text='Themes')
+        theme_changer.pack()
+
         for theme_name in self.style.theme_names():
-            rb = ttk.Radiobutton(self.theme_changer, text=theme_name, value=theme_name, variable=self.selected_theme, command=self.change_theme)
+            rb = ttk.Radiobutton(theme_changer, text=theme_name, value=theme_name, variable=self.selected_theme, command=self.change_theme)
             rb.pack(expand=True, fill='both')
 
-        self.after(0, self.run)
+        dlg.transient(self)   # dialog window is related to main
+        dlg.wait_visibility() # can't grab until window appears, so we wait
+        dlg.grab_set()        # ensure all input goes to our window
+        dlg.wait_window()
 
 
     def save(self):

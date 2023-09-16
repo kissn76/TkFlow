@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.simpledialog import Dialog
 from PIL import Image, ImageTk
-from datalabel import InputLabel, OutputLabel, input_add, input_get, input_get_by_plugin, output_add, output_get, output_get_by_plugin
+from datalabel import InputLabel, OutputLabel
 
 
 
@@ -44,11 +44,15 @@ def counter_get():
 
 
 class PluginBase(ttk.Frame):
-    def __init__(self, master, plugin_name, name=None, parents=[], **kwargs):
+    def __init__(self, master, plugin_name, plugin_container_id, name=None, parents=[], **kwargs):
         super().__init__(master, **kwargs)
         self.parents = parents
         self.name = name
         self.id = f"{plugin_name}.{counter_get()}"
+        self.plugin_container_id = plugin_container_id
+
+        self.__input_container = {}
+        self.__output_container = {}
 
         self.__input_row_counter = 0
         self.__output_row_counter = 0
@@ -67,15 +71,15 @@ class PluginBase(ttk.Frame):
 
 
     def to_dict(self):
-        inputs = []
-        for inp in input_get_by_plugin(self.id):
-            inputs.append(inp.to_dict())
+        inputs = {}
+        for input_object in self.__input_container.values():
+            inputs.update(input_object.to_dict())
 
-        outputs = []
-        for out in output_get_by_plugin(self.id):
-            outputs.append(out.to_dict())
+        outputs = {}
+        for output_object in self.__output_container.values():
+            outputs.update(output_object.to_dict())
 
-        ret = {self.id: {"input": inputs, "output":outputs}}
+        ret = {self.id: {"inputs": inputs, "outputs": outputs}}
         return ret
 
 
@@ -96,60 +100,62 @@ class PluginBase(ttk.Frame):
 
     def input_init(self, *args):
         for var_name in args:
-            input = f"{self.id}:{var_name}"
-            input_add(input, InputLabel(self, id=input))
-            input_get(input).grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
+            input_id = f"{self.id}:{var_name}"
+            self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_container_id=self.plugin_container_id)})
+            self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
             self.__input_row_counter += 1
 
 
     # get output value that represented by input
     def input_value_get(self, input):
-        input = f"{self.id}:{input}"
+        input_id = f"{self.id}:{input}"
         result = None
-
-        try:
-            result = output_get(input_get(input).value_get()).value_get()
-        except:
-            pass
-
+        output_id = self.__input_container[input_id].value_get()
+        if bool(output_id):
+            plugin_id = output_id.split(':')[0]
+            plugin_object = get(plugin_id)
+            result = plugin_object.output_value_get(output_id).value_get()
         return result
+
+
+    def input_container_get(self):
+        return self.__input_container
 
 
     def output_init(self, *args):
         for var_name in args:
-            output = f"{self.id}:{var_name}"
-            output_object = OutputLabel(self, id=output)
-            output_object.grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
-            # output_object.bind('<Double-Button-1>', self.settings)
-            output_add(output, output_object)
+            output_id = f"{self.id}:{var_name}"
+            self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_container_id=self.plugin_container_id)})
+            self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
             self.__output_row_counter += 1
 
 
+    def output_value_get(self, output):
+        return self.__output_container[output]
+
+
     def output_value_set(self, output, value):
-        try:
-            output = f"{self.id}:{output}"
-            output_get(output).value_set(text=str(value))
-        except:
-            pass
+        output_id = f"{self.id}:{output}"
+        self.__output_container[output_id].value_set(text=str(value))
+
+
+    def output_container_get(self):
+        return self.__output_container
 
 
     def connect(self):
-        input_container = input_get_by_plugin(self.id)
-        for input_object in input_container:
+        for input_object in self.__input_container.values():
             input_object.connect()
 
-        output_container = output_get_by_plugin(self.id)
-        for output_object in output_container:
+        for output_object in self.__output_container.values():
             output_object.connect()
 
 
     def datalabels_box_set(self):
-        input_container = input_get_by_plugin(self.id)
-        for input_object in input_container:
+        for input_object in self.__input_container.values():
             input_object.box_set()
 
-        output_container = output_get_by_plugin(self.id)
-        for output_object in output_container:
+        for output_object in self.__output_container.values():
             output_object.box_set()
 
 

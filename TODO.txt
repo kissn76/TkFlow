@@ -16,3 +16,6 @@ plugin
 InputLabel
 ==========
 - Dizájn megváltozatása, amikor vonal vonszolás közben fölötte van az egér, aztán vissza
+- Ráklikkelek:
+    - Ha van hozzá csatlakoztatva bemenet, akkor azt "leakasztja", és átrakhatom máshova
+    - Ha nincs bemenet, akkor húzok egy vonalat egy bemenetig
