@@ -32,11 +32,14 @@ class Maincanvas(tk.Canvas):
         self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}:name"])
 
         # plugin container add
+        ww = style.widget_resizer_width
+        if not bool(style.widget_width_resizer):
+            ww = 0
         self.create_window(
                 0, 0,
                 window=plugin_container,
                 anchor="nw",
-                width=style.widget_width_min - style.widget_padding * 2,
+                width=style.widget_width_min - style.widget_padding * 2 - ww,
                 tags=f"{widget_id}:plugincontainer"
             )
         plugin_container.plugin_insert(plugin_name)
@@ -46,7 +49,6 @@ class Maincanvas(tk.Canvas):
         self.tag_lower(f"{widget_id}:background", f"{widget_id}:move")
 
         # widget resizer
-        print(style.widget_resizer_width)
         if style.widget_resizer_width > 0:
             # width resizer line
             if bool(style.widget_width_resizer):
@@ -86,7 +88,11 @@ class Maincanvas(tk.Canvas):
                 self.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: self.config(cursor=""))
                 self.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
-        self.widget_reset(widget_id)
+        self.update()
+        self.widget_name_set(widget_id)
+        self.widget_plugin_container_set(widget_id)
+        self.widget_background_set(widget_id)
+        self.widget_resizer_set(widget_id)
 
 
     def widget_reset(self, widget_id:str) -> None:
@@ -131,41 +137,15 @@ class Maincanvas(tk.Canvas):
 
 
     # set position and size of background
-    def widget_background_set(self, widget_id, move=False, right_side=None, bottom_side=None):
+    def widget_background_set(self, widget_id):
         move_box = self.bbox(f"{widget_id}:move")
-        background_box = self.bbox(f"{widget_id}:background")
-
-        outline = 1
-        if self.itemcget(f"{widget_id}:background", "outline") == "":
-            outline = 0
-
-        background_box_width = background_box[2] - background_box[0] - outline * 2
-        background_box_height = background_box[3] - background_box[1] - outline * 2
-
-        if not bool(move):
-            plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
-
-            if not right_side is None:
-                background_box_width = right_side - background_box[0]
-
-            if not bottom_side is None:
-                background_box_height = bottom_side - background_box[1]
-
-            if background_box_width < style.widget_width_min:
-                background_box_width = style.widget_width_min
-
-            if background_box_height < style.widget_height_min:
-                background_box_height = style.widget_height_min
-            if background_box_height < plugin_container_box[3] - move_box[1] - outline * 2 + style.widget_padding * 2:
-                background_box_height = plugin_container_box[3] - move_box[1] - outline * 2 + style.widget_padding * 2
+        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
 
         self.coords(
                 f"{widget_id}:background",
                 move_box[0] - style.widget_padding, move_box[1] - style.widget_padding,
-                move_box[0] - style.widget_padding + background_box_width, move_box[1] - style.widget_padding + background_box_height,
+                plugin_container_box[2] + style.widget_padding , plugin_container_box[3] + style.widget_padding
             )
-
-        return background_box_width, background_box_height
 
 
     def widget_resizer_set(self, widget_id):
@@ -241,32 +221,30 @@ class Maincanvas(tk.Canvas):
         self.widget_resize_height(widget_id, y)
 
 
-    def widget_resize_width(self, widget_id, x = None, canvasx = None):
-        canvas_x = None
+    def widget_resize_width(self, widget_id, x):
+        if x > self.winfo_width():
+            self.xview_scroll(1, 'units')
+        if x < 1:
+            self.xview_scroll(-1, 'units')
 
-        if not x is None:
-            if x > self.winfo_width():
-                self.xview_scroll(1, 'units')
-            if x < 1:
-                self.xview_scroll(-1, 'units')
-            canvas_x = self.canvasx(x)
+        canvas_x = self.canvasx(x)
+        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
+        plugin_container_width = canvas_x - plugin_container_box[0] - style.widget_padding * 2
 
-        if not canvasx is None:
-            canvas_x = canvasx
+        ww = style.widget_resizer_width
+        if not bool(style.widget_width_resizer):
+            ww = 0
+        if plugin_container_width < style.widget_width_min - style.widget_padding * 2 - ww:
+            plugin_container_width = style.widget_width_min - style.widget_padding * 2 - ww
 
-        if not canvas_x is None:
-            bg_w, _ = self.widget_background_set(widget_id, right_side=canvas_x)
+        self.itemconfigure(f"{widget_id}:plugincontainer", width=plugin_container_width)
+        self.widget_background_set(widget_id)
+        self.widget_resizer_set(widget_id)
 
-            self.itemconfigure(f"{widget_id}:plugincontainer", width=bg_w - style.widget_padding * 2)
-
-            self.widget_resizer_set(widget_id)
-
-            self.update()
-
-            plugin_container = plugincontainer.get(widget_id)
-            for plugin_object in plugin_container.plugins_get().values():
-                plugin_object.datalabels_box_set()
-                plugin_object.connect()
+        plugin_container = plugincontainer.get(widget_id)
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.datalabels_box_set()
+            plugin_object.connect()
 
 
     def widget_reset_width(self, widget_id):
@@ -276,29 +254,29 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set()
 
 
-    def widget_resize_height(self, widget_id, y = None, canvasy = None):
-        canvas_y = None
+    def widget_resize_height(self, widget_id, y):
+        if y > self.winfo_height():
+            self.yview_scroll(1, 'units')
+        if y < 1:
+            self.yview_scroll(-1, 'units')
 
-        if not y is None:
-            if y > self.winfo_height():
-                self.yview_scroll(1, 'units')
-            if y < 1:
-                self.yview_scroll(-1, 'units')
-            canvas_y = self.canvasy(y)
+        canvas_y = self.canvasy(y)
+        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
+        plugin_container_height = canvas_y - plugin_container_box[1] - style.widget_padding * 2
 
-        if not canvasy is None:
-            canvas_y = canvasy
+        wh = style.widget_resizer_width
+        if not bool(style.widget_height_resizer):
+            wh = 0
+        if plugin_container_height < style.widget_height_min - style.widget_padding * 2 - wh:
+            plugin_container_height = style.widget_height_min - style.widget_padding * 2 - wh
 
-        if not canvas_y is None:
-            self.widget_background_set(widget_id, bottom_side=canvas_y)
-            self.widget_resizer_set(widget_id)
-
-            self.update()
+        plugin_container = plugincontainer.get(widget_id)
+        plugin_container.configure(height=plugin_container_height)
+        self.widget_background_set(widget_id)
+        self.widget_resizer_set(widget_id)
 
 
     def widget_move(self, widget_id, x, y):
-        canvas_x = self.canvasx(x)
-        canvas_y = self.canvasy(y)
         if x > self.winfo_width():
             self.xview_scroll(1, 'units')
         if x < 1:
@@ -307,6 +285,9 @@ class Maincanvas(tk.Canvas):
             self.yview_scroll(1, 'units')
         if y < 1:
             self.yview_scroll(-1, 'units')
+
+        canvas_x = self.canvasx(x)
+        canvas_y = self.canvasy(y)
 
         if canvas_x < style.widget_padding:
             canvas_x = style.widget_padding
@@ -317,7 +298,7 @@ class Maincanvas(tk.Canvas):
 
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
-        self.widget_background_set(widget_id, move=True)
+        self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
 
         plugin_container = plugincontainer.get(widget_id)

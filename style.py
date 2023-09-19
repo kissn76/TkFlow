@@ -13,7 +13,7 @@ widget_resizer_color = "red"
 widget_resizer_wh_color = "green"
 widget_padding = 12
 widget_background_color = "yellow"
-widget_background_outline_color = "green"    # szín, 1 pixeles keret a background körül, "" kikapcsolja (üres string)
+widget_background_outline_color = ""    # szín, 1 pixeles keret a background körül, "" kikapcsolja (üres string)
 # widget settings end
 
 # images
