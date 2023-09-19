@@ -2,19 +2,15 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import mainwindow
 import pluginbase
+import style
 
 
 
 class DataLabel(ttk.Frame):
     def __init__(self, master, id, plugin_container_id):
         super().__init__(master)
-        MAX_SIZE = (12, 12)
-        datatype_any = Image.open(f"./resources/icon/anydata.png")
-        data = Image.open(f"./resources/icon/arrow_right.png")
-        datatype_any.thumbnail(MAX_SIZE)
-        data.thumbnail(MAX_SIZE)
-        self.image_anydata = ImageTk.PhotoImage(datatype_any)
-        self.image_data = ImageTk.PhotoImage(data)
+        self.image_anydata = ImageTk.PhotoImage(style.datatype_any)
+        self.image_data = ImageTk.PhotoImage(style.data)
 
         self.id = id
         self.plugin_container_id = plugin_container_id

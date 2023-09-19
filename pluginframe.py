@@ -1,14 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import plugincontroller
 import plugincontainer
 import mainwindow
+import style
 
 
 
 class Pluginframe(ttk.Treeview):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.image_directory = ImageTk.PhotoImage(style.image_directory)
+        self.image_work = ImageTk.PhotoImage(style.image_work)
         self.floating_widget = None
         self.load()
 
@@ -16,7 +20,8 @@ class Pluginframe(ttk.Treeview):
     def load(self):
         self.plugin_categories = {}
         self.plugin_element_counter = 0
-        # # add available plugin to gui
+
+        # add available plugin to gui
         def add(plugin_name):
             plugin_object = plugincontroller.new_object(plugin_name, None)
             for plugin_parent_path in plugin_object.parents:
@@ -36,7 +41,7 @@ class Pluginframe(ttk.Treeview):
                             tree_open = False
                         except:
                             pass
-                        self.insert(tree_master, 'end', self.plugin_categories[parent_path_new], text=parent_path_new.split('/')[-1], image=mainwindow.image_directory, open=tree_open)
+                        self.insert(tree_master, 'end', self.plugin_categories[parent_path_new], text=parent_path_new.split('/')[-1], image=self.image_directory, open=tree_open)
                         self.plugin_element_counter += 1
 
                     parent_path = parent_path_new
@@ -46,7 +51,7 @@ class Pluginframe(ttk.Treeview):
                     tree_master = self.plugin_categories[parent_path]
                 except:
                     pass
-                self.insert(tree_master, 'end', f"plugin:{plugin_name}.{self.plugin_element_counter}", text=plugin_object.name, image=mainwindow.image_work)
+                self.insert(tree_master, 'end', f"plugin:{plugin_name}.{self.plugin_element_counter}", text=plugin_object.name, image=self.image_work)
                 self.plugin_element_counter += 1
                 self.bind('<<TreeviewSelect>>', lambda event: self.dnd_start(event, self.selection()))
                 self.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
@@ -80,7 +85,7 @@ class Pluginframe(ttk.Treeview):
 
             can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
 
-            if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - mainwindow.widget_padding * 2 or canvas_y >= can_main_height - mainwindow.widget_padding * 2:
+            if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - style.widget_padding * 2 or canvas_y >= can_main_height - style.widget_padding * 2:
                 self.config(cursor="X_cursor")
             else:
                 self.config(cursor="")
@@ -105,7 +110,7 @@ class Pluginframe(ttk.Treeview):
                 canvas_y = mainwindow.can_main.canvasy(y)
 
                 can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
-                if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - mainwindow.widget_padding * 2 and canvas_y < can_main_height - mainwindow.widget_padding * 2:
+                if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
                     try:
                         widgets = mainwindow.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 

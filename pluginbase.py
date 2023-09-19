@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.simpledialog import Dialog
 from PIL import Image, ImageTk
 from datalabel import InputLabel, OutputLabel
+import style
 
 
 
@@ -63,9 +64,7 @@ class PluginBase(ttk.Frame):
         self.__gridcolumn_content = 2
         self.__gridcolumn_output = 3
 
-        self.__image_setting = Image.open("./resources/icon/setting.png")
-        self.__image_setting.thumbnail((16, 16))
-        self.__image_setting = ImageTk.PhotoImage(self.__image_setting)
+        self.__image_setting = ImageTk.PhotoImage(style.image_setting)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
@@ -157,40 +156,3 @@ class PluginBase(ttk.Frame):
 
         for output_object in self.__output_container.values():
             output_object.box_set()
-
-
-
-class SettingDialog(Dialog):
-    def __init__(self, parent, title, name):
-        self.plugin_name = name
-        super().__init__(parent, title)
-
-
-    def body(self, frame):
-        self.lbl_plugin_name = ttk.Label(frame, width=25, text="Plugin name")
-        self.lbl_plugin_name.pack()
-        self.ent_plugin_name = ttk.Entry(frame, width=25)
-        self.ent_plugin_name.pack()
-        self.ent_plugin_name.insert(0, self.plugin_name)
-
-        return frame
-
-
-    def ok_pressed(self):
-        # print("ok")
-        self.plugin_name = self.ent_plugin_name.get()
-        self.destroy()
-
-
-    def cancel_pressed(self):
-        # print("cancel")
-        self.destroy()
-
-
-    def buttonbox(self):
-        self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
-        self.ok_button.pack(side="left")
-        cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
-        cancel_button.pack(side="right")
-        self.bind("<Return>", lambda event: self.ok_pressed())
-        self.bind("<Escape>", lambda event: self.cancel_pressed())
