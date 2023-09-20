@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter.colorchooser import askcolor
 from PIL import Image, ImageTk
 import platform
 import json
@@ -91,16 +92,20 @@ class Mainwindow(tk.Tk):
 
     def settings(self):
         def set_settings():
-            global widget_width_min, widget_height_min, widget_resizer_width, widget_padding
-            widget_width_min = int(var_width_min.get())
-            widget_height_min = int(var_height_min.get())
-            widget_resizer_width = int(var_resizer_width.get())
-            widget_padding = int(var_padding.get())
+            style.widget_width_min = var_width_min.get()
+            style.widget_height_min = var_height_min.get()
+            style.widget_resizer_width = var_resizer_width.get()
+            style.widget_padding = var_padding.get()
 
             for plugincont in plugincontainer.get_all().values():
                 can_main.widget_reset(plugincont.id)
 
             dlg.destroy()
+
+
+        def change_color():
+            colors = askcolor(title="Color Chooser")
+            return colors[1]
 
 
         dlg = settingswindow.SettingsWindow(self)
@@ -122,20 +127,59 @@ class Mainwindow(tk.Tk):
             rb = ttk.Radiobutton(theme_changer, text=theme_name, value=theme_name, variable=self.selected_theme, command=self.change_theme)
             rb.pack(expand=True, fill='both')
 
+        """
+        widget_resizer_wh_color = "green"
+        widget_background_color = "yellow"
+        widget_background_outline_color = "blue"
+        """
+
         widget_settings = ttk.LabelFrame(appearance, text='Widget Settings')
         widget_settings.pack(fill=tk.X)
-        var_width_min = tk.StringVar(value=widget_width_min)
-        var_height_min = tk.StringVar(value=widget_height_min)
-        var_resizer_width = tk.StringVar(value=widget_resizer_width)
-        var_padding = tk.StringVar(value=widget_padding)
-        ttk.Label(widget_settings, text="Width min").grid(row=0, column=0)
-        ttk.Entry(widget_settings, textvariable=var_width_min).grid(row=0, column=1, sticky="w, e")
-        ttk.Label(widget_settings, text="Height min").grid(row=1, column=0)
-        ttk.Entry(widget_settings, textvariable=var_height_min).grid(row=1, column=1, sticky="w, e")
-        ttk.Label(widget_settings, text="Resizer width").grid(row=2, column=0)
-        ttk.Entry(widget_settings, textvariable=var_resizer_width).grid(row=2, column=1, sticky="w, e")
-        ttk.Label(widget_settings, text="Padding").grid(row=3, column=0)
-        ttk.Entry(widget_settings, textvariable=var_padding).grid(row=3, column=1, sticky="w, e")
+        var_width_min = tk.IntVar(value=style.widget_width_min)
+        var_height_min = tk.IntVar(value=style.widget_height_min)
+        var_resizer_width = tk.IntVar(value=style.widget_resizer_width)
+        widget_resizer_wh_width_multiplier = tk.IntVar(value=style.widget_resizer_wh_width_multiplier)
+        var_padding = tk.IntVar(value=style.widget_padding)
+        widget_width_resizer = tk.BooleanVar(value=style.widget_width_resizer)
+        widget_height_resizer = tk.BooleanVar(value=style.widget_height_resizer)
+        widget_width_height_resizer = tk.BooleanVar(value=style.widget_width_height_resizer)
+        row = 0
+        ttk.Label(widget_settings, text="Width min").grid(row=row, column=0)
+        ttk.Entry(widget_settings, textvariable=var_width_min).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Height min").grid(row=row, column=0)
+        ttk.Entry(widget_settings, textvariable=var_height_min).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Resizer width").grid(row=row, column=0)
+        ttk.Entry(widget_settings, textvariable=var_resizer_width).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Width resizer enabled").grid(row=row, column=0)
+        ttk.Checkbutton(widget_settings, variable=widget_width_resizer, onvalue=True, offvalue=False).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Height resizer enabled").grid(row=row, column=0)
+        ttk.Checkbutton(widget_settings, variable=widget_height_resizer, onvalue=True, offvalue=False).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Width & height resizer enabled").grid(row=row, column=0)
+        ttk.Checkbutton(widget_settings, variable=widget_width_height_resizer, onvalue=True, offvalue=False).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Width & height resizer width multiplier").grid(row=row, column=0)
+        ttk.Entry(widget_settings, textvariable=widget_resizer_wh_width_multiplier).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Padding").grid(row=row, column=0)
+        ttk.Entry(widget_settings, textvariable=var_padding).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Resizer color").grid(row=row, column=0)
+        ttk.Button(widget_settings, text='Select a Color', command=change_color).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Width & height resizer color").grid(row=row, column=0)
+        ttk.Button(widget_settings, text='Select a Color', command=change_color).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Widget background color").grid(row=row, column=0)
+        ttk.Button(widget_settings, text='Select a Color', command=change_color).grid(row=row, column=1, sticky="w, e")
+        row += 1
+        ttk.Label(widget_settings, text="Widget background outline color").grid(row=row, column=0)
+        ttk.Button(widget_settings, text='Select a Color', command=change_color).grid(row=row, column=1, sticky="w, e")
+        row += 1
         widget_settings.columnconfigure(1, weight=1)
 
         notebook.add(appearance, text="Appearance")

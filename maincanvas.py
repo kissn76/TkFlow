@@ -101,22 +101,13 @@ class Maincanvas(tk.Canvas):
 
         Args:
         widget_id (str): Widget id that will reset
-
-        Returns:
-        int: The product of a and b.
         """
         self.update()
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
-        self.widget_background_set(widget_id)
+        self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
         self.update()
-
-        resizerwh_box = self.bbox(f"{widget_id}:resize_wh")
-        canvasx = resizerwh_box[2]
-        canvasy = resizerwh_box[3]
-        self.widget_resize_width(widget_id, 0, canvasx)
-        self.widget_resize_height(widget_id, 0, canvasy)
 
         plugin_container = plugincontainer.get(widget_id)
         for plugin_object in plugin_container.plugins_get().values():
