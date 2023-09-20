@@ -5,15 +5,16 @@ from PIL import Image, ImageTk
 # widget settings
 widget_width_min = 200
 widget_height_min = 0
-widget_resizer_width = 6    # szám, páros szám
+widget_resizer_width = 2    # szám, páros szám
 widget_width_resizer = True
 widget_height_resizer = True
+widget_width_height_resizer = False
 widget_resizer_wh_width_multiplier = 2
 widget_resizer_color = "red"
 widget_resizer_wh_color = "green"
-widget_padding = 12
+widget_padding = 6
 widget_background_color = "yellow"
-widget_background_outline_color = ""    # szín, 1 pixeles keret a background körül, "" kikapcsolja (üres string)
+widget_background_outline_color = "blue"    # szín, 1 pixeles keret a background körül, "" kikapcsolja (üres string)
 # widget settings end
 
 # images

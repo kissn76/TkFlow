@@ -129,7 +129,7 @@ class Pluginframe(ttk.Treeview):
                                 plugin_container = plugincontainer.get(target_widget_id)
                                 plugin_container.plugin_insert(plugin_id)
                                 self.winfo_toplevel().update()
-                                mainwindow.can_main.widget_background_set(widget_id)
+                                mainwindow.can_main.widget_background_set(widget_id, keep_height=True)
                                 mainwindow.can_main.widget_resizer_set(widget_id)
 
                                 for plugin_object in plugin_container.plugins_get().values():
