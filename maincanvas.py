@@ -94,6 +94,10 @@ class Maincanvas(tk.Canvas):
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
 
+        plugin_container = plugincontainer.get(widget_id)
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.datalabels_box_set()
+
 
     def widget_reset(self, widget_id:str) -> None:
         """
@@ -245,6 +249,7 @@ class Maincanvas(tk.Canvas):
         self.itemconfigure(f"{widget_id}:plugincontainer", width=plugin_container_width)
         self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
+        self.update()
 
         plugin_container = plugincontainer.get(widget_id)
         for plugin_object in plugin_container.plugins_get().values():
