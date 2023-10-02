@@ -69,13 +69,15 @@ class DataLabel(ttk.Frame):
         mid_1_x = end_x - offset
         mid_1_y = end_y
 
-        mainwindow.can_main.create_line(
+        line_id = mainwindow.can_main.create_line(
                 start_x, start_y,
                 mid_0_x, mid_0_y,
                 mid_1_x, mid_1_y,
                 end_x, end_y,
                 smooth=True, tags=tags
             )
+
+        mainwindow.can_main.tag_bind(line_id, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(line_id, fill="red"))
 
 
 
