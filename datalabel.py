@@ -59,25 +59,7 @@ class DataLabel(ttk.Frame):
         end_y = input_object.box[1] + ((input_object.box[3] - input_object.box[1]) / 2)
 
         # count and draw line
-        self.draw_connect(start_x, start_y, end_x, end_y, tags)
-
-
-    def draw_connect(self, start_x, start_y, end_x, end_y, tags):
-        offset = (end_x - start_x) / 3
-        mid_0_x = start_x + offset
-        mid_0_y = start_y
-        mid_1_x = end_x - offset
-        mid_1_y = end_y
-
-        line_id = mainwindow.can_main.create_line(
-                start_x, start_y,
-                mid_0_x, mid_0_y,
-                mid_1_x, mid_1_y,
-                end_x, end_y,
-                smooth=True, tags=tags
-            )
-
-        mainwindow.can_main.tag_bind(line_id, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(line_id, fill="red"))
+        mainwindow.can_main.connect_line_create(start_x, start_y, end_x, end_y, tags)
 
 
 
@@ -88,21 +70,19 @@ class InputLabel(DataLabel):
 
         # self.lbl_data_type.grid(row=0, column=1, sticky="n, s, w, e")
 
-        self.output_input_line = None
-
 
     def connect(self):
+        line_id = f"{self.id}:connect_line"
         start_variable_id = self.value_get()
         if bool(start_variable_id):
-            if bool(self.output_input_line):
-                mainwindow.can_main.delete(self.output_input_line)
-            self.output_input_line = f"{start_variable_id}-{self.id}"
 
             for plugin_object in pluginbase.get_all().values():
                 for output_object in plugin_object.output_container_get().values():
                     if output_object.id == start_variable_id:
-                        super().connect(output_object, self, self.output_input_line)
+                        super().connect(output_object, self, line_id)
                         return
+        else:
+            mainwindow.can_main.connect_line_delete(line_id)
 
 
 
@@ -145,12 +125,11 @@ class OutputLabel(DataLabel):
         start_x = self.box[2]
         start_y = self.box[1] + ((self.box[3] - self.box[1]) / 2)
 
-        mainwindow.can_main.delete("drawing")
-        self.draw_connect(start_x, start_y, canvas_x, canvas_y, "drawing")
+        mainwindow.can_main.connect_line_create(start_x, start_y, canvas_x, canvas_y, "drawing")
 
 
     def dnd_stop(self, event):
-        mainwindow.can_main.delete("drawing")
+        mainwindow.can_main.connect_line_delete("drawing")
 
         x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
         y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
@@ -190,11 +169,9 @@ class OutputLabel(DataLabel):
                 pass
 
 
-
     def connect(self):
         for plugin_object in pluginbase.get_all().values():
             for input_object in plugin_object.input_container_get().values():
                 if input_object.value_get() == self.id:
-                    line_id = f"{self.id}-{input_object.id}"
-                    mainwindow.can_main.delete(line_id)
+                    line_id = f"{input_object.id}:connect_line"
                     super().connect(self, input_object, line_id)

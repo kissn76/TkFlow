@@ -313,3 +313,34 @@ class Maincanvas(tk.Canvas):
         for plugin_object in plugin_container.plugins_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
+
+
+    def connect_line_create(self, start_x, start_y, end_x, end_y, tag):
+        offset = (end_x - start_x) / 3
+        mid_0_x = start_x + offset
+        mid_0_y = start_y
+        mid_1_x = end_x - offset
+        mid_1_y = end_y
+
+        if len(self.find_withtag(tag)) > 0:
+            self.coords(
+                    tag,
+                    start_x, start_y,
+                    mid_0_x, mid_0_y,
+                    mid_1_x, mid_1_y,
+                    end_x, end_y
+                )
+        else:
+            self.create_line(
+                    start_x, start_y,
+                    mid_0_x, mid_0_y,
+                    mid_1_x, mid_1_y,
+                    end_x, end_y,
+                    smooth=True, tags=tag
+                )
+
+            self.tag_bind(tag, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(tag, fill="red", width=6))
+
+
+    def connect_line_delete(self, tag):
+        self.delete(tag)
