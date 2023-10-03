@@ -112,6 +112,8 @@ class OutputLabel(DataLabel):
         self.lbl_data.bind('<Button1-Motion>', self.dnd_motion)
         self.lbl_data.bind('<ButtonRelease-1>', self.dnd_stop)
 
+        self.__last_input_object = None
+
 
     def dnd_start(self, event):
         self.box_set()
@@ -128,14 +130,19 @@ class OutputLabel(DataLabel):
 
         mainwindow.can_main.connect_line_create(start_x, start_y, canvas_x, canvas_y, "drawing")
 
-        input_object = self.input_object_find(canvas_x, canvas_y)
+        if bool(self.__last_input_object):
+            self.__last_input_object.leave()
+            self.__last_input_object = None
+
+        input_object = self.input_object_find()
         if bool(input_object):
-            print("m", input_object.id)
             input_object.enter()
+            self.__last_input_object = input_object
 
 
     def dnd_stop(self, event):
         mainwindow.can_main.connect_line_delete("drawing")
+        self.__last_input_object = None
 
         input_object = self.input_object_find()
         if bool(input_object):
@@ -143,16 +150,13 @@ class OutputLabel(DataLabel):
             input_object.connect()
 
 
-    def input_object_find(self, canvas_x=None, canvas_y=None):
+    def input_object_find(self):
         ret = None
 
-        if not bool(canvas_x) or not bool(canvas_y):
-            x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-            y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-            canvas_x = mainwindow.can_main.canvasx(x)
-            canvas_y = mainwindow.can_main.canvasy(y)
-        else:
-            print(canvas_x, canvas_y)
+        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
+        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+        canvas_x = mainwindow.can_main.canvasx(x)
+        canvas_y = mainwindow.can_main.canvasy(y)
 
         can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
         if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width and canvas_y < can_main_height:
@@ -160,17 +164,19 @@ class OutputLabel(DataLabel):
                 widgets = mainwindow.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
                 if len(widgets) > 0:
-                    widget_tags = set()
+                    widget_tags = []
                     for id in widgets:
                         tags = mainwindow.can_main.gettags(id)
                         if len(tags) > 0:
-                            widget_id, widget_type = tags[0].split(':')
+                            widget_unpack = tags[0].split(':')
+                            if len(widget_unpack) > 1:
+                                if widget_unpack[1] == "plugincontainer":
+                                    widget_tags.append(tags[0])
 
-                            if widget_type == "plugincontainer":
-                                widget_tags.add(tags[0])
+                    widget_tags = list(set(widget_tags))
 
                     if len(widget_tags) == 1:
-                        target_widget_tag = list(widget_tags)[0].split(':')[0]
+                        target_widget_tag = widget_tags[0].split(':')[0]
                         input_object_list = []
                         for plugin_object in pluginbase.get_all().values():
                             if plugin_object.plugin_container_id == target_widget_tag:
@@ -180,8 +186,6 @@ class OutputLabel(DataLabel):
                             if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
                                 ret = input_object
                                 break
-                    else:
-                        print("too many widget are overlapped:", widget_tags)
             except:
                 pass
 
