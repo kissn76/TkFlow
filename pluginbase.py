@@ -142,6 +142,10 @@ class PluginBase(ttk.Frame):
         return self.__output_container
 
 
+    def output_object_get(self, output_id):
+        return self.__output_container[output_id]
+
+
     def connect(self):
         for input_object in self.__input_container.values():
             input_object.connect()
