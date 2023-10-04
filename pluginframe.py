@@ -121,7 +121,7 @@ class Pluginframe(ttk.Treeview):
                             for id in widgets:
                                 tags = mainwindow.can_main.gettags(id)
                                 if len(tags) > 0:
-                                    widget_id, _ = tags[0].split(':')
+                                    widget_id, _ = tags[0].split('*')
                                     widget_ids.add(widget_id)
 
                             if len(widget_ids) == 1:

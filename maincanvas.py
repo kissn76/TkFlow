@@ -3,6 +3,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import mainwindow
 import plugincontainer
+import pluginbase
 import style
 
 
@@ -24,12 +25,12 @@ class Maincanvas(tk.Canvas):
         widget_id = plugin_container.id
 
         # mover
-        self.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}:move"])
-        self.tag_bind(f"{widget_id}:move", "<Enter>", lambda event: self.config(cursor="hand1"))
-        self.tag_bind(f"{widget_id}:move", "<Leave>", lambda event: self.config(cursor=""))
+        self.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}*move"])
+        self.tag_bind(f"{widget_id}*move", "<Enter>", lambda event: self.config(cursor="hand1"))
+        self.tag_bind(f"{widget_id}*move", "<Leave>", lambda event: self.config(cursor=""))
 
         # name
-        self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}:name"])
+        self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}*name"])
 
         # plugin container add
         ww = style.widget_resizer_width
@@ -40,13 +41,13 @@ class Maincanvas(tk.Canvas):
                 window=plugin_container,
                 anchor="nw",
                 width=style.widget_width_min - style.widget_padding * 2 - ww,
-                tags=f"{widget_id}:plugincontainer"
+                tags=f"{widget_id}*plugincontainer"
             )
         plugin_container.plugin_insert(plugin_name)
 
         # background
-        self.create_rectangle(0, 0, 0, 0, fill=style.widget_background_color, outline=style.widget_background_outline_color, tags=[f"{widget_id}:background"])
-        self.tag_lower(f"{widget_id}:background", f"{widget_id}:move")
+        self.create_rectangle(0, 0, 0, 0, fill=style.widget_background_color, outline=style.widget_background_outline_color, tags=[f"{widget_id}*background"])
+        self.tag_lower(f"{widget_id}*background", f"{widget_id}*move")
 
         # widget resizer
         if style.widget_resizer_width > 0:
@@ -55,38 +56,38 @@ class Maincanvas(tk.Canvas):
                 self.create_line(
                     0, 0, 0, 0,
                     width=style.widget_resizer_width,
-                    fill=style.widget_resizer_color, tags=[f"{widget_id}:resize_w"]
+                    fill=style.widget_resizer_color, tags=[f"{widget_id}*resize_w"]
                 )
-                self.tag_bind(f"{widget_id}:resize_w", "<Enter>", lambda event: self.config(cursor="right_side"))
-                self.tag_bind(f"{widget_id}:resize_w", "<Leave>", lambda event: self.config(cursor=""))
-                self.tag_bind(f"{widget_id}:resize_w", "<Double-Button-1>", lambda event: self.widget_resize_width(widget_id, 0))
+                self.tag_bind(f"{widget_id}*resize_w", "<Enter>", lambda event: self.config(cursor="right_side"))
+                self.tag_bind(f"{widget_id}*resize_w", "<Leave>", lambda event: self.config(cursor=""))
+                self.tag_bind(f"{widget_id}*resize_w", "<Double-Button-1>", lambda event: self.widget_resize_width(widget_id, 0))
 
             # height resizer line
             if bool(style.widget_height_resizer):
                 self.create_line(
                     0, 0, 0, 0,
                     width=style.widget_resizer_width,
-                    fill=style.widget_resizer_color, tags=[f"{widget_id}:resize_h"]
+                    fill=style.widget_resizer_color, tags=[f"{widget_id}*resize_h"]
                 )
-                self.tag_bind(f"{widget_id}:resize_h", "<Enter>", lambda event: self.config(cursor="bottom_side"))
-                self.tag_bind(f"{widget_id}:resize_h", "<Leave>", lambda event: self.config(cursor=""))
-                self.tag_bind(f"{widget_id}:resize_h", "<Double-Button-1>", lambda event: self.widget_resize_height(widget_id, 0))
+                self.tag_bind(f"{widget_id}*resize_h", "<Enter>", lambda event: self.config(cursor="bottom_side"))
+                self.tag_bind(f"{widget_id}*resize_h", "<Leave>", lambda event: self.config(cursor=""))
+                self.tag_bind(f"{widget_id}*resize_h", "<Double-Button-1>", lambda event: self.widget_resize_height(widget_id, 0))
 
             # width & height resizer rectangle
             if bool(style.widget_width_resizer) and bool(style.widget_height_resizer) and bool(style.widget_width_height_resizer):
                 self.create_line(
                     0, 0, 0, 0,
                     width=style.widget_resizer_width,
-                    fill=style.widget_resizer_wh_color, tags=[f"{widget_id}:resize_wh", f"{widget_id}:resize_wh_w"]
+                    fill=style.widget_resizer_wh_color, tags=[f"{widget_id}*resize_wh", f"{widget_id}*resize_wh_w"]
                 )
                 self.create_line(
                     0, 0, 0, 0,
                     width=style.widget_resizer_width,
-                    fill=style.widget_resizer_wh_color, tags=[f"{widget_id}:resize_wh", f"{widget_id}:resize_wh_h"]
+                    fill=style.widget_resizer_wh_color, tags=[f"{widget_id}*resize_wh", f"{widget_id}*resize_wh_h"]
                 )
-                self.tag_bind(f"{widget_id}:resize_wh", "<Enter>", lambda event: self.config(cursor="bottom_right_corner"))
-                self.tag_bind(f"{widget_id}:resize_wh", "<Leave>", lambda event: self.config(cursor=""))
-                self.tag_bind(f"{widget_id}:resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
+                self.tag_bind(f"{widget_id}*resize_wh", "<Enter>", lambda event: self.config(cursor="bottom_right_corner"))
+                self.tag_bind(f"{widget_id}*resize_wh", "<Leave>", lambda event: self.config(cursor=""))
+                self.tag_bind(f"{widget_id}*resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
         self.update()
         self.widget_name_set(widget_id)
@@ -121,24 +122,24 @@ class Maincanvas(tk.Canvas):
 
     # set position and size of widget name
     def widget_name_set(self, widget_id):
-        move_box = self.bbox(f"{widget_id}:move")
-        self.coords(f"{widget_id}:name", move_box[2] + style.widget_padding, move_box[1])
+        move_box = self.bbox(f"{widget_id}*move")
+        self.coords(f"{widget_id}*name", move_box[2] + style.widget_padding, move_box[1])
 
 
     # set position and size of plugin container
     def widget_plugin_container_set(self, widget_id):
-        move_box = self.bbox(f"{widget_id}:move")
-        self.coords(f"{widget_id}:plugincontainer", move_box[0], move_box[3] + style.widget_padding)
+        move_box = self.bbox(f"{widget_id}*move")
+        self.coords(f"{widget_id}*plugincontainer", move_box[0], move_box[3] + style.widget_padding)
 
 
     # set position and size of background
     def widget_background_set(self, widget_id, keep_height=False):
-        move_box = self.bbox(f"{widget_id}:move")
-        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
-        background_box = self.bbox(f"{widget_id}:background")
+        move_box = self.bbox(f"{widget_id}*move")
+        plugin_container_box = self.bbox(f"{widget_id}*plugincontainer")
+        background_box = self.bbox(f"{widget_id}*background")
 
         outline = 1
-        if self.itemcget(f"{widget_id}:background", "outline") == "":
+        if self.itemcget(f"{widget_id}*background", "outline") == "":
             outline = 0
 
         y2 = plugin_container_box[3] + style.widget_padding
@@ -151,7 +152,7 @@ class Maincanvas(tk.Canvas):
                 y2 = y2_tmp
 
         self.coords(
-                f"{widget_id}:background",
+                f"{widget_id}*background",
                 move_box[0] - style.widget_padding, move_box[1] - style.widget_padding,
                 plugin_container_box[2] + style.widget_padding, y2
             )
@@ -160,40 +161,40 @@ class Maincanvas(tk.Canvas):
     def widget_resizer_set(self, widget_id):
         if style.widget_resizer_width > 0:
             if bool(style.widget_width_resizer) or bool(style.widget_height_resizer):
-                background_box = self.bbox(f"{widget_id}:background")
+                background_box = self.bbox(f"{widget_id}*background")
 
                 outline = 1
-                if self.itemcget(f"{widget_id}:background", "outline") == "":
+                if self.itemcget(f"{widget_id}*background", "outline") == "":
                     outline = 0
 
             # width resizer line
             if bool(style.widget_width_resizer):
-                self.itemconfigure(f"{widget_id}:resize_w", width=style.widget_resizer_width)
+                self.itemconfigure(f"{widget_id}*resize_w", width=style.widget_resizer_width)
                 self.coords(
-                        f"{widget_id}:resize_w",
+                        f"{widget_id}*resize_w",
                         background_box[2] + int(style.widget_resizer_width / 2), background_box[1] + outline,
                         background_box[2] + int(style.widget_resizer_width / 2), background_box[3]
                     )
 
             # height resizer line
             if bool(style.widget_height_resizer):
-                self.itemconfigure(f"{widget_id}:resize_h", width=style.widget_resizer_width)
+                self.itemconfigure(f"{widget_id}*resize_h", width=style.widget_resizer_width)
                 self.coords(
-                        f"{widget_id}:resize_h",
+                        f"{widget_id}*resize_h",
                         background_box[0] + outline, background_box[3] + int(style.widget_resizer_width / 2),
                         background_box[2] + style.widget_resizer_width, background_box[3] + int(style.widget_resizer_width / 2)
                     )
 
             # width & height resizer rectangle
             if bool(style.widget_width_resizer) and bool(style.widget_height_resizer) and bool(style.widget_width_height_resizer):
-                self.itemconfigure(f"{widget_id}:resize_wh", width=style.widget_resizer_width)
+                self.itemconfigure(f"{widget_id}*resize_wh", width=style.widget_resizer_width)
                 self.coords(
-                        f"{widget_id}:resize_wh_w",
+                        f"{widget_id}*resize_wh_w",
                         background_box[2] + int(style.widget_resizer_width / 2), background_box[3] - style.widget_resizer_width * style.widget_resizer_wh_width_multiplier,
                         background_box[2] + int(style.widget_resizer_width / 2), background_box[3]
                     )
                 self.coords(
-                        f"{widget_id}:resize_wh_h",
+                        f"{widget_id}*resize_wh_h",
                         background_box[2] - style.widget_resizer_width * style.widget_resizer_wh_width_multiplier, background_box[3] + int(style.widget_resizer_width / 2),
                         background_box[2] + style.widget_resizer_width, background_box[3] + int(style.widget_resizer_width / 2)
                     )
@@ -208,7 +209,7 @@ class Maincanvas(tk.Canvas):
     def dnd_motion(self, event):
         tags = self.gettags('selected')
         if len(tags) > 0:
-            widget_id, widget_function = tags[0].split(':')
+            widget_id, widget_function = tags[0].split('*')
             mouse_x, mouse_y = event.x, event.y
             if widget_function == "move":
                 self.widget_move(widget_id, mouse_x, mouse_y)
@@ -237,7 +238,7 @@ class Maincanvas(tk.Canvas):
             self.xview_scroll(-1, 'units')
 
         canvas_x = self.canvasx(x)
-        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
+        plugin_container_box = self.bbox(f"{widget_id}*plugincontainer")
         plugin_container_width = canvas_x - plugin_container_box[0] - style.widget_padding * 2
 
         ww = style.widget_resizer_width
@@ -246,7 +247,7 @@ class Maincanvas(tk.Canvas):
         if plugin_container_width < style.widget_width_min - style.widget_padding * 2 - ww:
             plugin_container_width = style.widget_width_min - style.widget_padding * 2 - ww
 
-        self.itemconfigure(f"{widget_id}:plugincontainer", width=plugin_container_width)
+        self.itemconfigure(f"{widget_id}*plugincontainer", width=plugin_container_width)
         self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
         self.update()
@@ -264,7 +265,7 @@ class Maincanvas(tk.Canvas):
             self.yview_scroll(-1, 'units')
 
         canvas_y = self.canvasy(y)
-        plugin_container_box = self.bbox(f"{widget_id}:plugincontainer")
+        plugin_container_box = self.bbox(f"{widget_id}*plugincontainer")
 
         plugin_container_height = canvas_y - plugin_container_box[1] - style.widget_padding * 2
 
@@ -302,7 +303,7 @@ class Maincanvas(tk.Canvas):
         if canvas_y < style.widget_padding:
             canvas_y = style.widget_padding
 
-        self.coords(f"{widget_id}:move", canvas_x, canvas_y)
+        self.coords(f"{widget_id}*move", canvas_x, canvas_y)
 
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
@@ -339,8 +340,17 @@ class Maincanvas(tk.Canvas):
                     smooth=True, tags=tag
                 )
 
-            self.tag_bind(tag, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(tag, fill="red", width=6))
+            # self.tag_bind(tag, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(tag, fill="red", width=6))
+            self.tag_bind(tag, "<Double-Button-1>", lambda event: self.connect_line_delete(tag))
 
 
     def connect_line_delete(self, tag):
+        try:
+            plugin_id, tmp = tag.split(':')
+            input_id, _ = tmp.split('*')
+            plugin_object = pluginbase.get(plugin_id)
+            input_object = plugin_object.input_container_get()[f"{plugin_id}:{input_id}"]
+            input_object.value_set("")
+        except:
+            pass
         self.delete(tag)

@@ -42,7 +42,7 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}:plugincontainer")
+        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}*plugincontainer")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -64,7 +64,7 @@ class DataLabel(ttk.Frame):
 
     def connect(self, output_object, input_object, line_id=None):
         if not bool(line_id):
-            line_id = f"{self.id}:connect_line"
+            line_id = f"{self.id}*connect_line"
 
         start_x = output_object.box[2]
         start_y = output_object.box[1] + ((output_object.box[3] - output_object.box[1]) / 2)
@@ -78,7 +78,7 @@ class DataLabel(ttk.Frame):
 
     def diconnect(self, line_id=None):
         if not bool(line_id):
-            line_id = f"{self.id}:connect_line"
+            line_id = f"{self.id}*connect_line"
 
         mainwindow.can_main.connect_line_delete(line_id)
 
@@ -168,7 +168,7 @@ class OutputLabel(DataLabel):
                     for id in widgets:
                         tags = mainwindow.can_main.gettags(id)
                         if len(tags) > 0:
-                            widget_unpack = tags[0].split(':')
+                            widget_unpack = tags[0].split('*')
                             if len(widget_unpack) > 1:
                                 if widget_unpack[1] == "plugincontainer":
                                     widget_tags.append(tags[0])
@@ -176,7 +176,7 @@ class OutputLabel(DataLabel):
                     widget_tags = list(set(widget_tags))
 
                     if len(widget_tags) == 1:
-                        target_widget_tag = widget_tags[0].split(':')[0]
+                        target_widget_tag = widget_tags[0].split('*')[0]
                         input_object_list = []
                         for plugin_object in pluginbase.get_all().values():
                             if plugin_object.plugin_container_id == target_widget_tag:
@@ -196,5 +196,5 @@ class OutputLabel(DataLabel):
         for plugin_object in pluginbase.get_all().values():
             for input_object in plugin_object.input_container_get().values():
                 if input_object.value_get() == self.id:
-                    line_id = f"{input_object.id}:connect_line"
+                    line_id = f"{input_object.id}*connect_line"
                     super().connect(self, input_object, line_id)
