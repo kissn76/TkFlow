@@ -69,6 +69,8 @@ class PluginBase(ttk.Frame):
 
         self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
         self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
+        self.__image_arranger_up = ImageTk.PhotoImage(style.image_up_6)
+        self.__image_arranger_down = ImageTk.PhotoImage(style.image_down_6)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
@@ -91,11 +93,11 @@ class PluginBase(ttk.Frame):
 
     def setting_mode_toggle(self):
         if self.__setting_mode:
-            self.lbl_arranger.grid_remove()
+            self.arranger.grid_remove()
             self.lbl_config.grid_remove()
             self.__setting_mode = False
         else:
-            self.lbl_arranger.grid(row=0, column=self.__gridcolumn_arranger)
+            self.arranger.grid(row=0, column=self.__gridcolumn_arranger)
             self.lbl_config.grid(row=0, column=self.__gridcolumn_setting)
             self.__setting_mode = True
 
@@ -110,7 +112,11 @@ class PluginBase(ttk.Frame):
 
 
     def arranger_init(self):
-        self.lbl_arranger = ttk.Label(self, image=self.__image_arranger)
+        self.arranger = ttk.Frame(self)
+        self.arranger_up = tk.Button(self.arranger, image=self.__image_arranger_up)
+        self.arranger_down = tk.Button(self.arranger, image=self.__image_arranger_down)
+        self.arranger_up.grid(row=0, column=0)
+        self.arranger_down.grid(row=1, column=0)
 
 
     def settings_init(self):

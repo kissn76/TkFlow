@@ -18,6 +18,7 @@ widget_background_outline_color = "blue"    # szín, 1 pixeles keret a backgroun
 # widget settings end
 
 # images
+MAX_SIZE_6 = (6, 6)
 MAX_SIZE_12 = (12, 12)
 MAX_SIZE_16 = (16, 16)
 
@@ -26,6 +27,12 @@ image_move_16.thumbnail(MAX_SIZE_16)
 
 image_arranger_12 = Image.open("./resources/icon/up-down.png")
 image_arranger_12.thumbnail(MAX_SIZE_12)
+
+image_up_6 = Image.open("./resources/icon/up.png")
+image_up_6.thumbnail(MAX_SIZE_6)
+
+image_down_6 = Image.open("./resources/icon/down.png")
+image_down_6.thumbnail(MAX_SIZE_6)
 
 image_directory_12 = Image.open("./resources/icon/directory.png")
 image_directory_12.thumbnail(MAX_SIZE_12)
