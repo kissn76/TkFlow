@@ -11,7 +11,8 @@ import style
 class Maincanvas(tk.Canvas):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.image_move = ImageTk.PhotoImage(style.image_move)
+        self.image_move = ImageTk.PhotoImage(style.image_move_16)
+        self.image_settings = ImageTk.PhotoImage(style.image_setting_16)
 
 
     # create new widget
@@ -31,6 +32,10 @@ class Maincanvas(tk.Canvas):
 
         # name
         self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}*name"])
+
+        # settings button
+        self.create_image(x, y, image=self.image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
+        self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: self.widget_setting_mode_toggle(widget_id))
 
         # plugin container add
         ww = style.widget_resizer_width
@@ -94,10 +99,17 @@ class Maincanvas(tk.Canvas):
         self.widget_plugin_container_set(widget_id)
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
+        self.widget_settings_button_set(widget_id)
 
         plugin_container = plugincontainer.get(widget_id)
         for plugin_object in plugin_container.plugins_get().values():
             plugin_object.datalabels_box_set()
+
+
+    def widget_setting_mode_toggle(self, widget_id):
+        plugin_container = plugincontainer.get(widget_id)
+        for plugin_object in plugin_container.plugins_get().values():
+            plugin_object.setting_mode_toggle()
 
 
     def widget_reset(self, widget_id:str) -> None:
@@ -112,6 +124,7 @@ class Maincanvas(tk.Canvas):
         self.widget_plugin_container_set(widget_id)
         self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
+        self.widget_settings_button_set(widget_id)
         self.update()
 
         plugin_container = plugincontainer.get(widget_id)
@@ -155,6 +168,19 @@ class Maincanvas(tk.Canvas):
                 f"{widget_id}*background",
                 move_box[0] - style.widget_padding, move_box[1] - style.widget_padding,
                 plugin_container_box[2] + style.widget_padding, y2
+            )
+
+
+    # set position and size of settings button
+    def widget_settings_button_set(self, widget_id):
+        move_box = self.bbox(f"{widget_id}*move")
+        background_box = self.bbox(f"{widget_id}*background")
+        settings = self.bbox(f"{widget_id}*settings")
+        width = settings[2] - settings[0]
+
+        self.coords(
+                f"{widget_id}*settings",
+                background_box[2] - width - style.widget_padding, move_box[1]
             )
 
 
@@ -250,6 +276,7 @@ class Maincanvas(tk.Canvas):
         self.itemconfigure(f"{widget_id}*plugincontainer", width=plugin_container_width)
         self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
+        self.widget_settings_button_set(widget_id)
         self.update()
 
         plugin_container = plugincontainer.get(widget_id)
@@ -308,6 +335,7 @@ class Maincanvas(tk.Canvas):
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
         self.widget_background_set(widget_id, keep_height=True)
+        self.widget_settings_button_set(widget_id)
         self.widget_resizer_set(widget_id)
 
         plugin_container = plugincontainer.get(widget_id)

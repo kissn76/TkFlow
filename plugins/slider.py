@@ -11,9 +11,6 @@ class Plugin(pluginbase.PluginBase):
         # init input, output
         self.output_init("value")
 
-        # init settings or not
-        self.settings_init()
-
         # init own plugin
         self.sc = ttk.Scale(self, from_=-100, to=100, orient='horizontal', command=lambda _: self.run())
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))

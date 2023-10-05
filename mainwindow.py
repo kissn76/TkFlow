@@ -34,9 +34,9 @@ class Mainwindow(tk.Tk):
         self.attributes("-alpha", 0.6)
         self.style = ttk.Style(self)
 
-        self.image_move = ImageTk.PhotoImage(style.image_move)
-        self.image_directory = ImageTk.PhotoImage(style.image_directory)
-        self.image_work = ImageTk.PhotoImage(style.image_work)
+        self.image_move = ImageTk.PhotoImage(style.image_move_16)
+        self.image_directory = ImageTk.PhotoImage(style.image_directory_12)
+        self.image_work = ImageTk.PhotoImage(style.image_work_12)
 
         # Menubar
         menubar = tk.Menu(self)

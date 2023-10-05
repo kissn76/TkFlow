@@ -18,25 +18,32 @@ widget_background_outline_color = "blue"    # szín, 1 pixeles keret a backgroun
 # widget settings end
 
 # images
-MAX_SIZE = (12, 12)
+MAX_SIZE_12 = (12, 12)
+MAX_SIZE_16 = (16, 16)
 
-image_move = Image.open("./resources/icon/move.png")
-image_move.thumbnail((16, 16))
+image_move_16 = Image.open("./resources/icon/move.png")
+image_move_16.thumbnail(MAX_SIZE_16)
 
-image_directory = Image.open("./resources/icon/directory.png")
-image_directory.thumbnail(MAX_SIZE)
+image_arranger_12 = Image.open("./resources/icon/up-down.png")
+image_arranger_12.thumbnail(MAX_SIZE_12)
 
-image_work = Image.open("./resources/icon/scrawdriver.png")
-image_work.thumbnail(MAX_SIZE)
+image_directory_12 = Image.open("./resources/icon/directory.png")
+image_directory_12.thumbnail(MAX_SIZE_12)
 
-datatype_any = Image.open(f"./resources/icon/anydata.png")
-datatype_any.thumbnail(MAX_SIZE)
+image_work_12 = Image.open("./resources/icon/scrawdriver.png")
+image_work_12.thumbnail(MAX_SIZE_12)
 
-data = Image.open(f"./resources/icon/arrow_right.png")
-data.thumbnail(MAX_SIZE)
+image_datatype_any_12 = Image.open(f"./resources/icon/anydata.png")
+image_datatype_any_12.thumbnail(MAX_SIZE_12)
 
-image_setting = Image.open("./resources/icon/setting.png")
-image_setting.thumbnail((16, 16))
+image_data_12 = Image.open(f"./resources/icon/arrow_right.png")
+image_data_12.thumbnail(MAX_SIZE_12)
+
+image_setting_12 = Image.open("./resources/icon/setting.png")
+image_setting_12.thumbnail(MAX_SIZE_12)
+
+image_setting_16 = Image.open("./resources/icon/setting.png")
+image_setting_16.thumbnail(MAX_SIZE_16)
 # images end
 
 widget_resizer_width = int(widget_resizer_width)

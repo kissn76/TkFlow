@@ -9,8 +9,8 @@ import style
 class DataLabel(ttk.Frame):
     def __init__(self, master, id, plugin_container_id):
         super().__init__(master)
-        self.image_anydata = ImageTk.PhotoImage(style.datatype_any)
-        self.image_data = ImageTk.PhotoImage(style.data)
+        self.image_anydata = ImageTk.PhotoImage(style.image_datatype_any_12)
+        self.image_data = ImageTk.PhotoImage(style.image_data_12)
 
         self.id = id
         self.plugin_container_id = plugin_container_id

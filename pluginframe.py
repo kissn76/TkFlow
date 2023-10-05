@@ -11,8 +11,8 @@ import style
 class Pluginframe(ttk.Treeview):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.image_directory = ImageTk.PhotoImage(style.image_directory)
-        self.image_work = ImageTk.PhotoImage(style.image_work)
+        self.image_directory = ImageTk.PhotoImage(style.image_directory_12)
+        self.image_work = ImageTk.PhotoImage(style.image_work_12)
         self.floating_widget = None
         self.load()
 

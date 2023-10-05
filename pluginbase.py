@@ -52,6 +52,8 @@ class PluginBase(ttk.Frame):
         self.id = f"{plugin_name}.{counter_get()}"
         self.plugin_container_id = plugin_container_id
 
+        self.__setting_mode = False
+
         self.__input_container = {}
         self.__output_container = {}
 
@@ -59,14 +61,19 @@ class PluginBase(ttk.Frame):
         self.__output_row_counter = 0
         self.__content_row_counter = 0
 
-        self.__gridcoulmn_input = 0
+        self.__gridcolumn_arranger = 0
         self.__gridcolumn_setting = 1
-        self.__gridcolumn_content = 2
-        self.__gridcolumn_output = 3
+        self.__gridcoulmn_input = 2
+        self.__gridcolumn_content = 3
+        self.__gridcolumn_output = 4
 
-        self.__image_setting = ImageTk.PhotoImage(style.image_setting)
+        self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
+        self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
+
+        self.arranger_init()
+        self.settings_init()
 
 
     def to_dict(self):
@@ -82,6 +89,17 @@ class PluginBase(ttk.Frame):
         return ret
 
 
+    def setting_mode_toggle(self):
+        if self.__setting_mode:
+            self.lbl_arranger.grid_remove()
+            self.lbl_config.grid_remove()
+            self.__setting_mode = False
+        else:
+            self.lbl_arranger.grid(row=0, column=self.__gridcolumn_arranger)
+            self.lbl_config.grid(row=0, column=self.__gridcolumn_setting)
+            self.__setting_mode = True
+
+
     def settings(self):
         print("Settings panel start", type(self), self.id)
 
@@ -91,9 +109,12 @@ class PluginBase(ttk.Frame):
         self.__content_row_counter += 1
 
 
+    def arranger_init(self):
+        self.lbl_arranger = ttk.Label(self, image=self.__image_arranger)
+
+
     def settings_init(self):
-        self.btn_config = tk.Button(self, image=self.__image_setting, compound="center", width=14, height=14, command=self.settings)
-        self.btn_config.grid(row=0, column=self.__gridcolumn_setting)
+        self.lbl_config = tk.Label(self, image=self.__image_setting)
         # self.bind('<Button-3>', self.settings)
 
 
