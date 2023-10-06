@@ -61,11 +61,23 @@ class Plugincontainer(ttk.Frame):
         super().__init__(master, **kwargs)
         self.id = f"widget.{counter_get()}"
         add(self.id, self)
+        self.__setting_mode = False
+
+
+    def setting_mode_toggle(self):
+        if self.__setting_mode:
+            self.__setting_mode = False
+        else:
+            self.__setting_mode = True
+
+        for plugin_object in self.plugins_get().values():
+            plugin_object.setting_mode_set(self.__setting_mode)
 
 
     def plugin_insert(self, plugin_name):
         plugin_object = plugincontroller.new_object(plugin_name, self.id, master=self)
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
+        plugin_object.setting_mode_set(self.__setting_mode)
         pluginbase.add(plugin_object.id, plugin_object)
         widget_plugin_insert(self.id, plugin_object.id)
 

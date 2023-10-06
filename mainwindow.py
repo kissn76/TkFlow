@@ -17,18 +17,20 @@ can_main = None
 
 
 class Mainwindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, fullscreen=False):
         global can_main
         super().__init__()
         self.title("TkFlow")
 
         self.geometry("1200x400")
         # self.attributes('-fullscreen', True)
-        os_type = platform.system()
-        if os_type == "Linux":
-            self.attributes('-zoomed', True)
-        else:   # Windows, Mac OS
-            self.wm_state('zoomed')
+
+        if bool(fullscreen):
+            os_type = platform.system()
+            if os_type == "Linux":
+                self.attributes('-zoomed', True)
+            else:   # Windows, Mac OS
+                self.wm_state('zoomed')
 
         self.protocol("WM_DELETE_WINDOW", self.quit)
         self.attributes("-alpha", 0.6)

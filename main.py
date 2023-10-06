@@ -7,7 +7,9 @@ sys.path.append('./plugins')
 
 
 def main():
-    mainwindow = mw.Mainwindow()
+    fullscreen=False
+    # fullscreen=True
+    mainwindow = mw.Mainwindow(fullscreen=fullscreen)
     mainwindow.mainloop()
 
 

@@ -35,7 +35,7 @@ class Maincanvas(tk.Canvas):
 
         # settings button
         self.create_image(x, y, image=self.image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
-        self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: self.widget_setting_mode_toggle(widget_id))
+        self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: plugin_container.setting_mode_toggle())
 
         # plugin container add
         ww = style.widget_resizer_width
@@ -104,12 +104,6 @@ class Maincanvas(tk.Canvas):
         plugin_container = plugincontainer.get(widget_id)
         for plugin_object in plugin_container.plugins_get().values():
             plugin_object.datalabels_box_set()
-
-
-    def widget_setting_mode_toggle(self, widget_id):
-        plugin_container = plugincontainer.get(widget_id)
-        for plugin_object in plugin_container.plugins_get().values():
-            plugin_object.setting_mode_toggle()
 
 
     def widget_reset(self, widget_id:str) -> None:

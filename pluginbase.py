@@ -4,6 +4,7 @@ from tkinter.simpledialog import Dialog
 from PIL import Image, ImageTk
 from datalabel import InputLabel, OutputLabel
 import style
+import mainwindow
 
 
 
@@ -32,6 +33,11 @@ def get_all_as_dict():
     return ret
 
 
+def box_set_all():
+    for obj in get_all().values():
+        obj.box_set()
+
+
 def add(plugin_id, object):
     __container.update({plugin_id: object})
 
@@ -51,8 +57,7 @@ class PluginBase(ttk.Frame):
         self.name = name
         self.id = f"{plugin_name}.{counter_get()}"
         self.plugin_container_id = plugin_container_id
-
-        self.__setting_mode = False
+        self.box = ()   # box in canvas
 
         self.__input_container = {}
         self.__output_container = {}
@@ -69,8 +74,7 @@ class PluginBase(ttk.Frame):
 
         self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
         self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
-        self.__image_arranger_up = ImageTk.PhotoImage(style.image_up_6)
-        self.__image_arranger_down = ImageTk.PhotoImage(style.image_down_6)
+        self.__image_move = ImageTk.PhotoImage(style.image_move_12)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
@@ -91,37 +95,93 @@ class PluginBase(ttk.Frame):
         return ret
 
 
-    def setting_mode_toggle(self):
-        if self.__setting_mode:
-            self.arranger.grid_remove()
-            self.lbl_config.grid_remove()
-            self.__setting_mode = False
-        else:
-            self.arranger.grid(row=0, column=self.__gridcolumn_arranger)
-            self.lbl_config.grid(row=0, column=self.__gridcolumn_setting)
-            self.__setting_mode = True
+    # set box in canvas
+    def box_set(self, event=None):
+        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}*plugincontainer")
+        plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
+
+        x1 = int(plugin_container_box[0]) + int(plugin_geometry[2])
+        y1 = int(plugin_container_box[1]) + int(plugin_geometry[3])
+        x2 = int(x1 + int(plugin_geometry[0]))
+        y2 = int(y1 + int(plugin_geometry[1]))
+
+        self.box = (x1, y1, x2, y2)
 
 
-    def settings(self):
+    def arranger_init(self):
+        self.arranger = ttk.Frame(self)
+        self.btn_arranger = tk.Button(self.arranger, image=self.__image_move, compound=tk.CENTER)
+        self.btn_arranger.grid(row=0, column=0, sticky="nswe")
+        self.btn_arranger.bind('<Button-1>', lambda event: self.dnd_arrange_start(event))
+        self.btn_arranger.bind('<B1-Motion>', lambda event: self.dnd_arrange_motion(event))
+        self.btn_arranger.bind('<ButtonRelease-1>', lambda event: self.dnd_arrange_stop(event))
+
+
+    def dnd_arrange_start(self, event):
+        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
+        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+
+        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.id)
+        self.floating_widget.place(x=x, y=y)
+
+
+    def dnd_arrange_motion(self, event):
+        if bool(self.floating_widget):
+            x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
+            y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+
+            self.floating_widget.place(x=x, y=y)
+
+
+    def dnd_arrange_stop(self, event):
+        if bool(self.floating_widget):
+            self.floating_widget.place_forget()
+            self.floating_widget.destroy()
+
+        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
+        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+        canvas_x = mainwindow.can_main.canvasx(x)
+        canvas_y = mainwindow.can_main.canvasy(y)
+
+        box_set_all()
+        for obj in get_all().values():
+            x1, y1, x2, y2 = obj.box
+            # if pointer is in plugin box
+            if canvas_x >= x1 and canvas_x <= x2 and canvas_y >= y1 and canvas_y <= y2:
+                # if pointer is in beginning of plugin box
+                if canvas_y <= int(y1 + ((y2 - y1) / 2)):
+                    print(obj.id, "befor")
+                # if pointer is in ending of plugin box
+                else:
+                    print(obj.id, "after")
+            else:
+                # put plugin in a new widget
+                pass
+
+
+    def settings_init(self):
+        self.config = ttk.Frame(self)
+        self.btn_config = tk.Button(self.config, image=self.__image_setting, compound=tk.CENTER)
+        self.btn_config.grid(row=0, column=0, sticky="nswe")
+        self.btn_config.bind('<Button-1>', lambda event: self.settings_open(event))
+
+
+    def settings_open(self, event):
         print("Settings panel start", type(self), self.id)
+
+
+    def setting_mode_set(self, setting_mode):
+        if not setting_mode:
+            self.arranger.grid_remove()
+            self.config.grid_remove()
+        else:
+            self.arranger.grid(row=0, column=self.__gridcolumn_arranger, sticky="nswe")
+            self.config.grid(row=0, column=self.__gridcolumn_setting, sticky="nswe")
 
 
     def content_init(self, content_object):
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
-
-
-    def arranger_init(self):
-        self.arranger = ttk.Frame(self)
-        self.arranger_up = tk.Button(self.arranger, image=self.__image_arranger_up)
-        self.arranger_down = tk.Button(self.arranger, image=self.__image_arranger_down)
-        self.arranger_up.grid(row=0, column=0)
-        self.arranger_down.grid(row=1, column=0)
-
-
-    def settings_init(self):
-        self.lbl_config = tk.Label(self, image=self.__image_setting)
-        # self.bind('<Button-3>', self.settings)
 
 
     def input_init(self, *args):

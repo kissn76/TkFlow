@@ -22,6 +22,9 @@ MAX_SIZE_6 = (6, 6)
 MAX_SIZE_12 = (12, 12)
 MAX_SIZE_16 = (16, 16)
 
+image_move_12 = Image.open("./resources/icon/move.png")
+image_move_12.thumbnail(MAX_SIZE_12)
+
 image_move_16 = Image.open("./resources/icon/move.png")
 image_move_16.thumbnail(MAX_SIZE_16)
 
