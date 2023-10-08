@@ -8,6 +8,30 @@ import mainwindow
 
 
 
+# class Pluginbase():
+#     '''
+#         Pluginbase controller
+#     '''
+#     pass
+
+
+
+# class PluginbaseModel():
+#     '''
+#         Pluginbase model
+#     '''
+#     pass
+
+
+
+# class PluginbaseView(ttk.Frame):
+#     '''
+#         Pluginbase view
+#     '''
+#     pass
+
+
+
 __container = {}
 __counter = 0
 
