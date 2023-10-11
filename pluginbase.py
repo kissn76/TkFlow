@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter.simpledialog import Dialog
-from PIL import Image, ImageTk
+from PIL import ImageTk
 from datalabel import InputLabel, OutputLabel
 import style
 import mainwindow
@@ -32,54 +31,12 @@ import mainwindow
 
 
 
-__container = {}
-__counter = 0
-
-
-def get(plugin_id):
-    object = None
-    try:
-        object = __container[plugin_id]
-    except:
-        pass
-    return object
-
-
-def get_all():
-    return __container
-
-
-def get_all_as_dict():
-    ret = {}
-    for obj in __container.values():
-        ret.update(obj.to_dict())
-
-    return ret
-
-
-def box_set_all():
-    for obj in get_all().values():
-        obj.box_set()
-
-
-def add(plugin_id, object):
-    __container.update({plugin_id: object})
-
-
-def counter_get():
-    global __counter
-    ret = __counter
-    __counter += 1
-    return ret
-
-
-
 class PluginBase(ttk.Frame):
-    def __init__(self, master, plugin_name, plugin_container_id, name=None, parents=[], **kwargs):
+    def __init__(self, master, plugin_id, plugin_container_id, name=None, parents=[], **kwargs):
         super().__init__(master, **kwargs)
         self.parents = parents
         self.name = name
-        self.id = f"{plugin_name}.{counter_get()}"
+        self.id = plugin_id
         self.plugin_container_id = plugin_container_id
         self.box = ()   # box in canvas
 

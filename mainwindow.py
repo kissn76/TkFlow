@@ -224,9 +224,7 @@ class Mainwindow(tk.Tk):
 
 
     def run(self):
-        for plugin_object in pluginbase.get_all().values():
-            plugin_object.run()
-
+        can_main.run()
         self.after(100, self.run)
 
 

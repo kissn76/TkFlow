@@ -7,7 +7,6 @@ import pluginbase
 
 __container = {}
 __widget_plugin_connection = {}
-__counter = 0
 
 
 def get(widget_id):
@@ -21,18 +20,6 @@ def get(widget_id):
 
 def get_all():
     return __container
-
-
-def add(widget_id, object):
-    __container.update({widget_id: object})
-    __widget_plugin_connection.update({widget_id: []})
-
-
-def counter_get():
-    global __counter
-    ret = __counter
-    __counter += 1
-    return ret
 
 
 def widget_plugin_insert(widget_id, plugin_id):
@@ -57,9 +44,9 @@ def widget_id_get(plugin_id):
 
 
 class Plugincontainer(ttk.Frame):
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master, plugincontainer_id, **kwargs):
         super().__init__(master, **kwargs)
-        self.id = f"widget.{counter_get()}"
+        self.id = plugincontainer_id
         add(self.id, self)
         self.__setting_mode = False
 
@@ -72,6 +59,10 @@ class Plugincontainer(ttk.Frame):
 
         for plugin_object in self.plugins_get().values():
             plugin_object.setting_mode_set(self.__setting_mode)
+
+
+    def setting_mode_get(self):
+        return self.__setting_mode
 
 
     def plugin_insert(self, plugin_name):

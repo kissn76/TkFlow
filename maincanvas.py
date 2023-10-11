@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import mainwindow
+import plugincontroller
 import plugincontainer
 import pluginbase
 import style
@@ -13,6 +14,59 @@ class Maincanvas(tk.Canvas):
         super().__init__(master, **kwargs)
         self.image_move = ImageTk.PhotoImage(style.image_move_16)
         self.image_settings = ImageTk.PhotoImage(style.image_setting_16)
+        self.__plugin_container = {}    # contains all plugin
+        self.__plugin_counter = 0
+        self.__plugincontainer_container = {}
+        self.__plugincontainer_counter = 0
+
+
+    def plugin_add(self, plugin_name, plugincontainer):
+        plugin_id = f"{plugin_name}.{self.plugin_counter_get()}"
+
+        plugin_object = plugincontroller.new_object(plugin_name, plugincontainer.id, master=plugincontainer)
+        plugin_object.pack(anchor="nw", fill=tk.BOTH)
+        plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
+
+        self.__plugin_container.update({plugin_id: plugin_object})
+
+
+    def plugin_get(self, plugin_id):
+        plugin_object = None
+        try:
+            plugin_object = self.__plugin_container[plugin_id]
+        except:
+            pass
+        return plugin_object
+
+
+    def plugin_get_all(self):
+        return self.__plugin_container
+
+
+    def plugin_box_set_all(self):
+        for plugin_object in self.plugin_get_all().values():
+            plugin_object.box_set()
+
+
+    def plugin_counter_get(self):
+        ret = self.__plugin_counter
+        self.__plugin_counter += 1
+        return ret
+
+
+    def plugincontainer_add(self):
+        plugincontainer_id = f"widget.{self.plugincontainer_counter_get()}"
+
+        plugincontainer_object = plugincontainer.Plugincontainer(self, plugincontainer_id)
+        self.__plugincontainer_container.update({plugincontainer_id: plugincontainer_object})
+
+        return plugincontainer_id, plugincontainer_object
+
+
+    def plugincontainer_counter_get(self):
+        ret = self.__plugincontainer_counter
+        self.__plugincontainer_counter += 1
+        return ret
 
 
     # create new widget
@@ -22,8 +76,7 @@ class Maincanvas(tk.Canvas):
         if y < style.widget_padding:
             y = style.widget_padding
 
-        plugin_container = plugincontainer.Plugincontainer(self)
-        widget_id = plugin_container.id
+        widget_id, plugincontainer = self.plugincontainer_add()
 
         # mover
         self.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}*move"])
@@ -35,7 +88,7 @@ class Maincanvas(tk.Canvas):
 
         # settings button
         self.create_image(x, y, image=self.image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
-        self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: plugin_container.setting_mode_toggle())
+        self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: plugincontainer.setting_mode_toggle())
 
         # plugin container add
         ww = style.widget_resizer_width
@@ -43,12 +96,12 @@ class Maincanvas(tk.Canvas):
             ww = 0
         self.create_window(
                 0, 0,
-                window=plugin_container,
+                window=plugincontainer,
                 anchor="nw",
                 width=style.widget_width_min - style.widget_padding * 2 - ww,
                 tags=f"{widget_id}*plugincontainer"
             )
-        plugin_container.plugin_insert(plugin_name)
+        plugincontainer.plugin_insert(plugin_name)
 
         # background
         self.create_rectangle(0, 0, 0, 0, fill=style.widget_background_color, outline=style.widget_background_outline_color, tags=[f"{widget_id}*background"])
@@ -101,8 +154,8 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
         self.widget_settings_button_set(widget_id)
 
-        plugin_container = plugincontainer.get(widget_id)
-        for plugin_object in plugin_container.plugins_get().values():
+        plugincontainer = plugincontainer.get(widget_id)
+        for plugin_object in plugincontainer.plugins_get().values():
             plugin_object.datalabels_box_set()
 
 
@@ -376,3 +429,8 @@ class Maincanvas(tk.Canvas):
         except:
             pass
         self.delete(tag)
+
+
+    def run(self):
+        for plugin_object in self.plugin_get_all().values():
+            plugin_object.run()
