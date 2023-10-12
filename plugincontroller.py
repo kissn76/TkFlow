@@ -16,7 +16,7 @@ def list_plugins():
     return __plugins
 
 
-def new_object(plugin_name, plugin_container_id, master=None, **kwargs):
+def new_object(plugin_name, plugin_id, plugincontainer_id, canvas_object, master=None, **kwargs):
     if plugin_name in __plugins:
-        return importlib.import_module(plugin_name, plugins_dir).Plugin(master, plugin_name, plugin_container_id, **kwargs)
+        return importlib.import_module(plugin_name, plugins_dir).Plugin(master, plugin_id, plugincontainer_id, canvas_object, **kwargs)
 

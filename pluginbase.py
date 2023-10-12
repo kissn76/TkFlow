@@ -3,7 +3,6 @@ from tkinter import ttk
 from PIL import ImageTk
 from datalabel import InputLabel, OutputLabel
 import style
-import mainwindow
 
 
 
@@ -32,13 +31,14 @@ import mainwindow
 
 
 class PluginBase(ttk.Frame):
-    def __init__(self, master, plugin_id, plugin_container_id, name=None, parents=[], **kwargs):
+    def __init__(self, master, plugin_id, plugincontainer_id, canvas_object, name=None, parents=[], **kwargs):
         super().__init__(master, **kwargs)
         self.parents = parents
         self.name = name
         self.id = plugin_id
-        self.plugin_container_id = plugin_container_id
+        self.plugincontainer_id = plugincontainer_id
         self.box = ()   # box in canvas
+        self.canvas = canvas_object
 
         self.__input_container = {}
         self.__output_container = {}
@@ -78,11 +78,11 @@ class PluginBase(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}*plugincontainer")
+        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer_id}*plugincontainer")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
 
-        x1 = int(plugin_container_box[0]) + int(plugin_geometry[2])
-        y1 = int(plugin_container_box[1]) + int(plugin_geometry[3])
+        x1 = int(plugincontainer_box[0]) + int(plugin_geometry[2])
+        y1 = int(plugincontainer_box[1]) + int(plugin_geometry[3])
         x2 = int(x1 + int(plugin_geometry[0]))
         y2 = int(y1 + int(plugin_geometry[1]))
 
@@ -99,8 +99,8 @@ class PluginBase(ttk.Frame):
 
 
     def dnd_arrange_start(self, event):
-        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
+        y = self.winfo_pointery() - self.canvas.winfo_rooty()
 
         self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.id)
         self.floating_widget.place(x=x, y=y)
@@ -108,8 +108,8 @@ class PluginBase(ttk.Frame):
 
     def dnd_arrange_motion(self, event):
         if bool(self.floating_widget):
-            x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-            y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
+            x = self.winfo_pointerx() - self.canvas.winfo_rootx()
+            y = self.winfo_pointery() - self.canvas.winfo_rooty()
 
             self.floating_widget.place(x=x, y=y)
 
@@ -119,10 +119,10 @@ class PluginBase(ttk.Frame):
             self.floating_widget.place_forget()
             self.floating_widget.destroy()
 
-        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-        canvas_x = mainwindow.can_main.canvasx(x)
-        canvas_y = mainwindow.can_main.canvasy(y)
+        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
+        y = self.winfo_pointery() - self.canvas.winfo_rooty()
+        canvas_x = self.canvas.canvasx(x)
+        canvas_y = self.canvas.canvasy(y)
 
         box_set_all()
         for obj in get_all().values():
@@ -168,7 +168,7 @@ class PluginBase(ttk.Frame):
     def input_init(self, *args):
         for var_name in args:
             input_id = f"{self.id}:{var_name}"
-            self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_container_id=self.plugin_container_id)})
+            self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_container_id=self.plugincontainer_id, canvas_object=self.canvas)})
             self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
             self.__input_row_counter += 1
 
@@ -180,7 +180,7 @@ class PluginBase(ttk.Frame):
         output_id = self.__input_container[input_id].value_get()
         if bool(output_id):
             plugin_id = output_id.split(':')[0]
-            plugin_object = get(plugin_id)
+            plugin_object = self.canvas.plugin_get(plugin_id)
             result = plugin_object.output_value_get(output_id).value_get()
         return result
 
@@ -192,7 +192,7 @@ class PluginBase(ttk.Frame):
     def output_init(self, *args):
         for var_name in args:
             output_id = f"{self.id}:{var_name}"
-            self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_container_id=self.plugin_container_id)})
+            self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_container_id=self.plugincontainer_id, canvas_object=self.canvas)})
             self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
             self.__output_row_counter += 1
 

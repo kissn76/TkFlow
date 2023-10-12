@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import ImageTk
 import plugincontroller
-import plugincontainer
 import mainwindow
 import style
 
@@ -23,7 +22,7 @@ class Pluginframe(ttk.Treeview):
 
         # add available plugin to gui
         def add(plugin_name):
-            plugin_object = plugincontroller.new_object(plugin_name, None)
+            plugin_object = plugincontroller.new_object(plugin_name, None, None, None)
             for plugin_parent_path in plugin_object.parents:
                 parent_path = ""
                 for parent_element in plugin_parent_path.split('/'):
@@ -126,15 +125,15 @@ class Pluginframe(ttk.Treeview):
 
                             if len(widget_ids) == 1:
                                 target_widget_id = list(widget_ids)[0]
-                                plugin_container = plugincontainer.get(target_widget_id)
-                                plugin_container.plugin_insert(plugin_id)
+                                plugincontainer = mainwindow.can_main.plugincontainer_get(target_widget_id)
+                                mainwindow.can_main.plugin_add(plugin_id, plugincontainer)
                                 self.winfo_toplevel().update()
                                 mainwindow.can_main.widget_background_set(widget_id, keep_height=True)
                                 mainwindow.can_main.widget_resizer_set(widget_id)
 
-                                for plugin_object in plugin_container.plugins_get().values():
+                                for plugin_object in plugincontainer.plugins_get().values():
                                     plugin_object.datalabels_box_set()
-                                    plugin_object.connect()
+                                    plugin_object.connect(mainwindow.can_main.plugin_get_all())
                             else:
                                 print("too many widget are overlapped:", widget_ids)
                     except:

@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from PIL import Image, ImageTk
-import mainwindow
+from PIL import ImageTk
 import plugincontroller
 import plugincontainer
 import pluginbase
@@ -20,17 +19,18 @@ class Maincanvas(tk.Canvas):
         self.__plugincontainer_counter = 0
 
 
-    def plugin_add(self, plugin_name, plugincontainer):
-        plugin_id = f"{plugin_name}.{self.plugin_counter_get()}"
+    def plugin_add(self, plugin_name: str, plugincontainer: plugincontainer.Plugincontainer):
+        plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
 
-        plugin_object = plugincontroller.new_object(plugin_name, plugincontainer.id, master=plugincontainer)
+        plugin_object = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer.id, self, master=plugincontainer)
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
         plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
 
         self.__plugin_container.update({plugin_id: plugin_object})
+        plugincontainer.plugin_insert(plugin_object)
 
 
-    def plugin_get(self, plugin_id):
+    def plugin_get(self, plugin_id: str) -> pluginbase.PluginBase:
         plugin_object = None
         try:
             plugin_object = self.__plugin_container[plugin_id]
@@ -39,7 +39,7 @@ class Maincanvas(tk.Canvas):
         return plugin_object
 
 
-    def plugin_get_all(self):
+    def plugin_get_all(self) -> dict:
         return self.__plugin_container
 
 
@@ -48,14 +48,14 @@ class Maincanvas(tk.Canvas):
             plugin_object.box_set()
 
 
-    def plugin_counter_get(self):
+    def __plugin_counter_get(self) -> int:
         ret = self.__plugin_counter
         self.__plugin_counter += 1
         return ret
 
 
-    def plugincontainer_add(self):
-        plugincontainer_id = f"widget.{self.plugincontainer_counter_get()}"
+    def plugincontainer_add(self) -> str | plugincontainer.Plugincontainer:
+        plugincontainer_id = f"widget.{self.__plugincontainer_counter_get()}"
 
         plugincontainer_object = plugincontainer.Plugincontainer(self, plugincontainer_id)
         self.__plugincontainer_container.update({plugincontainer_id: plugincontainer_object})
@@ -63,7 +63,16 @@ class Maincanvas(tk.Canvas):
         return plugincontainer_id, plugincontainer_object
 
 
-    def plugincontainer_counter_get(self):
+    def plugincontainer_get(self, plugincontainer_id: str) -> plugincontainer.Plugincontainer:
+        plugincontainer_object = None
+        try:
+            plugincontainer_object = self.__plugincontainer_container[plugincontainer_id]
+        except:
+            pass
+        return plugincontainer_object
+
+
+    def __plugincontainer_counter_get(self) -> int:
         ret = self.__plugincontainer_counter
         self.__plugincontainer_counter += 1
         return ret
@@ -101,7 +110,6 @@ class Maincanvas(tk.Canvas):
                 width=style.widget_width_min - style.widget_padding * 2 - ww,
                 tags=f"{widget_id}*plugincontainer"
             )
-        plugincontainer.plugin_insert(plugin_name)
 
         # background
         self.create_rectangle(0, 0, 0, 0, fill=style.widget_background_color, outline=style.widget_background_outline_color, tags=[f"{widget_id}*background"])
@@ -147,6 +155,8 @@ class Maincanvas(tk.Canvas):
                 self.tag_bind(f"{widget_id}*resize_wh", "<Leave>", lambda event: self.config(cursor=""))
                 self.tag_bind(f"{widget_id}*resize_wh", "<Double-Button-1>", lambda event: self.widget_resize(widget_id, 0, 0))
 
+        self.plugin_add(plugin_name, plugincontainer)
+
         self.update()
         self.widget_name_set(widget_id)
         self.widget_plugin_container_set(widget_id)
@@ -154,7 +164,6 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
         self.widget_settings_button_set(widget_id)
 
-        plugincontainer = plugincontainer.get(widget_id)
         for plugin_object in plugincontainer.plugins_get().values():
             plugin_object.datalabels_box_set()
 
@@ -311,23 +320,23 @@ class Maincanvas(tk.Canvas):
             self.xview_scroll(-1, 'units')
 
         canvas_x = self.canvasx(x)
-        plugin_container_box = self.bbox(f"{widget_id}*plugincontainer")
-        plugin_container_width = canvas_x - plugin_container_box[0] - style.widget_padding * 2
+        plugincontainer_box = self.bbox(f"{widget_id}*plugincontainer")
+        plugincontainer_width = canvas_x - plugincontainer_box[0] - style.widget_padding * 2
 
         ww = style.widget_resizer_width
         if not bool(style.widget_width_resizer):
             ww = 0
-        if plugin_container_width < style.widget_width_min - style.widget_padding * 2 - ww:
-            plugin_container_width = style.widget_width_min - style.widget_padding * 2 - ww
+        if plugincontainer_width < style.widget_width_min - style.widget_padding * 2 - ww:
+            plugincontainer_width = style.widget_width_min - style.widget_padding * 2 - ww
 
-        self.itemconfigure(f"{widget_id}*plugincontainer", width=plugin_container_width)
+        self.itemconfigure(f"{widget_id}*plugincontainer", width=plugincontainer_width)
         self.widget_background_set(widget_id, keep_height=True)
         self.widget_resizer_set(widget_id)
         self.widget_settings_button_set(widget_id)
         self.update()
 
-        plugin_container = plugincontainer.get(widget_id)
-        for plugin_object in plugin_container.plugins_get().values():
+        plugincontainer = self.plugincontainer_get(widget_id)
+        for plugin_object in plugincontainer.plugins_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -339,22 +348,22 @@ class Maincanvas(tk.Canvas):
             self.yview_scroll(-1, 'units')
 
         canvas_y = self.canvasy(y)
-        plugin_container_box = self.bbox(f"{widget_id}*plugincontainer")
+        plugincontainer_box = self.bbox(f"{widget_id}*plugincontainer")
 
-        plugin_container_height = canvas_y - plugin_container_box[1] - style.widget_padding * 2
+        plugincontainer_height = canvas_y - plugincontainer_box[1] - style.widget_padding * 2
 
         wh = style.widget_resizer_width
         if not bool(style.widget_height_resizer):
             wh = 0
         # a plugincontainer nem lehet olyan kicsi, hogy a widget a minimum méret alá csökkenjen
-        if plugin_container_height < style.widget_height_min - style.widget_padding * 2 - wh:
-            plugin_container_height = style.widget_height_min - style.widget_padding * 2 - wh
+        if plugincontainer_height < style.widget_height_min - style.widget_padding * 2 - wh:
+            plugincontainer_height = style.widget_height_min - style.widget_padding * 2 - wh
         # a plugincontainer nem lehet a saját tényleges méreténél kisebb
-        if plugin_container_height < plugin_container_box[3] - plugin_container_box[1]:
-            plugin_container_height = plugin_container_box[3] - plugin_container_box[1]
+        if plugincontainer_height < plugincontainer_box[3] - plugincontainer_box[1]:
+            plugincontainer_height = plugincontainer_box[3] - plugincontainer_box[1]
 
-        plugin_container = plugincontainer.get(widget_id)
-        plugin_container.configure(height=plugin_container_height)
+        plugincontainer = self.plugincontainer_get(widget_id)
+        plugincontainer.configure(height=plugincontainer_height)
         self.widget_background_set(widget_id)
         self.widget_resizer_set(widget_id)
 
@@ -385,8 +394,8 @@ class Maincanvas(tk.Canvas):
         self.widget_settings_button_set(widget_id)
         self.widget_resizer_set(widget_id)
 
-        plugin_container = plugincontainer.get(widget_id)
-        for plugin_object in plugin_container.plugins_get().values():
+        plugincontainer = self.plugincontainer_get(widget_id)
+        for plugin_object in plugincontainer.plugins_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -423,7 +432,7 @@ class Maincanvas(tk.Canvas):
         try:
             plugin_id, tmp = tag.split(':')
             input_id, _ = tmp.split('*')
-            plugin_object = pluginbase.get(plugin_id)
+            plugin_object = self.plugin_get(plugin_id)
             input_object = plugin_object.input_container_get()[f"{plugin_id}:{input_id}"]
             input_object.value_set("")
         except:

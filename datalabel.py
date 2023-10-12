@@ -1,13 +1,11 @@
 from tkinter import ttk
-from PIL import Image, ImageTk
-import mainwindow
-import pluginbase
+from PIL import ImageTk
 import style
 
 
 
 class DataLabel(ttk.Frame):
-    def __init__(self, master, id, plugin_container_id):
+    def __init__(self, master, id, plugin_container_id, canvas_object):
         super().__init__(master)
         self.image_anydata = ImageTk.PhotoImage(style.image_datatype_any_12)
         self.image_data = ImageTk.PhotoImage(style.image_data_12)
@@ -15,6 +13,7 @@ class DataLabel(ttk.Frame):
         self.id = id
         self.plugin_container_id = plugin_container_id
         self.box = ()   # box in canvas
+        self.canvas = canvas_object
 
         self.lbl_txt = ttk.Label(self, text="")
         self.lbl_data_type = ttk.Label(self, image=self.image_anydata)
@@ -42,7 +41,7 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = mainwindow.can_main.bbox(f"{self.plugin_container_id}*plugincontainer")
+        plugin_container_box = self.canvas.bbox(f"{self.plugin_container_id}*plugincontainer")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -73,20 +72,20 @@ class DataLabel(ttk.Frame):
         end_y = input_object.box[1] + ((input_object.box[3] - input_object.box[1]) / 2)
 
         # count and draw line
-        mainwindow.can_main.connect_line_create(start_x, start_y, end_x, end_y, line_id)
+        self.canvas.connect_line_create(start_x, start_y, end_x, end_y, line_id)
 
 
-    def diconnect(self, line_id=None):
+    def disconnect(self, line_id=None):
         if not bool(line_id):
             line_id = f"{self.id}*connect_line"
 
-        mainwindow.can_main.connect_line_delete(line_id)
+        self.canvas.connect_line_delete(line_id)
 
 
 
 class InputLabel(DataLabel):
-    def __init__(self, master, id, plugin_container_id):
-        super().__init__(master, id, plugin_container_id)
+    def __init__(self, master, id, plugin_container_id, canvas_object):
+        super().__init__(master, id, plugin_container_id, canvas_object)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
 
 
@@ -94,17 +93,17 @@ class InputLabel(DataLabel):
         start_variable_id = self.value_get()
         if bool(start_variable_id):
             plugin_id = start_variable_id.split(':')[0]
-            plugin_object = pluginbase.get(plugin_id)
+            plugin_object = self.canvas.plugin_get(plugin_id)
             output_object = plugin_object.output_object_get(start_variable_id)
             super().connect(output_object, self)
         else:
-            super().diconnect()
+            super().disconnect()
 
 
 
 class OutputLabel(DataLabel):
-    def __init__(self, master, id, plugin_container_id):
-        super().__init__(master, id, plugin_container_id)
+    def __init__(self, master, id, plugin_container_id, canvas_object):
+        super().__init__(master, id, plugin_container_id, canvas_object)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
 
         self.lbl_data.grid(row=0, column=1, sticky="n, s, w, e")
@@ -120,15 +119,15 @@ class OutputLabel(DataLabel):
 
 
     def dnd_motion(self, event):
-        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-        canvas_x = mainwindow.can_main.canvasx(x)
-        canvas_y = mainwindow.can_main.canvasy(y)
+        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
+        y = self.winfo_pointery() - self.canvas.winfo_rooty()
+        canvas_x = self.canvas.canvasx(x)
+        canvas_y = self.canvas.canvasy(y)
 
         start_x = self.box[2]
         start_y = self.box[1] + ((self.box[3] - self.box[1]) / 2)
 
-        mainwindow.can_main.connect_line_create(start_x, start_y, canvas_x, canvas_y, "drawing")
+        self.canvas.connect_line_create(start_x, start_y, canvas_x, canvas_y, "drawing")
 
         if bool(self.__last_input_object):
             self.__last_input_object.leave()
@@ -141,7 +140,7 @@ class OutputLabel(DataLabel):
 
 
     def dnd_stop(self, event):
-        mainwindow.can_main.connect_line_delete("drawing")
+        self.canvas.connect_line_delete("drawing")
         self.__last_input_object = None
 
         input_object = self.input_object_find()
@@ -150,23 +149,23 @@ class OutputLabel(DataLabel):
             input_object.connect()
 
 
-    def input_object_find(self):
+    def input_object_find(self) -> InputLabel:
         ret = None
 
-        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-        canvas_x = mainwindow.can_main.canvasx(x)
-        canvas_y = mainwindow.can_main.canvasy(y)
+        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
+        y = self.winfo_pointery() - self.canvas.winfo_rooty()
+        canvas_x = self.canvas.canvasx(x)
+        canvas_y = self.canvas.canvasy(y)
 
-        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
+        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.canvas.cget("scrollregion").split()))
         if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width and canvas_y < can_main_height:
             try:
-                widgets = mainwindow.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+                widgets = self.canvas.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
                 if len(widgets) > 0:
                     widget_tags = []
                     for id in widgets:
-                        tags = mainwindow.can_main.gettags(id)
+                        tags = self.canvas.gettags(id)
                         if len(tags) > 0:
                             widget_unpack = tags[0].split('*')
                             if len(widget_unpack) > 1:
@@ -178,10 +177,10 @@ class OutputLabel(DataLabel):
                     if len(widget_tags) == 1:
                         target_widget_tag = widget_tags[0].split('*')[0]
                         input_object_list = []
-                        for plugin_object in pluginbase.get_all().values():
-                            if plugin_object.plugin_container_id == target_widget_tag:
-                                for input_object in plugin_object.input_container_get().values():
-                                    input_object_list.append(input_object)
+                        plugincontainer = self.canvas.plugincontainer_get(target_widget_tag)
+                        for plugin_object in plugincontainer.plugins_get().values():
+                            for input_object in plugin_object.input_container_get().values():
+                                input_object_list.append(input_object)
                         for input_object in input_object_list:
                             if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
                                 ret = input_object
@@ -193,7 +192,7 @@ class OutputLabel(DataLabel):
 
 
     def connect(self):
-        for plugin_object in pluginbase.get_all().values():
+        for plugin_object in self.canvas.plugin_get_all().values():
             for input_object in plugin_object.input_container_get().values():
                 if input_object.value_get() == self.id:
                     line_id = f"{input_object.id}*connect_line"

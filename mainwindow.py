@@ -202,7 +202,7 @@ class Mainwindow(tk.Tk):
         print(project_json)
 
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         pcs_boxes = {}
         pcs_plugins = plugincontainer.widget_plugins_get_all()
         plugins = pluginbase.get_all_as_dict()
