@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import ImageTk
+import json
 import plugincontroller
 import mainwindow
 import style
@@ -20,10 +21,13 @@ class Pluginframe(ttk.Treeview):
         self.plugin_categories = {}
         self.plugin_element_counter = 0
 
+        pluginjson = None
+        with open('plugins/plugins.json') as f:
+            pluginjson = json.load(f)
+
         # add available plugin to gui
-        def add(plugin_name):
-            plugin_object = plugincontroller.new_object(plugin_name, None, None, None)
-            for plugin_parent_path in plugin_object.parents:
+        def add(plugin):
+            for plugin_parent_path in plugin["parents"]:
                 parent_path = ""
                 for parent_element in plugin_parent_path.split('/'):
                     parent_path_new = parent_path
@@ -50,14 +54,14 @@ class Pluginframe(ttk.Treeview):
                     tree_master = self.plugin_categories[parent_path]
                 except:
                     pass
-                self.insert(tree_master, 'end', f"plugin:{plugin_name}.{self.plugin_element_counter}", text=plugin_object.name, image=self.image_work)
+                self.insert(tree_master, 'end', f"plugin:{plugin['file'].split('.')[0]}.{self.plugin_element_counter}", text=plugin["name"], image=self.image_work)
                 self.plugin_element_counter += 1
                 self.bind('<<TreeviewSelect>>', lambda event: self.dnd_start(event, self.selection()))
                 self.bind('<B1-Motion>', lambda event: self.dnd_motion(event))
                 self.bind('<ButtonRelease-1>', lambda event: self.dnd_stop(event, self.selection()))
 
-        for plugin_name in plugincontroller.list_plugins():
-            add(plugin_name)
+        for plugin in pluginjson:
+            add(plugin)
 
 
     # plugin list methods

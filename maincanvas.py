@@ -22,15 +22,16 @@ class Maincanvas(tk.Canvas):
     def plugin_add(self, plugin_name: str, plugincontainer: plugincontainer.Plugincontainer):
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
 
-        plugin_object = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer.id, self, master=plugincontainer)
+        plugin_base = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer.id, self, master=plugincontainer)
+        plugin_object = plugin_base.view
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
         plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
 
-        self.__plugin_container.update({plugin_id: plugin_object})
+        self.__plugin_container.update({plugin_id: plugin_base})
         plugincontainer.plugin_insert(plugin_object)
 
 
-    def plugin_get(self, plugin_id: str) -> pluginbase.PluginBase:
+    def plugin_get(self, plugin_id: str) -> pluginbase.Pluginbase:
         plugin_object = None
         try:
             plugin_object = self.__plugin_container[plugin_id]

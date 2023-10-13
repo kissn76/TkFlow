@@ -5,9 +5,9 @@ import pluginbase
 
 
 
-class Plugin(pluginbase.PluginBase):
+class Plugin(pluginbase.Pluginbase):
     def __init__(self, master, plugin_name, plugin_container_id, canvas_object, **kwargs):
-        super().__init__(master, plugin_name, plugin_container_id, canvas_object, name="Slider", parents=["Widgets"], **kwargs)
+        super().__init__(master, plugin_name, plugin_container_id, canvas_object, **kwargs)
         # init input, output
         self.output_init("value")
 

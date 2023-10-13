@@ -3,42 +3,115 @@ from tkinter import ttk
 from PIL import ImageTk
 from datalabel import InputLabel, OutputLabel
 import style
+# import maincanvas
+import plugincontainer
 
 
 
-# class Pluginbase():
-#     '''
-#         Pluginbase controller
-#     '''
-#     pass
+class Pluginbase():
+    '''
+        Pluginbase controller
+    '''
+    def __init__(self, master, plugin_id, plugincontainer_id, canvas_object, **kwargs):
+        self.view = None
+        self.model = PluginbaseModel(plugin_id, plugincontainer_id)
+
+        self.view_create(master, canvas_object, **kwargs)
+
+
+    def view_create(self, master, canvas_object, **kwargs):
+        try:
+            self.view.destroy()
+        except:
+            pass
+        self.view = None
+        self.view = PluginbaseView(master, canvas_object, self.model, **kwargs)
+
+
+    def input_init(self, *args):
+        for var_name in args:
+            input_id = f"{self.model.id}:{var_name}"
+            self.view.input_init(input_id)
+            self.input_value_set(input_id, None)
+
+
+    def input_value_set(self, input, value):
+        self.model.input_value_set(input, value)
+        self.view.input_value_set(input)
+
+
+    # get output value that represented by input
+    def input_value_get(self, input):
+        input_id = f"{self.model.id}:{input}"
+        result = None
+        output_id = self.model.input_value_get(input_id)
+        if bool(output_id):
+            plugin_id = output_id.split(':')[0]
+            plugin_object = self.view.canvas.plugin_get(plugin_id)
+            result = plugin_object.output_value_get(output_id)
+        return result
+
+
+    def output_init(self, *args):
+        for var_name in args:
+            output_id = f"{self.model.id}:{var_name}"
+            self.view.output_init(output_id)
+            self.output_value_set(output_id, None)
+
+
+    def output_value_set(self, output, value):
+        self.model.output_value_set(output, value)
+        self.view.output_value_set(output)
+
+
+    def output_value_get(self, output):
+        return self.model.output_value_get(output)
+
+
+    def content_init(self, content_object):
+        self.view.content_init(content_object)
 
 
 
-# class PluginbaseModel():
-#     '''
-#         Pluginbase model
-#     '''
-#     pass
-
-
-
-# class PluginbaseView(ttk.Frame):
-#     '''
-#         Pluginbase view
-#     '''
-#     pass
-
-
-
-class PluginBase(ttk.Frame):
-    def __init__(self, master, plugin_id, plugincontainer_id, canvas_object, name=None, parents=[], **kwargs):
-        super().__init__(master, **kwargs)
-        self.parents = parents
-        self.name = name
+class PluginbaseModel():
+    '''
+        Pluginbase model
+    '''
+    def __init__(self, plugin_id, plugincontainer_id):
         self.id = plugin_id
         self.plugincontainer_id = plugincontainer_id
+
+        self.__input_value_container = {}
+        self.__output_value_container = {}
+
+
+    def input_value_set(self, input, value):
+        self.__input_value_container[input] = value
+
+
+    def input_value_get(self, input):
+        return self.__input_value_container[input]
+
+
+    def output_value_set(self, output, value):
+        self.__output_value_container[output] = value
+
+
+    def output_value_get(self, output):
+        return self.__output_value_container[output]
+
+
+
+class PluginbaseView(ttk.Frame):
+    '''
+        Pluginbase view
+    '''
+    def __init__(self, master: plugincontainer.Plugincontainer, canvas_object, model: PluginbaseModel, **kwargs):
+        super().__init__(master, **kwargs)
+        self.model = model
         self.box = ()   # box in canvas
         self.canvas = canvas_object
+        self.plugincontainer = master
 
         self.__input_container = {}
         self.__output_container = {}
@@ -165,45 +238,30 @@ class PluginBase(ttk.Frame):
         self.__content_row_counter += 1
 
 
-    def input_init(self, *args):
-        for var_name in args:
-            input_id = f"{self.id}:{var_name}"
-            self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_container_id=self.plugincontainer_id, canvas_object=self.canvas)})
-            self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
-            self.__input_row_counter += 1
+    def input_init(self, input_id):
+        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_container_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
+        self.__input_row_counter += 1
 
 
-    # get output value that represented by input
-    def input_value_get(self, input):
+    def input_value_set(self, input):
         input_id = f"{self.id}:{input}"
-        result = None
-        output_id = self.__input_container[input_id].value_get()
-        if bool(output_id):
-            plugin_id = output_id.split(':')[0]
-            plugin_object = self.canvas.plugin_get(plugin_id)
-            result = plugin_object.output_value_get(output_id).value_get()
-        return result
+        self.__input_container[input_id].value_set(text=str(self.model.input_value_get()))
+
+
+    def output_init(self, output_id):
+        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_container_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
+        self.__output_row_counter += 1
+
+
+    def output_value_set(self, output):
+        output_id = f"{self.model.id}:{output}"
+        self.__output_container[output_id].value_set(text=str(self.model.output_value_get()))
 
 
     def input_container_get(self):
         return self.__input_container
-
-
-    def output_init(self, *args):
-        for var_name in args:
-            output_id = f"{self.id}:{var_name}"
-            self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_container_id=self.plugincontainer_id, canvas_object=self.canvas)})
-            self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
-            self.__output_row_counter += 1
-
-
-    def output_value_get(self, output):
-        return self.__output_container[output]
-
-
-    def output_value_set(self, output, value):
-        output_id = f"{self.id}:{output}"
-        self.__output_container[output_id].value_set(text=str(value))
 
 
     def output_container_get(self):
