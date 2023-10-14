@@ -56,7 +56,7 @@ class Pluginbase():
         for var_name in args:
             output_id = f"{self.model.id}:{var_name}"
             self.view.output_init(output_id)
-            self.output_value_set(output_id, None)
+            self.output_value_set(output_id, "")
 
 
     def output_value_set(self, output, value):
@@ -145,13 +145,13 @@ class PluginbaseView(ttk.Frame):
         for output_object in self.__output_container.values():
             outputs.update(output_object.to_dict())
 
-        ret = {self.id: {"inputs": inputs, "outputs": outputs}}
+        ret = {self.model.id: {"inputs": inputs, "outputs": outputs}}
         return ret
 
 
     # set box in canvas
     def box_set(self, event=None):
-        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer_id}*plugincontainer")
+        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer.id}*plugincontainer")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
 
         x1 = int(plugincontainer_box[0]) + int(plugin_geometry[2])
@@ -221,7 +221,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def settings_open(self, event):
-        print("Settings panel start", type(self), self.id)
+        print("Settings panel start", type(self), self.model.id)
 
 
     def setting_mode_set(self, setting_mode):
@@ -256,8 +256,8 @@ class PluginbaseView(ttk.Frame):
 
 
     def output_value_set(self, output):
-        output_id = f"{self.model.id}:{output}"
-        self.__output_container[output_id].value_set(text=str(self.model.output_value_get()))
+        text = self.model.output_value_get(output)
+        self.__output_container[output].value_set(text=text)
 
 
     def input_container_get(self):
