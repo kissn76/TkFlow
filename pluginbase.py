@@ -15,8 +15,13 @@ class Pluginbase():
     def __init__(self, master, plugin_id, plugincontainer_id, canvas_object, **kwargs):
         self.view = None
         self.model = PluginbaseModel(plugin_id, plugincontainer_id)
+        self.canvas = canvas_object
 
         self.view_create(master, canvas_object, **kwargs)
+
+
+    def id_get(self):
+        return self.model.id
 
 
     def view_create(self, master, canvas_object, **kwargs):
@@ -30,9 +35,8 @@ class Pluginbase():
 
     def input_init(self, *args):
         for var_name in args:
-            input_id = f"{self.model.id}:{var_name}"
-            self.view.input_init(input_id)
-            self.input_value_set(input_id, None)
+            self.view.input_init(var_name)
+            self.input_value_set(var_name, None)
 
 
     def input_value_set(self, input, value):
@@ -40,11 +44,16 @@ class Pluginbase():
         self.view.input_value_set(input)
 
 
-    # get output value that represented by input
     def input_value_get(self, input):
         input_id = f"{self.model.id}:{input}"
+        return self.model.input_value_get(input_id)
+
+
+    # get output value that represented by input
+    def input_reference_get(self, input):
+        input_id = f"{self.model.id}:{input}"
         result = None
-        output_id = self.model.input_value_get(input_id)
+        output_id = self.model.input_value_get(input)
         if bool(output_id):
             plugin_id = output_id.split(':')[0]
             plugin_object = self.view.canvas.plugin_get(plugin_id)
@@ -52,11 +61,14 @@ class Pluginbase():
         return result
 
 
+    def input_value_get_all(self):
+        return self.model.input_value_get_all()
+
+
     def output_init(self, *args):
         for var_name in args:
-            output_id = f"{self.model.id}:{var_name}"
-            self.view.output_init(output_id)
-            self.output_value_set(output_id, "")
+            self.view.output_init(var_name)
+            self.output_value_set(var_name, "")
 
 
     def output_value_set(self, output, value):
@@ -91,6 +103,10 @@ class PluginbaseModel():
 
     def input_value_get(self, input):
         return self.__input_value_container[input]
+
+
+    def input_value_get_all(self):
+        return self.__input_value_container.copy()
 
 
     def output_value_set(self, output, value):
@@ -245,8 +261,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_value_set(self, input):
-        input_id = f"{self.id}:{input}"
-        self.__input_container[input_id].value_set(text=str(self.model.input_value_get()))
+        self.__input_container[input].value_set(text=self.model.input_value_get(input))
 
 
     def output_init(self, output_id):

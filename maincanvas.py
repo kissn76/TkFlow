@@ -28,7 +28,7 @@ class Maincanvas(tk.Canvas):
         plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
 
         self.__plugin_container.update({plugin_id: plugin_base})
-        plugincontainer.plugin_insert(plugin_object)
+        plugincontainer.plugin_insert(plugin_id, plugin_object)
 
 
     def plugin_get(self, plugin_id: str) -> pluginbase.Pluginbase:

@@ -54,7 +54,9 @@ class DataLabel(ttk.Frame):
 
 
     def value_set(self, text):
-        self.lbl_txt.configure(text=text)
+        if text == None:
+            text = ""
+        self.lbl_txt.configure(text=str(text))
 
 
     def value_get(self):
@@ -193,7 +195,8 @@ class OutputLabel(DataLabel):
 
     def connect(self):
         for plugin_object in self.canvas.plugin_get_all().values():
-            for input_object in plugin_object.input_container_get().values():
-                if input_object.value_get() == self.id:
-                    line_id = f"{input_object.id}*connect_line"
-                    super().connect(self, input_object, line_id)
+            for input_object in plugin_object.input_value_get_all().values():
+                if bool(input_object):
+                    if input_object.value_get() == self.id:
+                        line_id = f"{input_object.id}*connect_line"
+                        super().connect(self, input_object, line_id)

@@ -25,8 +25,8 @@ class Plugincontainer(ttk.Frame):
         return self.__setting_mode
 
 
-    def plugin_insert(self, plugin_object):
-        self.__plugin_container.update({plugin_object.id: plugin_object})
+    def plugin_insert(self, id, plugin_object):
+        self.__plugin_container.update({id: plugin_object})
 
 
     def plugins_get(self):
