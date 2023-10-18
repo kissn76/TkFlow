@@ -16,8 +16,8 @@ class Plugin(pluginbase.Pluginbase):
 
 
     def run(self):
-        one = self.input_value_get("one")
-        two = self.input_value_get("two")
+        one = self.input_value_get_referenced("one")
+        two = self.input_value_get_referenced("two")
 
         if not bool(one):
             one = 0

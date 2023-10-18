@@ -12,7 +12,7 @@ class Plugin(pluginbase.Pluginbase):
         self.output_init("value")
 
         # init own plugin
-        self.sc = ttk.Scale(self.view, from_=-100, to=100, orient='horizontal', command=lambda _: self.run())
+        self.sc = ttk.Scale(self.view_get(), from_=-100, to=100, orient='horizontal', command=lambda _: self.run())
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
 

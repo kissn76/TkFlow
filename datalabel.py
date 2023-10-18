@@ -5,13 +5,14 @@ import style
 
 
 class DataLabel(ttk.Frame):
-    def __init__(self, master, id, plugin_container_id, canvas_object):
+    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
         super().__init__(master)
         self.image_anydata = ImageTk.PhotoImage(style.image_datatype_any_12)
         self.image_data = ImageTk.PhotoImage(style.image_data_12)
 
         self.id = id
-        self.plugin_container_id = plugin_container_id
+        self.plugin_id = plugin_id
+        self.plugincontainer_id = plugincontainer_id
         self.box = ()   # box in canvas
         self.canvas = canvas_object
 
@@ -41,7 +42,7 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = self.canvas.bbox(f"{self.plugin_container_id}*plugincontainer")
+        plugin_container_box = self.canvas.bbox(f"{self.plugincontainer_id}*plugincontainer")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -65,7 +66,7 @@ class DataLabel(ttk.Frame):
 
     def connect(self, output_object, input_object, line_id=None):
         if not bool(line_id):
-            line_id = f"{self.id}*connect_line"
+            line_id = f"{self.plugin_id}:{self.id}*connect_line"
 
         start_x = output_object.box[2]
         start_y = output_object.box[1] + ((output_object.box[3] - output_object.box[1]) / 2)
@@ -86,17 +87,17 @@ class DataLabel(ttk.Frame):
 
 
 class InputLabel(DataLabel):
-    def __init__(self, master, id, plugin_container_id, canvas_object):
-        super().__init__(master, id, plugin_container_id, canvas_object)
+    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
+        super().__init__(master, id, plugin_id, plugincontainer_id, canvas_object)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
 
 
     def connect(self):
         start_variable_id = self.value_get()
         if bool(start_variable_id):
-            plugin_id = start_variable_id.split(':')[0]
+            plugin_id, output_id = start_variable_id.split(':')
             plugin_object = self.canvas.plugin_get(plugin_id)
-            output_object = plugin_object.output_object_get(start_variable_id)
+            output_object = plugin_object.output_object_get(output_id)
             super().connect(output_object, self)
         else:
             super().disconnect()
@@ -104,8 +105,8 @@ class InputLabel(DataLabel):
 
 
 class OutputLabel(DataLabel):
-    def __init__(self, master, id, plugin_container_id, canvas_object):
-        super().__init__(master, id, plugin_container_id, canvas_object)
+    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
+        super().__init__(master, id, plugin_id, plugincontainer_id, canvas_object)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
 
         self.lbl_data.grid(row=0, column=1, sticky="n, s, w, e")
@@ -147,7 +148,8 @@ class OutputLabel(DataLabel):
 
         input_object = self.input_object_find()
         if bool(input_object):
-            input_object.value_set(self.id)
+            plugin_object = self.canvas.plugin_get(input_object.plugin_id)
+            plugin_object.input_value_set(input_object.id, f"{self.plugin_id}:{self.id}")
             input_object.connect()
 
 
@@ -195,8 +197,8 @@ class OutputLabel(DataLabel):
 
     def connect(self):
         for plugin_object in self.canvas.plugin_get_all().values():
-            for input_object in plugin_object.input_value_get_all().values():
-                if bool(input_object):
-                    if input_object.value_get() == self.id:
-                        line_id = f"{input_object.id}*connect_line"
-                        super().connect(self, input_object, line_id)
+            for input_id, input_value in plugin_object.input_value_get().items():
+                if bool(input_value):
+                    if input_value == f"{self.plugin_id}:{self.id}":
+                        line_id = f"{plugin_object.id_get()}:{input_id}*connect_line"
+                        super().connect(self, plugin_object.input_object_get(input_id), line_id)

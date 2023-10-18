@@ -23,7 +23,7 @@ class Maincanvas(tk.Canvas):
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
 
         plugin_base = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer.id, self, master=plugincontainer)
-        plugin_object = plugin_base.view
+        plugin_object = plugin_base.view_get()
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
         plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
 
@@ -431,11 +431,8 @@ class Maincanvas(tk.Canvas):
 
     def connect_line_delete(self, tag):
         try:
-            plugin_id, tmp = tag.split(':')
-            input_id, _ = tmp.split('*')
-            plugin_object = self.plugin_get(plugin_id)
-            input_object = plugin_object.input_container_get()[f"{plugin_id}:{input_id}"]
-            input_object.value_set("")
+            plugin_id, input_id = tag.split('*')[0].split(':')
+            self.plugin_get(plugin_id).input_value_set(input_id, None)
         except:
             pass
         self.delete(tag)
