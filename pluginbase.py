@@ -45,13 +45,13 @@ class Pluginbase():
 
 
     def input_value_get(self, input):
-        input_id = f"{self.model.id}:{input}"
-        return self.model.input_value_get(input_id)
+        # input_id = f"{self.model.id}:{input}"
+        return self.model.input_value_get(input)
 
 
     # get output value that represented by input
     def input_reference_get(self, input):
-        input_id = f"{self.model.id}:{input}"
+        # input_id = f"{self.model.id}:{input}"
         result = None
         output_id = self.model.input_value_get(input)
         if bool(output_id):
