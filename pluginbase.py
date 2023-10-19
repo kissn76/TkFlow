@@ -142,6 +142,8 @@ class PluginbaseView(ttk.Frame):
         self.canvas = canvas_object
         self.plugincontainer = master
 
+        self.floating_widget = None
+
         self.__input_container = {}
         self.__output_container = {}
 
@@ -204,7 +206,7 @@ class PluginbaseView(ttk.Frame):
         x = self.winfo_pointerx() - self.canvas.winfo_rootx()
         y = self.winfo_pointery() - self.canvas.winfo_rooty()
 
-        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.id)
+        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.model.id)
         self.floating_widget.place(x=x, y=y)
 
 
@@ -220,11 +222,19 @@ class PluginbaseView(ttk.Frame):
         if bool(self.floating_widget):
             self.floating_widget.place_forget()
             self.floating_widget.destroy()
+            self.floating_widget = None
 
         x = self.winfo_pointerx() - self.canvas.winfo_rootx()
         y = self.winfo_pointery() - self.canvas.winfo_rooty()
         canvas_x = self.canvas.canvasx(x)
         canvas_y = self.canvas.canvasy(y)
+
+        # pointer pozíció:
+        #   - ugyanazon plugincontainer
+        #       - ugyanazon pozíciójában
+        #       - másik pozícióban
+        #   - másik plugincontiner valamelyik pozíciójában
+        #   - plugincontaineren kívül, üres területen
 
         box_set_all()
         for obj in get_all().values():

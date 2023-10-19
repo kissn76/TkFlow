@@ -9,14 +9,15 @@ import style
 
 
 class Maincanvas(tk.Canvas):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+    def __init__(self, mainwindow, **kwargs):
+        super().__init__(mainwindow.frm_main, **kwargs)
         self.image_move = ImageTk.PhotoImage(style.image_move_16)
         self.image_settings = ImageTk.PhotoImage(style.image_setting_16)
         self.__plugin_container = {}    # contains all plugin
         self.__plugin_counter = 0
         self.__plugincontainer_container = {}
         self.__plugincontainer_counter = 0
+        self.mainwindow = mainwindow
 
 
     def plugin_add(self, plugin_name: str, plugincontainer: plugincontainer.Plugincontainer):
@@ -307,6 +308,7 @@ class Maincanvas(tk.Canvas):
     def dnd_stop(self, event):
         self.dtag('selected')    # removes the 'selected' tag
         self.unbind('<Motion>')
+        self.mainwindow.statusbar_set()
 
 
     def widget_resize(self, widget_id, x, y):

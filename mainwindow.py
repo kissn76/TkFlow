@@ -57,7 +57,7 @@ class Mainwindow(tk.Tk):
 
         # Canvas
         self.frm_main = ttk.Frame(self)
-        can_main = maincanvas.Maincanvas(self.frm_main, scrollregion=(0, 0, 2000, 2000))
+        can_main = maincanvas.Maincanvas(self, scrollregion=(0, 0, 2000, 2000))
         hbar=ttk.Scrollbar(self.frm_main, orient=tk.HORIZONTAL)
         hbar.grid(row=1, column=0, sticky="e, w")
         hbar.config(command=can_main.xview)
@@ -69,10 +69,10 @@ class Mainwindow(tk.Tk):
         can_main.rowconfigure(0, weight=1)
         can_main.columnconfigure(0, weight=1)
         can_main.bind('<Button-1>', can_main.dnd_start)
-        can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(can_main.canvasx(event.x))}, {int(can_main.canvasy(event.y))}"))
         self.frm_main.grid(row=0, column=0, sticky="n, s, w, e")
         self.frm_main.rowconfigure(0, weight=1)
         self.frm_main.columnconfigure(0, weight=1)
+        self.statusbar_set()
 
         # Sidebar
         self.sidebar = ttk.Frame(self)
@@ -90,6 +90,11 @@ class Mainwindow(tk.Tk):
         self.selected_theme = tk.StringVar()
 
         self.after(0, self.run)
+
+
+    def statusbar_set(self):
+        can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(can_main.canvasx(event.x))}, {int(can_main.canvasy(event.y))}"))
+
 
 
     def settings(self):
