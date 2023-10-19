@@ -163,40 +163,37 @@ class OutputLabel(DataLabel):
 
         can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.canvas.cget("scrollregion").split()))
         if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width and canvas_y < can_main_height:
-            try:
-                widgets = self.canvas.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+            widgets = self.canvas.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
-                if len(widgets) > 0:
-                    widget_tags = []
-                    for id in widgets:
-                        tags = self.canvas.gettags(id)
-                        if len(tags) > 0:
-                            widget_unpack = tags[0].split('*')
-                            if len(widget_unpack) > 1:
-                                if widget_unpack[1] == "plugincontainer":
-                                    widget_tags.append(tags[0])
+            if len(widgets) > 0:
+                widget_tags = []
+                for id in widgets:
+                    tags = self.canvas.gettags(id)
+                    if len(tags) > 0:
+                        widget_unpack = tags[0].split('*')
+                        if len(widget_unpack) > 1:
+                            if widget_unpack[1] == "plugincontainer":
+                                widget_tags.append(tags[0])
 
-                    widget_tags = list(set(widget_tags))
+                widget_tags = list(set(widget_tags))
 
-                    if len(widget_tags) == 1:
-                        target_widget_tag = widget_tags[0].split('*')[0]
-                        input_object_list = []
-                        plugincontainer = self.canvas.plugincontainer_get(target_widget_tag)
-                        for plugin_object in plugincontainer.plugins_get().values():
-                            for input_object in plugin_object.input_container_get().values():
-                                input_object_list.append(input_object)
-                        for input_object in input_object_list:
-                            if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
-                                ret = input_object
-                                break
-            except:
-                pass
+                if len(widget_tags) == 1:
+                    target_widget_tag = widget_tags[0].split('*')[0]
+                    input_object_list = []
+                    plugincontainer = self.canvas.plugincontainer_get(target_widget_tag)
+                    for plugin_object in plugincontainer.plugin_get().values():
+                        for input_object in plugin_object.input_container_get().values():
+                            input_object_list.append(input_object)
+                    for input_object in input_object_list:
+                        if canvas_x >= input_object.box[0] and canvas_x <= input_object.box[2] and canvas_y >= input_object.box[1] and canvas_y <= input_object.box[3]:
+                            ret = input_object
+                            break
 
         return ret
 
 
     def connect(self):
-        for plugin_object in self.canvas.plugin_get_all().values():
+        for plugin_object in self.canvas.plugin_get().values():
             for input_id, input_value in plugin_object.input_value_get().items():
                 if bool(input_value):
                     if input_value == f"{self.plugin_id}:{self.id}":

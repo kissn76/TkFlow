@@ -12,25 +12,25 @@ class Pluginbase():
     '''
         Pluginbase controller
     '''
-    def __init__(self, master, plugin_id, plugincontainer_id, canvas_object, **kwargs):
+    def __init__(self, plugin_id, plugincontainer_object, canvas_object, **kwargs):
         self.__view = None
-        self.__model = PluginbaseModel(plugin_id, plugincontainer_id)
+        self.__model = PluginbaseModel(plugin_id)
         self.__canvas = canvas_object
 
-        self.view_create(master, canvas_object, **kwargs)
+        self.view_create(plugincontainer_object)
 
 
     def id_get(self):
-        return self.__model.id
+        return self.__model.id_get()
 
 
-    def view_create(self, master, canvas_object, **kwargs):
+    def view_create(self, plugincontainer_object, **kwargs):
         try:
             self.__view.destroy()
         except:
             pass
         self.__view = None
-        self.__view = PluginbaseView(master, canvas_object, self.__model, **kwargs)
+        self.__view = PluginbaseView(plugincontainer_object, self.__canvas, self.__model, **kwargs)
 
 
     def view_get(self):
@@ -53,7 +53,6 @@ class Pluginbase():
 
 
     def input_value_get(self, input=None):
-        # input_id = f"{self.model.id}:{input}"
         ret = None
         if input == None:
             ret = self.__model.input_value_get_all()
@@ -64,7 +63,6 @@ class Pluginbase():
 
     # get output value that represented by input
     def input_value_get_referenced(self, input):
-        # input_id = f"{self.model.id}:{input}"
         result = None
         input_value = self.__model.input_value_get(input)
         if bool(input_value):
@@ -102,12 +100,15 @@ class PluginbaseModel():
     '''
         Pluginbase model
     '''
-    def __init__(self, plugin_id, plugincontainer_id):
-        self.id = plugin_id
-        self.plugincontainer_id = plugincontainer_id
+    def __init__(self, plugin_id):
+        self.__id = plugin_id
 
         self.__input_value_container = {}
         self.__output_value_container = {}
+
+
+    def id_get(self):
+        return self.__id
 
 
     def input_value_set(self, input, value):
@@ -176,7 +177,7 @@ class PluginbaseView(ttk.Frame):
         for output_object in self.__output_container.values():
             outputs.update(output_object.to_dict())
 
-        ret = {self.model.id: {"inputs": inputs, "outputs": outputs}}
+        ret = {self.model.id_get(): {"inputs": inputs, "outputs": outputs}}
         return ret
 
 
@@ -206,7 +207,7 @@ class PluginbaseView(ttk.Frame):
         x = self.winfo_pointerx() - self.canvas.winfo_rootx()
         y = self.winfo_pointery() - self.canvas.winfo_rooty()
 
-        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.model.id)
+        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.model.id_get())
         self.floating_widget.place(x=x, y=y)
 
 
@@ -219,6 +220,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def dnd_arrange_stop(self, event):
+        widget_id_move = self.floating_widget.cget("text")
         if bool(self.floating_widget):
             self.floating_widget.place_forget()
             self.floating_widget.destroy()
@@ -235,21 +237,50 @@ class PluginbaseView(ttk.Frame):
         #       - másik pozícióban
         #   - másik plugincontiner valamelyik pozíciójában
         #   - plugincontaineren kívül, üres területen
+        #       - ha csak egy plugin van a forrás plugincontainer-ben, akkor ne történjen semmi (értelmetlen)
 
-        box_set_all()
-        for obj in get_all().values():
-            x1, y1, x2, y2 = obj.box
-            # if pointer is in plugin box
+        # box_set_all()
+
+        plugincontainer_target = None
+        plugin_target = None
+
+        for widget_id in self.canvas.plugincontainer_get().keys():
+            widget_box = self.canvas.bbox(f"{widget_id}*background")
+            x1, y1, x2, y2 = widget_box
             if canvas_x >= x1 and canvas_x <= x2 and canvas_y >= y1 and canvas_y <= y2:
-                # if pointer is in beginning of plugin box
-                if canvas_y <= int(y1 + ((y2 - y1) / 2)):
-                    print(obj.id, "befor")
-                # if pointer is in ending of plugin box
+                plugincontainer_target = widget_id
+                for plugin_id, plugin_object in self.canvas.plugincontainer_get(plugincontainer_target).plugin_get().items():
+                    plugin_object.box_set()
+                    x1, y1, x2, y2 = plugin_object.box
+                    if canvas_y >= y1 and canvas_y <= y2:
+                        plugin_target = plugin_id
+
+        if bool(plugincontainer_target):
+            if plugincontainer_target == self.plugincontainer.id:
+                # widget nem változik
+                if bool(plugin_target):
+                    if plugin_target == widget_id_move:
+                        # Semmi nem változik
+                        print("Nothing changed")
+                        # pass
+                    else:
+                        # A plugin pozíciója a widgeten belűl változik
+                        print(f"There is'nt widget change, {widget_id_move} plugin moves before {plugin_target} plugin")
                 else:
-                    print(obj.id, "after")
+                    # A plugin a jelenlegi widget végére kerül
+                    print(f"There is'nt widget change, {widget_id_move} plugin moves the end of the widget")
             else:
-                # put plugin in a new widget
-                pass
+                # widget váltás történik
+                print(f"{widget_id_move} plugin moves to {plugincontainer_target} widget ", end="")
+                if bool(plugin_target):
+                    # A plugin egy létező másik widgetben egy létező plugin elé kerül
+                    print(f"before {plugin_target} plugin")
+                else:
+                    # A plugin egy létező másik widget végére kerül
+                    print("end")
+        else:
+            # A plugin egy új üres widgetbe kerül
+            print(f"Create new widget width {widget_id_move} in position ({canvas_x}, {canvas_y})")
 
 
     def settings_init(self):
@@ -260,7 +291,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def settings_open(self, event):
-        print("Settings panel start", type(self), self.model.id)
+        print("Settings panel start", type(self), self.model.id_get())
 
 
     def setting_mode_set(self, setting_mode):
@@ -278,7 +309,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_init(self, input_id):
-        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.model.id, plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
         self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
         self.__input_row_counter += 1
 
@@ -292,7 +323,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def output_init(self, output_id):
-        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.model.id, plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
         self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
         self.__output_row_counter += 1
 

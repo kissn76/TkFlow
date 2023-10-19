@@ -29,5 +29,15 @@ class Plugincontainer(ttk.Frame):
         self.__plugin_container.update({id: plugin_object})
 
 
-    def plugins_get(self):
-        return self.__plugin_container
+    def plugin_get(self, plugin_id=None):
+        plugin_object = None
+
+        if bool(plugin_id):
+            try:
+                plugin_object = self.__plugin_container[plugin_id]
+            except:
+                pass
+        else:
+            plugin_object = self.__plugin_container
+
+        return plugin_object

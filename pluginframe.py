@@ -135,7 +135,7 @@ class Pluginframe(ttk.Treeview):
                                 mainwindow.can_main.widget_background_set(widget_id, keep_height=True)
                                 mainwindow.can_main.widget_resizer_set(widget_id)
 
-                                for plugin_object in plugincontainer.plugins_get().values():
+                                for plugin_object in plugincontainer.plugin_get().values():
                                     plugin_object.datalabels_box_set()
                                     plugin_object.connect(mainwindow.can_main.plugin_get_all())
                             else:

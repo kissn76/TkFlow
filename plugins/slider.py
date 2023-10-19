@@ -6,8 +6,8 @@ import pluginbase
 
 
 class Plugin(pluginbase.Pluginbase):
-    def __init__(self, master, plugin_name, plugin_container_id, canvas_object, **kwargs):
-        super().__init__(master, plugin_name, plugin_container_id, canvas_object, **kwargs)
+    def __init__(self, plugin_id, plugincontainer_object, canvas_object, **kwargs):
+        super().__init__(plugin_id, plugincontainer_object, canvas_object, **kwargs)
         # init input, output
         self.output_init("value")
 

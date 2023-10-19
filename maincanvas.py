@@ -18,12 +18,13 @@ class Maincanvas(tk.Canvas):
         self.__plugincontainer_container = {}
         self.__plugincontainer_counter = 0
         self.mainwindow = mainwindow
+        self.__widget_backgrounds = {}
 
 
     def plugin_add(self, plugin_name: str, plugincontainer: plugincontainer.Plugincontainer):
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
 
-        plugin_base = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer.id, self, master=plugincontainer)
+        plugin_base = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer, self)
         plugin_object = plugin_base.view_get()
         plugin_object.pack(anchor="nw", fill=tk.BOTH)
         plugin_object.setting_mode_set(plugincontainer.setting_mode_get())
@@ -32,17 +33,18 @@ class Maincanvas(tk.Canvas):
         plugincontainer.plugin_insert(plugin_id, plugin_object)
 
 
-    def plugin_get(self, plugin_id: str) -> pluginbase.Pluginbase:
+    def plugin_get(self, plugin_id: str=None):
         plugin_object = None
-        try:
-            plugin_object = self.__plugin_container[plugin_id]
-        except:
-            pass
+
+        if bool(plugin_id):
+            try:
+                plugin_object = self.__plugin_container[plugin_id]
+            except:
+                pass
+        else:
+            plugin_object = self.__plugin_container
+
         return plugin_object
-
-
-    def plugin_get_all(self) -> dict:
-        return self.__plugin_container
 
 
     def plugin_box_set_all(self):
@@ -65,12 +67,17 @@ class Maincanvas(tk.Canvas):
         return plugincontainer_id, plugincontainer_object
 
 
-    def plugincontainer_get(self, plugincontainer_id: str) -> plugincontainer.Plugincontainer:
+    def plugincontainer_get(self, plugincontainer_id: str=None):
         plugincontainer_object = None
-        try:
-            plugincontainer_object = self.__plugincontainer_container[plugincontainer_id]
-        except:
-            pass
+
+        if bool(plugincontainer_id):
+            try:
+                plugincontainer_object = self.__plugincontainer_container[plugincontainer_id]
+            except:
+                pass
+        else:
+            plugincontainer_object = self.__plugincontainer_container
+
         return plugincontainer_object
 
 
@@ -228,6 +235,11 @@ class Maincanvas(tk.Canvas):
                 plugin_container_box[2] + style.widget_padding, y2
             )
 
+        # TEST
+        background_box = self.bbox(f"{widget_id}*background")
+        self.itemconfigure(f"{widget_id}*name", text=f"({background_box[0]}, {background_box[1]}) ({background_box[2]}, {background_box[3]})")
+        # TEST END
+
 
     # set position and size of settings button
     def widget_settings_button_set(self, widget_id):
@@ -339,7 +351,7 @@ class Maincanvas(tk.Canvas):
         self.update()
 
         plugincontainer = self.plugincontainer_get(widget_id)
-        for plugin_object in plugincontainer.plugins_get().values():
+        for plugin_object in plugincontainer.plugin_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -398,7 +410,7 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
 
         plugincontainer = self.plugincontainer_get(widget_id)
-        for plugin_object in plugincontainer.plugins_get().values():
+        for plugin_object in plugincontainer.plugin_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -424,7 +436,7 @@ class Maincanvas(tk.Canvas):
                     mid_0_x, mid_0_y,
                     mid_1_x, mid_1_y,
                     end_x, end_y,
-                    smooth=True, tags=tag
+                    smooth=True, tags=tag, arrow="last", arrowshape=(16, 20, 5)
                 )
 
             # self.tag_bind(tag, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(tag, fill="red", width=6))
@@ -441,5 +453,5 @@ class Maincanvas(tk.Canvas):
 
 
     def run(self):
-        for plugin_object in self.plugin_get_all().values():
+        for plugin_object in self.plugin_get().values():
             plugin_object.run()
