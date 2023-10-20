@@ -118,7 +118,7 @@ class Pluginframe(ttk.Treeview):
                         widgets = mainwindow.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
 
                         if len(widgets) == 0:
-                            mainwindow.can_main.widget_create(plugin_name=plugin_id, x=canvas_x, y=canvas_y)
+                            mainwindow.can_main.widget_add(plugin_name=plugin_id, x=canvas_x, y=canvas_y)
                         else:
                             widget_ids = set()
                             for id in widgets:

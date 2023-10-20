@@ -6,9 +6,13 @@ from tkinter import ttk
 class Plugincontainer(ttk.Frame):
     def __init__(self, master, plugincontainer_id, **kwargs):
         super().__init__(master, **kwargs)
-        self.id = plugincontainer_id
+        self.__id = plugincontainer_id
         self.__setting_mode = False
         self.__plugin_container = {}
+
+
+    def id_get(self):
+        return self.__id
 
 
     def setting_mode_toggle(self):

@@ -24,13 +24,25 @@ class Pluginbase():
         return self.__model.id_get()
 
 
-    def view_create(self, plugincontainer_object, **kwargs):
+    def view_destroy(self):
         try:
             self.__view.destroy()
         except:
             pass
         self.__view = None
+
+
+    def view_create(self, plugincontainer_object, **kwargs):
+        self.view_destroy()
         self.__view = PluginbaseView(plugincontainer_object, self.__canvas, self.__model, **kwargs)
+
+
+    def view_init(self):
+        for var_name in self.input_value_get().keys():
+            self.__view.input_init(var_name)
+
+        for var_name in self.output_value_get().keys():
+            self.__view.output_init(var_name)
 
 
     def view_get(self):
@@ -39,8 +51,7 @@ class Pluginbase():
 
     def input_init(self, *args):
         for var_name in args:
-            self.__view.input_init(var_name)
-            self.input_value_set(var_name, None)
+            self.__model.input_value_set(var_name, None)
 
 
     def input_object_get(self, input):
@@ -74,8 +85,7 @@ class Pluginbase():
 
     def output_init(self, *args):
         for var_name in args:
-            self.__view.output_init(var_name)
-            self.output_value_set(var_name, None)
+            self.__model.output_value_set(var_name, None)
 
 
     def output_object_get(self, output):
@@ -87,8 +97,13 @@ class Pluginbase():
         self.__view.output_value_set(output)
 
 
-    def output_value_get(self, output):
-        return self.__model.output_value_get(output)
+    def output_value_get(self, output=None):
+        ret = None
+        if output == None:
+            ret = self.__model.output_value_get_all()
+        else:
+            ret = self.__model.output_value_get(output)
+        return ret
 
 
     def content_init(self, content_object):
@@ -129,6 +144,10 @@ class PluginbaseModel():
 
     def output_value_get(self, output):
         return self.__output_value_container[output]
+
+
+    def output_value_get_all(self):
+        return self.__output_value_container.copy()
 
 
 
@@ -183,7 +202,7 @@ class PluginbaseView(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer.id}*plugincontainer")
+        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer.__id}*plugincontainer")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
 
         x1 = int(plugincontainer_box[0]) + int(plugin_geometry[2])
@@ -256,7 +275,7 @@ class PluginbaseView(ttk.Frame):
                         plugin_target = plugin_id
 
         if bool(plugincontainer_target):
-            if plugincontainer_target == self.plugincontainer.id:
+            if plugincontainer_target == self.plugincontainer.__id:
                 # widget nem változik
                 if bool(plugin_target):
                     if plugin_target == widget_id_move:
@@ -281,6 +300,7 @@ class PluginbaseView(ttk.Frame):
         else:
             # A plugin egy új üres widgetbe kerül
             print(f"Create new widget width {widget_id_move} in position ({canvas_x}, {canvas_y})")
+            self.canvas.plugin_move(widget_id_move, x=canvas_x, y=canvas_y)
 
 
     def settings_init(self):
@@ -309,7 +329,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_init(self, input_id):
-        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id_get(), canvas_object=self.canvas)})
         self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
         self.__input_row_counter += 1
 
@@ -323,7 +343,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def output_init(self, output_id):
-        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id, canvas_object=self.canvas)})
+        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.model.id_get(), plugincontainer_id=self.plugincontainer.id_get(), canvas_object=self.canvas)})
         self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
         self.__output_row_counter += 1
 
