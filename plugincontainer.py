@@ -31,6 +31,13 @@ class Plugincontainer(ttk.Frame):
 
     def plugin_insert(self, id, plugin_object):
         self.__plugin_container.update({id: plugin_object})
+        plugin_object.pack(anchor="nw", fill=tk.BOTH)
+
+
+    def plugin_remove(self, plugin_id):
+        plugin_view = self.__plugin_container.pop(plugin_id)
+        plugin_view.pack_forget()
+        plugin_view.destroy()
 
 
     def plugin_get(self, plugin_id=None):
@@ -45,3 +52,7 @@ class Plugincontainer(ttk.Frame):
             plugin_object = self.__plugin_container
 
         return plugin_object
+
+
+    def plugin_count_get(self):
+        return len(self.__plugin_container)

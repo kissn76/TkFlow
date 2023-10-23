@@ -24,17 +24,9 @@ class Pluginbase():
         return self.__model.id_get()
 
 
-    def view_destroy(self):
-        try:
-            self.__view.destroy()
-        except:
-            pass
-        self.__view = None
-
-
     def view_create(self, plugincontainer_object, **kwargs):
-        self.view_destroy()
         self.__view = PluginbaseView(plugincontainer_object, self.__canvas, self.__model, **kwargs)
+        self.__view.setting_mode_set(plugincontainer_object.setting_mode_get())
 
 
     def view_init(self):
@@ -202,7 +194,7 @@ class PluginbaseView(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer.__id}*plugincontainer")
+        plugincontainer_box = self.canvas.bbox(f"{self.plugincontainer.id_get()}*plugincontainer")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
 
         x1 = int(plugincontainer_box[0]) + int(plugin_geometry[2])
@@ -275,11 +267,11 @@ class PluginbaseView(ttk.Frame):
                         plugin_target = plugin_id
 
         if bool(plugincontainer_target):
-            if plugincontainer_target == self.plugincontainer.__id:
-                # widget nem változik
+            if plugincontainer_target == self.plugincontainer.id_get():
+                # A plugin widgeten belül marad
                 if bool(plugin_target):
                     if plugin_target == widget_id_move:
-                        # Semmi nem változik
+                        # A widgeten belüli sorrend sem változik
                         print("Nothing changed")
                         # pass
                     else:
@@ -294,13 +286,15 @@ class PluginbaseView(ttk.Frame):
                 if bool(plugin_target):
                     # A plugin egy létező másik widgetben egy létező plugin elé kerül
                     print(f"before {plugin_target} plugin")
+                    self.canvas.plugin_move(widget_id_move, plugincontainer_id=plugincontainer_target)
                 else:
                     # A plugin egy létező másik widget végére kerül
                     print("end")
+                    self.canvas.plugin_move(widget_id_move, plugincontainer_id=plugincontainer_target)
         else:
-            # A plugin egy új üres widgetbe kerül
-            print(f"Create new widget width {widget_id_move} in position ({canvas_x}, {canvas_y})")
-            self.canvas.plugin_move(widget_id_move, x=canvas_x, y=canvas_y)
+            # A plugin egy új üres widgetbe kerül, de csak akkor, ha eleve nem egyedül volt az eredeti widgetben
+            if self.plugincontainer.plugin_count_get() > 1:
+                self.canvas.plugin_move(widget_id_move, x=canvas_x, y=canvas_y)
 
 
     def settings_init(self):

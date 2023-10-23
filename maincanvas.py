@@ -25,21 +25,28 @@ class Maincanvas(tk.Canvas):
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
 
         plugin_object = plugincontroller.new_object(plugin_name, plugin_id, plugincontainer_object, self)
-        plugin_object_view = plugin_object.view_get()
-        plugin_object_view.pack(anchor="nw", fill=tk.BOTH)
-        plugin_object_view.setting_mode_set(plugincontainer_object.setting_mode_get())
-
         self.__plugin_container.update({plugin_id: plugin_object})
-        plugincontainer_object.plugin_insert(plugin_id, plugin_object_view)
+        plugincontainer_object.plugin_insert(plugin_id, plugin_object.view_get())
 
 
     def plugin_move(self, plugin_id, plugincontainer_id=None, x=24, y=24):
-        plugincontainer_object = self.widget_create(x, y)
+        plugincontainer_object = None
+
+        if bool(plugincontainer_id):
+            plugincontainer_object = self.plugincontainer_get(plugincontainer_id)
+        else:
+            plugincontainer_object = self.widget_create(x, y)
         widget_id = plugincontainer_object.id_get()
 
         plugin_object = self.plugin_get(plugin_id)
-        plugin_object.content_destroy()
-        plugin_object.view_destroy()
+        plugincontainer_object_old = plugin_object.view_get().plugincontainer
+        plugincontainer_object_old.plugin_remove(plugin_id)
+
+        if plugincontainer_object_old.plugin_count_get() < 1:
+            widget_id_old = plugincontainer_object_old.id_get()
+            plugincontainer_object_old.destroy()
+            self.widget_delete(widget_id_old)
+
         plugin_object.view_create(plugincontainer_object)
         plugin_object.content_set()
 
@@ -230,6 +237,17 @@ class Maincanvas(tk.Canvas):
         for plugin_object in plugin_container.plugin_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
+
+
+    def widget_delete(self, widget_id:str):
+        self.delete(f"{widget_id}*move")
+        self.delete(f"{widget_id}*name")
+        self.delete(f"{widget_id}*settings")
+        self.delete(f"{widget_id}*plugincontainer")
+        self.delete(f"{widget_id}*background")
+        self.delete(f"{widget_id}*resize_w")
+        self.delete(f"{widget_id}*resize_h")
+        self.delete(f"{widget_id}*resize_wh")
 
 
     # set position and size of widget name
@@ -485,6 +503,7 @@ class Maincanvas(tk.Canvas):
             pass
         self.delete(tag)
 
+        self.delete(tag)
 
     def run(self):
         for plugin_object in self.plugin_get().values():
