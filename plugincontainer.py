@@ -9,6 +9,7 @@ class Plugincontainer(ttk.Frame):
         self.__id = plugincontainer_id
         self.__setting_mode = False
         self.__plugin_container = {}
+        self.__plugin_order = []
 
 
     def id_get(self):
@@ -31,13 +32,38 @@ class Plugincontainer(ttk.Frame):
 
     def plugin_insert(self, id, plugin_object):
         self.__plugin_container.update({id: plugin_object})
-        plugin_object.pack(anchor="nw", fill=tk.BOTH)
+        self.__plugin_order.append(id)
+        self.__unpack_all()
+        self.__pack_all()
+
+
+    def __unpack_all(self):
+        for plugin_object in self.plugin_get().values():
+            plugin_object.pack_forget()
+
+
+    def __pack_all(self):
+        for plugin_id in self.__plugin_order:
+            plugin_object = self.plugin_get(plugin_id)
+            plugin_object.pack(anchor="nw", fill=tk.BOTH)
 
 
     def plugin_remove(self, plugin_id):
         plugin_view = self.__plugin_container.pop(plugin_id)
         plugin_view.pack_forget()
         plugin_view.destroy()
+
+
+    def plugin_position_change(self, plugin_id, position_new):
+        position_old = self.plugin_position_get(plugin_id)
+        self.__plugin_order.pop(position_old)
+        self.__plugin_order.insert(position_new, plugin_id)
+        self.__unpack_all()
+        self.__pack_all()
+
+
+    def plugin_position_get(self, plugin_id):
+        return self.__plugin_order.index(plugin_id)
 
 
     def plugin_get(self, plugin_id=None):

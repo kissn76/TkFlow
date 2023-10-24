@@ -231,7 +231,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def dnd_arrange_stop(self, event):
-        widget_id_move = self.floating_widget.cget("text")
+        plugin_id_move = self.floating_widget.cget("text")
         if bool(self.floating_widget):
             self.floating_widget.place_forget()
             self.floating_widget.destroy()
@@ -253,7 +253,7 @@ class PluginbaseView(ttk.Frame):
         # box_set_all()
 
         plugincontainer_target = None
-        plugin_target = None
+        plugin_id_target = None
 
         for widget_id in self.canvas.plugincontainer_get().keys():
             widget_box = self.canvas.bbox(f"{widget_id}*background")
@@ -264,37 +264,38 @@ class PluginbaseView(ttk.Frame):
                     plugin_object.box_set()
                     x1, y1, x2, y2 = plugin_object.box
                     if canvas_y >= y1 and canvas_y <= y2:
-                        plugin_target = plugin_id
+                        plugin_id_target = plugin_id
 
         if bool(plugincontainer_target):
             if plugincontainer_target == self.plugincontainer.id_get():
                 # A plugin widgeten belül marad
-                if bool(plugin_target):
-                    if plugin_target == widget_id_move:
+                if bool(plugin_id_target):
+                    if plugin_id_target == plugin_id_move:
                         # A widgeten belüli sorrend sem változik
                         print("Nothing changed")
                         # pass
                     else:
                         # A plugin pozíciója a widgeten belűl változik
-                        print(f"There is'nt widget change, {widget_id_move} plugin moves before {plugin_target} plugin")
+                        print(f"There is'nt widget change, {plugin_id_move} plugin moves before {plugin_id_target} plugin")
+                        self.plugincontainer.plugin_position_change(plugin_id_move, self.plugincontainer.plugin_position_get(plugin_id_target))
                 else:
                     # A plugin a jelenlegi widget végére kerül
-                    print(f"There is'nt widget change, {widget_id_move} plugin moves the end of the widget")
+                    print(f"There is'nt widget change, {plugin_id_move} plugin moves the end of the widget")
             else:
                 # widget váltás történik
-                print(f"{widget_id_move} plugin moves to {plugincontainer_target} widget ", end="")
-                if bool(plugin_target):
+                print(f"{plugin_id_move} plugin moves to {plugincontainer_target} widget ", end="")
+                if bool(plugin_id_target):
                     # A plugin egy létező másik widgetben egy létező plugin elé kerül
-                    print(f"before {plugin_target} plugin")
-                    self.canvas.plugin_move(widget_id_move, plugincontainer_id=plugincontainer_target)
+                    print(f"before {plugin_id_target} plugin")
+                    self.canvas.plugin_move(plugin_id_move, plugincontainer_id=plugincontainer_target)
                 else:
                     # A plugin egy létező másik widget végére kerül
                     print("end")
-                    self.canvas.plugin_move(widget_id_move, plugincontainer_id=plugincontainer_target)
+                    self.canvas.plugin_move(plugin_id_move, plugincontainer_id=plugincontainer_target)
         else:
             # A plugin egy új üres widgetbe kerül, de csak akkor, ha eleve nem egyedül volt az eredeti widgetben
             if self.plugincontainer.plugin_count_get() > 1:
-                self.canvas.plugin_move(widget_id_move, x=canvas_x, y=canvas_y)
+                self.canvas.plugin_move(plugin_id_move, x=canvas_x, y=canvas_y)
 
 
     def settings_init(self):
