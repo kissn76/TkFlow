@@ -179,24 +179,24 @@ class PluginbaseView(ttk.Frame):
         self.arranger_init()
         self.settings_init()
 
-        self.bind('<Enter>', lambda event: self.enter(event))
-        self.bind('<Leave>', lambda event: self.leave())
+        # self.bind('<Enter>', lambda event: self.enter(event))
+        # self.bind('<Leave>', lambda event: self.leave())
 
 
-    def enter(self, event):
-        self.leave()
-        self.box_set()
-        self.marker_widget = ttk.Label(self.winfo_toplevel(), text=f"{self.plugincontainer.id_get()}-{self.model.id_get()}")
-        x = self.box[2]
-        y = self.box[1]
-        self.marker_widget.place(x=x, y=y)
+    # def enter(self, event):
+    #     self.leave()
+    #     self.box_set()
+    #     self.marker_widget = ttk.Label(self.winfo_toplevel(), text=f"{self.plugincontainer.id_get()}-{self.model.id_get()}")
+    #     x = self.box[2]
+    #     y = self.box[1]
+    #     self.marker_widget.place(x=x, y=y)
 
 
-    def leave(self):
-        if bool(self.marker_widget):
-            self.marker_widget.place_forget()
-            self.marker_widget.destroy()
-            self.marker_widget = None
+    # def leave(self):
+    #     if bool(self.marker_widget):
+    #         self.marker_widget.place_forget()
+    #         self.marker_widget.destroy()
+    #         self.marker_widget = None
 
 
     def to_dict(self):
@@ -235,7 +235,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def dnd_arrange_start(self, event):
-        self.leave()
+        # self.leave()
         x = self.winfo_pointerx() - self.canvas.winfo_rootx()
         y = self.winfo_pointery() - self.canvas.winfo_rooty()
 
