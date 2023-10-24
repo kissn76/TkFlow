@@ -5,9 +5,9 @@ from PIL import Image, ImageTk
 import platform
 import json
 import pluginbase
-import pluginframe
+import pluginchooser
 import maincanvas
-import plugincontainer
+import pluginframe
 import settingswindow
 import style
 
@@ -76,7 +76,7 @@ class Mainwindow(tk.Tk):
 
         # Sidebar
         self.sidebar = ttk.Frame(self)
-        self.available_plugins = pluginframe.Pluginframe(self.sidebar)
+        self.available_plugins = pluginchooser.Pluginchooser(self.sidebar)
         self.available_plugins.pack(fill=tk.BOTH, expand=True)
         self.sidebar.grid(row=0, column=1, sticky="n, s, w, e")
 
@@ -104,8 +104,8 @@ class Mainwindow(tk.Tk):
             style.widget_resizer_width = var_resizer_width.get()
             style.widget_padding = var_padding.get()
 
-            for plugincont in plugincontainer.get_all().values():
-                can_main.widget_reset(plugincont.id)
+            for pluginfrm in pluginframe.get_all().values():
+                can_main.widget_reset(pluginfrm.id)
 
             dlg.destroy()
 
@@ -209,9 +209,9 @@ class Mainwindow(tk.Tk):
 
     def to_dict(self) -> dict:
         pcs_boxes = {}
-        pcs_plugins = plugincontainer.widget_plugins_get_all()
+        pcs_plugins = pluginframe.widget_plugins_get_all()
         plugins = pluginbase.get_all_as_dict()
-        for key in plugincontainer.get_all().keys():
+        for key in pluginframe.get_all().keys():
             box = can_main.bbox(f"{key}:move")
             pcs_boxes.update({key: {"x": box[0], "y": box[1]}})
 

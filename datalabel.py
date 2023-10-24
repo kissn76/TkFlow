@@ -5,14 +5,14 @@ import style
 
 
 class DataLabel(ttk.Frame):
-    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
+    def __init__(self, master, id, plugin_id, pluginframe_id, canvas_object):
         super().__init__(master)
         self.image_anydata = ImageTk.PhotoImage(style.image_datatype_any_12)
         self.image_data = ImageTk.PhotoImage(style.image_data_12)
 
         self.id = id
         self.plugin_id = plugin_id
-        self.plugincontainer_id = plugincontainer_id
+        self.pluginframe_id = pluginframe_id
         self.box = ()   # box in canvas
         self.canvas = canvas_object
 
@@ -42,7 +42,7 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = self.canvas.bbox(f"{self.plugincontainer_id}*plugincontainer")
+        plugin_container_box = self.canvas.bbox(f"{self.pluginframe_id}*pluginframe")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
@@ -87,8 +87,8 @@ class DataLabel(ttk.Frame):
 
 
 class InputLabel(DataLabel):
-    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
-        super().__init__(master, id, plugin_id, plugincontainer_id, canvas_object)
+    def __init__(self, master, id, plugin_id, pluginframe_id, canvas_object):
+        super().__init__(master, id, plugin_id, pluginframe_id, canvas_object)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
 
 
@@ -105,8 +105,8 @@ class InputLabel(DataLabel):
 
 
 class OutputLabel(DataLabel):
-    def __init__(self, master, id, plugin_id, plugincontainer_id, canvas_object):
-        super().__init__(master, id, plugin_id, plugincontainer_id, canvas_object)
+    def __init__(self, master, id, plugin_id, pluginframe_id, canvas_object):
+        super().__init__(master, id, plugin_id, pluginframe_id, canvas_object)
         self.lbl_txt.grid(row=0, column=0, sticky="n, s, w, e")
 
         self.lbl_data.grid(row=0, column=1, sticky="n, s, w, e")
@@ -172,7 +172,7 @@ class OutputLabel(DataLabel):
                     if len(tags) > 0:
                         widget_unpack = tags[0].split('*')
                         if len(widget_unpack) > 1:
-                            if widget_unpack[1] == "plugincontainer":
+                            if widget_unpack[1] == "pluginframe":
                                 widget_tags.append(tags[0])
 
                 widget_tags = list(set(widget_tags))
@@ -180,8 +180,8 @@ class OutputLabel(DataLabel):
                 if len(widget_tags) == 1:
                     target_widget_tag = widget_tags[0].split('*')[0]
                     input_object_list = []
-                    plugincontainer = self.canvas.plugincontainer_get(target_widget_tag)
-                    for plugin_object in plugincontainer.plugin_get().values():
+                    pluginframe = self.canvas.pluginframe_get(target_widget_tag)
+                    for plugin_object in pluginframe.plugin_get().values():
                         for input_object in plugin_object.input_container_get().values():
                             input_object_list.append(input_object)
                     for input_object in input_object_list:

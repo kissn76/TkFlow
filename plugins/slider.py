@@ -6,8 +6,8 @@ import pluginbase
 
 
 class Plugin(pluginbase.Pluginbase):
-    def __init__(self, plugin_id, plugincontainer_object, canvas_object, **kwargs):
-        super().__init__(plugin_id, plugincontainer_object, canvas_object, **kwargs)
+    def __init__(self, plugin_id, pluginframe_object, canvas_object, **kwargs):
+        super().__init__(plugin_id, pluginframe_object, canvas_object, **kwargs)
 
         self.sc = None
         self.marker_widget = None
@@ -26,7 +26,7 @@ class Plugin(pluginbase.Pluginbase):
     def content_set(self):
         self.content_frame = ttk.Frame(self.view_get())
 
-        self.marker_widget = ttk.Label(self.content_frame, text=f"{self.view_get().plugincontainer.id_get()}-{self.id_get()}")
+        self.marker_widget = ttk.Label(self.content_frame, text=f"{self.view_get().pluginframe.id_get()}-{self.id_get()}")
         self.sc = ttk.Scale(self.content_frame, from_=-100, to=100, orient='horizontal', command=lambda _: self.run())
 
         self.marker_widget.pack(anchor="nw", fill=tk.BOTH)
