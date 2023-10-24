@@ -44,7 +44,6 @@ class Maincanvas(tk.Canvas):
 
         if plugincontainer_object_old.plugin_count_get() < 1:
             widget_id_old = plugincontainer_object_old.id_get()
-            plugincontainer_object_old.destroy()
             self.widget_delete(widget_id_old)
 
         plugin_object.view_create(plugincontainer_object)
@@ -248,6 +247,10 @@ class Maincanvas(tk.Canvas):
         self.delete(f"{widget_id}*resize_w")
         self.delete(f"{widget_id}*resize_h")
         self.delete(f"{widget_id}*resize_wh")
+
+        plugincontainer_object = self.plugincontainer_get(widget_id)
+        plugincontainer_object.destroy()
+        self.__plugincontainer_container.pop(widget_id)
 
 
     # set position and size of widget name

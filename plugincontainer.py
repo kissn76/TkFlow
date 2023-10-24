@@ -52,6 +52,7 @@ class Plugincontainer(ttk.Frame):
         plugin_view = self.__plugin_container.pop(plugin_id)
         plugin_view.pack_forget()
         plugin_view.destroy()
+        self.__plugin_order.remove(plugin_id)
 
 
     def plugin_position_change(self, plugin_id, position_new):
