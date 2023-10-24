@@ -38,6 +38,10 @@ class Plugin(pluginbase.Pluginbase):
         self.view_init()
         self.content_init(self.content_frame)
 
+        if bool(self.output_value_get("value")):
+            self.view_get().output_value_set("value")
+            self.sc.set(self.output_value_get("value"))
+
 
     def run(self):
         self.output_value_set("value", int(self.sc.get()))
