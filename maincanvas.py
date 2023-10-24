@@ -239,18 +239,21 @@ class Maincanvas(tk.Canvas):
 
 
     def widget_delete(self, widget_id:str):
-        self.delete(f"{widget_id}*move")
-        self.delete(f"{widget_id}*name")
-        self.delete(f"{widget_id}*settings")
-        self.delete(f"{widget_id}*plugincontainer")
-        self.delete(f"{widget_id}*background")
-        self.delete(f"{widget_id}*resize_w")
-        self.delete(f"{widget_id}*resize_h")
-        self.delete(f"{widget_id}*resize_wh")
-
         plugincontainer_object = self.plugincontainer_get(widget_id)
-        plugincontainer_object.destroy()
-        self.__plugincontainer_container.pop(widget_id)
+
+        if plugincontainer_object.plugin_count_get() < 1:
+            plugincontainer_object.destroy()
+            self.__plugincontainer_container.pop(widget_id)
+            self.delete(f"{widget_id}*move")
+            self.delete(f"{widget_id}*name")
+            self.delete(f"{widget_id}*settings")
+            self.delete(f"{widget_id}*plugincontainer")
+            self.delete(f"{widget_id}*background")
+            self.delete(f"{widget_id}*resize_w")
+            self.delete(f"{widget_id}*resize_h")
+            self.delete(f"{widget_id}*resize_wh")
+        else:
+            print(f"{widget_id} deletion disabled, there are some plugin in plugincontainer")
 
 
     # set position and size of widget name

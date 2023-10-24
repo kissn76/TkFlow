@@ -293,25 +293,20 @@ class PluginbaseView(ttk.Frame):
                 if bool(plugin_id_target):
                     if plugin_id_target == plugin_id_move:
                         # A widgeten belüli sorrend sem változik
-                        print("Nothing changed")
-                        # pass
+                        pass
                     else:
                         # A plugin pozíciója a widgeten belűl változik
-                        print(f"There is'nt widget change, {plugin_id_move} plugin moves before {plugin_id_target} plugin")
                         self.plugincontainer.plugin_position_change(plugin_id_move, self.plugincontainer.plugin_position_get(plugin_id_target))
                 else:
                     # A plugin a jelenlegi widget végére kerül
-                    print(f"There is'nt widget change, {plugin_id_move} plugin moves the end of the widget")
+                    self.plugincontainer.plugin_position_change(plugin_id_move, self.plugincontainer.plugin_count_get())
             else:
                 # widget váltás történik
-                print(f"{plugin_id_move} plugin moves to {plugincontainer_target} widget ", end="")
                 if bool(plugin_id_target):
                     # A plugin egy létező másik widgetben egy létező plugin elé kerül
-                    print(f"before {plugin_id_target} plugin")
                     self.canvas.plugin_move(plugin_id_move, plugincontainer_id=plugincontainer_target)
                 else:
                     # A plugin egy létező másik widget végére kerül
-                    print("end")
                     self.canvas.plugin_move(plugin_id_move, plugincontainer_id=plugincontainer_target)
         else:
             # A plugin egy új üres widgetbe kerül, de csak akkor, ha eleve nem egyedül volt az eredeti widgetben
