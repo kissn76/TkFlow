@@ -8,8 +8,8 @@ class Pluginframe(ttk.Frame):
         super().__init__(master, **kwargs)
         self.__id = pluginframe_id
         self.__setting_mode = False
-        self.__plugin_container = {}
-        self.__plugin_order = []
+        self.__pluginview_container = {}
+        self.__pluginview_order = []
 
 
     def id_get(self):
@@ -22,64 +22,64 @@ class Pluginframe(ttk.Frame):
         else:
             self.__setting_mode = True
 
-        for plugin_object in self.__plugin_container.values():
-            plugin_object.setting_mode_set(self.__setting_mode)
+        for pluginview_object in self.__pluginview_container.values():
+            pluginview_object.setting_mode_set(self.__setting_mode)
 
 
     def setting_mode_get(self):
         return self.__setting_mode
 
 
-    def plugin_insert(self, id, plugin_object):
-        self.__plugin_container.update({id: plugin_object})
-        self.__plugin_order.append(id)
+    def pluginview_insert(self, plugin_id, pluginview_object):
+        self.__pluginview_container.update({plugin_id: pluginview_object})
+        self.__pluginview_order.append(plugin_id)
         self.__unpack_all()
         self.__pack_all()
 
 
     def __unpack_all(self):
-        for plugin_object in self.plugin_get().values():
-            plugin_object.pack_forget()
+        for pluginview_object in self.pluginview_get().values():
+            pluginview_object.pack_forget()
 
 
     def __pack_all(self):
-        for plugin_id in self.__plugin_order:
-            plugin_object = self.plugin_get(plugin_id)
-            plugin_object.pack(anchor="nw", fill=tk.BOTH)
+        for plugin_id in self.__pluginview_order:
+            pluginview_object = self.pluginview_get(plugin_id)
+            pluginview_object.pack(anchor="nw", fill=tk.BOTH)
 
 
-    def plugin_remove(self, plugin_id):
-        plugin_view = self.__plugin_container.pop(plugin_id)
-        plugin_view.pack_forget()
-        plugin_view.destroy()
-        self.__plugin_order.remove(plugin_id)
+    def pluginview_remove(self, plugin_id):
+        pluginview_object = self.__pluginview_container.pop(plugin_id)
+        pluginview_object.pack_forget()
+        pluginview_object.destroy()
+        self.__pluginview_order.remove(plugin_id)
 
 
-    def plugin_position_change(self, plugin_id, position_new):
-        position_old = self.plugin_position_get(plugin_id)
-        self.__plugin_order.pop(position_old)
-        self.__plugin_order.insert(position_new, plugin_id)
+    def pluginview_position_change(self, plugin_id, position_new):
+        position_old = self.pluginview_position_get(plugin_id)
+        self.__pluginview_order.pop(position_old)
+        self.__pluginview_order.insert(position_new, plugin_id)
         self.__unpack_all()
         self.__pack_all()
 
 
-    def plugin_position_get(self, plugin_id):
-        return self.__plugin_order.index(plugin_id)
+    def pluginview_position_get(self, plugin_id):
+        return self.__pluginview_order.index(plugin_id)
 
 
-    def plugin_get(self, plugin_id=None):
+    def pluginview_get(self, plugin_id=None):
         plugin_object = None
 
         if bool(plugin_id):
             try:
-                plugin_object = self.__plugin_container[plugin_id]
+                plugin_object = self.__pluginview_container[plugin_id]
             except:
                 pass
         else:
-            plugin_object = self.__plugin_container
+            plugin_object = self.__pluginview_container
 
         return plugin_object
 
 
-    def plugin_count_get(self):
-        return len(self.__plugin_container)
+    def pluginview_count_get(self):
+        return len(self.__pluginview_container)

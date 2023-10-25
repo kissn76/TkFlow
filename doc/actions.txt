@@ -1,0 +1,18 @@
+plugin_create
+=============
+It creates new widget on canvas and add a new plugin to it.
+
+plugin_insert
+=============
+It inserts a new plugin to an existing widget.
+
+plugin_move
+===========
+It moves an existing plugin to:
+    - new position in parent widget
+    - new widget
+    - other widget specified position or end
+
+plugin_delete
+=============
+It deletes existing plugin.

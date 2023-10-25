@@ -24,7 +24,7 @@ class Pluginbase():
         return self.__model.id_get()
 
 
-    def view_create(self, pluginframe_object, **kwargs):
+    def view_create(self, pluginframe_object: pluginframe.Pluginframe, **kwargs):
         self.__view = PluginbaseView(pluginframe_object, self.__canvas, self.__model, **kwargs)
         self.__view.setting_mode_set(pluginframe_object.setting_mode_get())
 
@@ -56,12 +56,7 @@ class Pluginbase():
 
 
     def input_value_get(self, input=None):
-        ret = None
-        if input == None:
-            ret = self.__model.input_value_get_all()
-        else:
-            ret = self.__model.input_value_get(input)
-        return ret
+        return self.__model.input_value_get(input)
 
 
     # get output value that represented by input
@@ -90,12 +85,7 @@ class Pluginbase():
 
 
     def output_value_get(self, output=None):
-        ret = None
-        if output == None:
-            ret = self.__model.output_value_get_all()
-        else:
-            ret = self.__model.output_value_get(output)
-        return ret
+        return self.__model.output_value_get(output)
 
 
     def content_init(self, content_object):
@@ -122,24 +112,28 @@ class PluginbaseModel():
         self.__input_value_container[input] = value
 
 
-    def input_value_get(self, input):
-        return self.__input_value_container[input]
+    def input_value_get(self, input=None):
+        ret = None
+        if bool(input):
+            ret = self.__input_value_container[input]
+        else:
+            ret = self.__input_value_container.copy()
 
-
-    def input_value_get_all(self):
-        return self.__input_value_container.copy()
+        return ret
 
 
     def output_value_set(self, output, value):
         self.__output_value_container[output] = value
 
 
-    def output_value_get(self, output):
-        return self.__output_value_container[output]
+    def output_value_get(self, output=None):
+        ret = None
+        if bool(output):
+            ret = self.__output_value_container[output]
+        else:
+            ret = self.__output_value_container.copy()
 
-
-    def output_value_get_all(self):
-        return self.__output_value_container.copy()
+        return ret
 
 
 
@@ -281,9 +275,9 @@ class PluginbaseView(ttk.Frame):
             x1, y1, x2, y2 = widget_box
             if canvas_x >= x1 and canvas_x <= x2 and canvas_y >= y1 and canvas_y <= y2:
                 pluginframe_target = widget_id
-                for plugin_id, plugin_object in self.canvas.pluginframe_get(pluginframe_target).plugin_get().items():
-                    plugin_object.box_set()
-                    x1, y1, x2, y2 = plugin_object.box
+                for plugin_id, pluginview_object in self.canvas.pluginframe_get(pluginframe_target).pluginview_get().items():
+                    pluginview_object.box_set()
+                    x1, y1, x2, y2 = pluginview_object.box
                     if canvas_y >= y1 and canvas_y <= y2:
                         plugin_id_target = plugin_id
 
@@ -296,10 +290,10 @@ class PluginbaseView(ttk.Frame):
                         pass
                     else:
                         # A plugin pozíciója a widgeten belűl változik
-                        self.pluginframe.plugin_position_change(plugin_id_move, self.pluginframe.plugin_position_get(plugin_id_target))
+                        self.pluginframe.pluginview_position_change(plugin_id_move, self.pluginframe.pluginview_position_get(plugin_id_target))
                 else:
                     # A plugin a jelenlegi widget végére kerül
-                    self.pluginframe.plugin_position_change(plugin_id_move, self.pluginframe.plugin_count_get())
+                    self.pluginframe.pluginview_position_change(plugin_id_move, self.pluginframe.pluginview_count_get())
             else:
                 # widget váltás történik
                 if bool(plugin_id_target):
@@ -310,7 +304,7 @@ class PluginbaseView(ttk.Frame):
                     self.canvas.plugin_move(plugin_id_move, pluginframe_id=pluginframe_target)
         else:
             # A plugin egy új üres widgetbe kerül, de csak akkor, ha eleve nem egyedül volt az eredeti widgetben
-            if self.pluginframe.plugin_count_get() > 1:
+            if self.pluginframe.pluginview_count_get() > 1:
                 self.canvas.plugin_move(plugin_id_move, x=canvas_x, y=canvas_y)
 
 

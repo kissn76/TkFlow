@@ -26,7 +26,7 @@ class Maincanvas(tk.Canvas):
 
         plugin_object = plugincontroller.new_object(plugin_name, plugin_id, pluginframe_object, self)
         self.__plugin_container.update({plugin_id: plugin_object})
-        pluginframe_object.plugin_insert(plugin_id, plugin_object.view_get())
+        pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
 
 
     def plugin_move(self, plugin_id, pluginframe_id=None, x=24, y=24):
@@ -40,9 +40,9 @@ class Maincanvas(tk.Canvas):
 
         plugin_object = self.plugin_get(plugin_id)
         pluginframe_object_old = plugin_object.view_get().pluginframe
-        pluginframe_object_old.plugin_remove(plugin_id)
+        pluginframe_object_old.pluginview_remove(plugin_id)
 
-        if pluginframe_object_old.plugin_count_get() < 1:
+        if pluginframe_object_old.pluginview_count_get() < 1:
             widget_id_old = pluginframe_object_old.id_get()
             self.widget_delete(widget_id_old)
 
@@ -52,7 +52,7 @@ class Maincanvas(tk.Canvas):
         plugin_object_view = plugin_object.view_get()
         plugin_object_view.pack(anchor="nw", fill=tk.BOTH)
         plugin_object_view.setting_mode_set(pluginframe_object.setting_mode_get())
-        pluginframe_object.plugin_insert(plugin_id, plugin_object_view)
+        pluginframe_object.pluginview_insert(plugin_id, plugin_object_view)
 
         self.update()
         self.widget_name_set(widget_id)
@@ -61,7 +61,7 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
         self.widget_settings_button_set(widget_id)
 
-        for plugin_object in pluginframe_object.plugin_get().values():
+        for plugin_object in pluginframe_object.pluginview_get().values():
             plugin_object.datalabels_box_set()
 
 
@@ -241,7 +241,7 @@ class Maincanvas(tk.Canvas):
     def widget_delete(self, widget_id:str):
         pluginframe_object = self.pluginframe_get(widget_id)
 
-        if pluginframe_object.plugin_count_get() < 1:
+        if pluginframe_object.pluginview_count_get() < 1:
             pluginframe_object.destroy()
             self.__pluginframe_container.pop(widget_id)
             self.delete(f"{widget_id}*move")
@@ -468,7 +468,7 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
 
         pluginframe_object = self.pluginframe_get(widget_id)
-        for plugin_object in pluginframe_object.plugin_get().values():
+        for plugin_object in pluginframe_object.pluginview_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -510,6 +510,7 @@ class Maincanvas(tk.Canvas):
         self.delete(tag)
 
         self.delete(tag)
+
 
     def run(self):
         for plugin_object in self.plugin_get().values():
