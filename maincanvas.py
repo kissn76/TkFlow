@@ -258,8 +258,8 @@ class Maincanvas(tk.Canvas):
 
         pluginframe_object = self.pluginframe_get(widget_id)
         pluginframe_object.box_set()
-        for plugin_object in pluginframe_object.pluginview_get().values():
-            plugin_object.connect()
+        # for plugin_object in pluginframe_object.pluginview_get().values():
+        #     plugin_object.connect()
 
 
     def widget_delete(self, widget_id:str):
@@ -567,6 +567,26 @@ class Maincanvas(tk.Canvas):
             plugin_object.connect()
 
 
+    def connect(self, start_id, end_id):
+        start_plugin_id, output_id = start_id.split(':')
+        start_plugin_object = self.plugin_get(start_plugin_id)
+        output_object = start_plugin_object.output_object_get(output_id)
+        start_box = output_object.box_get()
+        start_x = start_box[2]
+        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
+
+        end_plugin_id, input_id = end_id.split(':')
+        end_plugin_object = self.plugin_get(end_plugin_id)
+        input_object = end_plugin_object.input_object_get(input_id)
+        end_box = input_object.box_get()
+        end_x = end_box[0]
+        end_y = end_box[1] + ((end_box[3] - end_box[1]) / 2)
+
+        line_id = f"{start_id}:{end_id}*connect_line"
+
+        self.connect_line_create(start_x, start_y, end_x, end_y, line_id)
+
+
     def connect_line_create(self, start_x, start_y, end_x, end_y, tag):
         offset = (end_x - start_x) / 3
         mid_0_x = start_x + offset
@@ -601,8 +621,6 @@ class Maincanvas(tk.Canvas):
             self.plugin_get(plugin_id).input_value_set(input_id, None)
         except:
             pass
-        self.delete(tag)
-
         self.delete(tag)
 
 

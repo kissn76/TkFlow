@@ -357,11 +357,3 @@ class PluginbaseView(ttk.Frame):
 
     def output_container_get(self):
         return self.__output_container
-
-
-    def connect(self):
-        for input_object in self.input_object_get().values():
-            input_object.connect()
-
-        for output_object in self.output_object_get().values():
-            output_object.connect()
