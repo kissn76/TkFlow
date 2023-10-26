@@ -256,9 +256,9 @@ class Maincanvas(tk.Canvas):
         self.widget_settings_button_set(widget_id)
         self.update()
 
-        plugin_container = self.pluginframe_get(widget_id)
-        for plugin_object in plugin_container.pluginview_get().values():
-            plugin_object.datalabels_box_set()
+        pluginframe_object = self.pluginframe_get(widget_id)
+        pluginframe_object.box_set()
+        for plugin_object in pluginframe_object.pluginview_get().values():
             plugin_object.connect()
 
 
@@ -503,8 +503,8 @@ class Maincanvas(tk.Canvas):
         self.update()
 
         pluginframe_object = self.pluginframe_get(widget_id)
+        pluginframe_object.box_set()
         for plugin_object in pluginframe_object.plugin_get().values():
-            plugin_object.datalabels_box_set()
             plugin_object.connect()
 
 
@@ -562,8 +562,8 @@ class Maincanvas(tk.Canvas):
         self.widget_resizer_set(widget_id)
 
         pluginframe_object = self.pluginframe_get(widget_id)
+        pluginframe_object.box_set()
         for plugin_object in pluginframe_object.pluginview_get().values():
-            plugin_object.datalabels_box_set()
             plugin_object.connect()
 
 

@@ -42,12 +42,12 @@ class DataLabel(ttk.Frame):
 
     # set box in canvas
     def box_set(self, event=None):
-        plugin_container_box = self.canvas.bbox(f"{self.pluginframe_id}*pluginframe")
+        pluginframe_box = self.canvas.bbox(f"{self.pluginframe_id}*pluginframe")
         plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
-        x1 = int(plugin_container_box[0]) + int(plugin_geometry[2]) + int(datalabel_geometry[2])
-        y1 = int(plugin_container_box[1]) + int(plugin_geometry[3]) + int(datalabel_geometry[3])
+        x1 = int(pluginframe_box[0]) + int(plugin_geometry[2]) + int(datalabel_geometry[2])
+        y1 = int(pluginframe_box[1]) + int(plugin_geometry[3]) + int(datalabel_geometry[3])
         x2 = int(x1 + int(datalabel_geometry[0]))
         y2 = int(y1 + int(datalabel_geometry[1]))
 

@@ -89,3 +89,8 @@ class Pluginframe(ttk.Frame):
 
     def pluginview_count_get(self):
         return len(self.__pluginview_container)
+
+
+    def box_set(self):
+        for plugin_view_object in self.pluginview_get().values():
+            plugin_view_object.box_set()

@@ -228,6 +228,12 @@ class PluginbaseView(ttk.Frame):
 
         self.__box = (x1, y1, x2, y2)
 
+        for input_object in self.input_object_get().values():
+            input_object.box_set()
+
+        for output_object in self.output_object_get().values():
+            output_object.box_set()
+
 
     def box_get(self):
         return self.__box
@@ -308,8 +314,15 @@ class PluginbaseView(ttk.Frame):
         self.__input_row_counter += 1
 
 
-    def input_object_get(self, input_id):
-        return self.__input_container[input_id]
+    def input_object_get(self, input_id=None):
+        ret = None
+
+        if bool(input_id):
+            ret = self.__input_container[input_id]
+        else:
+            ret = self.__input_container
+
+        return ret
 
 
     def input_value_set(self, input):
@@ -322,8 +335,15 @@ class PluginbaseView(ttk.Frame):
         self.__output_row_counter += 1
 
 
-    def output_object_get(self, output_id):
-        return self.__output_container[output_id]
+    def output_object_get(self, output_id=None):
+        ret = None
+
+        if bool(output_id):
+            ret = self.__output_container[output_id]
+        else:
+            ret = self.__output_container
+
+        return ret
 
 
     def output_value_set(self, output):
@@ -340,16 +360,8 @@ class PluginbaseView(ttk.Frame):
 
 
     def connect(self):
-        for input_object in self.__input_container.values():
+        for input_object in self.input_object_get().values():
             input_object.connect()
 
-        for output_object in self.__output_container.values():
+        for output_object in self.output_object_get().values():
             output_object.connect()
-
-
-    def datalabels_box_set(self):
-        for input_object in self.__input_container.values():
-            input_object.box_set()
-
-        for output_object in self.__output_container.values():
-            output_object.box_set()

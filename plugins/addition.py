@@ -12,7 +12,18 @@ class Plugin(pluginbase.Pluginbase):
         self.input_init("one", "two")
         self.output_init("result")
 
+        # init own plugin
+        self.content_set()
+
+        # set input, output init values
         self.output_value_set("result", 0)
+
+
+    def content_set(self):
+        self.marker_widget = ttk.Label(self.view_get(), text=f"{self.pluginframe_get().id_get()}-{self.id_get()}")
+
+        self.view_init()
+        self.content_init(self.marker_widget)
 
 
     def run(self):
