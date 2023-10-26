@@ -1,16 +1,15 @@
-import tkinter as tk
 from tkinter import ttk
 from PIL import ImageTk
 import json
-import plugincontroller
-import mainwindow
 import style
+import maincanvas
 
 
 
 class Pluginchooser(ttk.Treeview):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master: ttk.Frame, canvas: maincanvas.Maincanvas, **kwargs):
         super().__init__(master, **kwargs)
+        self.canvas = canvas
         self.image_directory = ImageTk.PhotoImage(style.image_directory_12)
         self.image_work = ImageTk.PhotoImage(style.image_work_12)
         self.floating_widget = None
@@ -66,29 +65,21 @@ class Pluginchooser(ttk.Treeview):
 
     # plugin list methods
     def dnd_start(self, event, selection):
-        x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-        y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-
         entry_type, entry_name = selection[0].split(':')
         if entry_type == "plugin":
             plugin_id = entry_name.split('.')[0]
 
             self.floating_widget = ttk.Label(self.winfo_toplevel(), text=plugin_id)
-            self.floating_widget.place(x=x, y=y)
+            display_x, display_y, _, _ = self.canvas.cursor_position_get()
+            self.floating_widget.place(x=display_x, y=display_y)
 
 
     def dnd_motion(self, event):
         if bool(self.floating_widget):
-            x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-            y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-            canvas_x = mainwindow.can_main.canvasx(x)
-            canvas_y = mainwindow.can_main.canvasy(y)
+            display_x, display_y, _, _ = self.canvas.cursor_position_get()
+            self.floating_widget.place(x=display_x, y=display_y)
 
-            self.floating_widget.place(x=x, y=y)
-
-            can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
-
-            if canvas_x <= 0 or canvas_y <= 0 or canvas_x >= can_main_width - style.widget_padding * 2 or canvas_y >= can_main_height - style.widget_padding * 2:
+            if not self.canvas.is_cursor_in_canvas():
                 self.config(cursor="X_cursor")
             else:
                 self.config(cursor="")
@@ -97,48 +88,14 @@ class Pluginchooser(ttk.Treeview):
     def dnd_stop(self, event, selection):
         self.config(cursor="")
 
+        if bool(self.floating_widget):
+            self.floating_widget.place_forget()
+            self.floating_widget.destroy()
+            self.floating_widget = None
+
         entry_type, entry_name = selection[0].split(':')
         if entry_type == "plugin":
-            plugin_id = entry_name.split('.')[0]
+            plugin_name = entry_name.split('.')[0]
 
-            if bool(self.floating_widget):
-                self.floating_widget.place_forget()
-                self.floating_widget.destroy()
-                self.floating_widget = None
-
-            if event.x < 0:
-                x = self.winfo_pointerx() - mainwindow.can_main.winfo_rootx()
-                y = self.winfo_pointery() - mainwindow.can_main.winfo_rooty()
-                canvas_x = mainwindow.can_main.canvasx(x)
-                canvas_y = mainwindow.can_main.canvasy(y)
-
-                can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, mainwindow.can_main.cget("scrollregion").split()))
-                if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
-                    try:
-                        widgets = mainwindow.can_main.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
-
-                        if len(widgets) == 0:
-                            mainwindow.can_main.widget_add(plugin_name=plugin_id, x=canvas_x, y=canvas_y)
-                        else:
-                            widget_ids = set()
-                            for id in widgets:
-                                tags = mainwindow.can_main.gettags(id)
-                                if len(tags) > 0:
-                                    widget_id, _ = tags[0].split('*')
-                                    widget_ids.add(widget_id)
-
-                            if len(widget_ids) == 1:
-                                target_widget_id = list(widget_ids)[0]
-                                pluginframe = mainwindow.can_main.pluginframe_get(target_widget_id)
-                                mainwindow.can_main.plugin_add(plugin_id, pluginframe)
-                                self.winfo_toplevel().update()
-                                mainwindow.can_main.widget_background_set(widget_id, keep_height=True)
-                                mainwindow.can_main.widget_resizer_set(widget_id)
-
-                                for plugin_object in pluginframe.plugin_get().values():
-                                    plugin_object.datalabels_box_set()
-                                    plugin_object.connect(mainwindow.can_main.plugin_get_all())
-                            else:
-                                print("too many widget are overlapped:", widget_ids)
-                    except:
-                        pass
+            if self.canvas.is_cursor_in_canvas():
+                self.canvas.plugin_add(plugin_name)

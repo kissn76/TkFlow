@@ -13,12 +13,8 @@ import style
 
 
 
-can_main = None
-
-
 class Mainwindow(tk.Tk):
     def __init__(self, fullscreen=False):
-        global can_main
         super().__init__()
         self.title("TkFlow")
 
@@ -57,18 +53,18 @@ class Mainwindow(tk.Tk):
 
         # Canvas
         self.frm_main = ttk.Frame(self)
-        can_main = maincanvas.Maincanvas(self, scrollregion=(0, 0, 2000, 2000))
+        self.can_main = maincanvas.Maincanvas(self, scrollregion=(0, 0, 2000, 2000))
         hbar=ttk.Scrollbar(self.frm_main, orient=tk.HORIZONTAL)
         hbar.grid(row=1, column=0, sticky="e, w")
-        hbar.config(command=can_main.xview)
+        hbar.config(command=self.can_main.xview)
         vbar=ttk.Scrollbar(self.frm_main, orient=tk.VERTICAL)
         vbar.grid(row=0, column=1, sticky="n, s")
-        vbar.config(command=can_main.yview)
-        can_main.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        can_main.grid(row=0, column=0, sticky="n, s, w, e")
-        can_main.rowconfigure(0, weight=1)
-        can_main.columnconfigure(0, weight=1)
-        can_main.bind('<Button-1>', can_main.dnd_start)
+        vbar.config(command=self.can_main.yview)
+        self.can_main.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+        self.can_main.grid(row=0, column=0, sticky="n, s, w, e")
+        self.can_main.rowconfigure(0, weight=1)
+        self.can_main.columnconfigure(0, weight=1)
+        self.can_main.bind('<Button-1>', self.can_main.dnd_start)
         self.frm_main.grid(row=0, column=0, sticky="n, s, w, e")
         self.frm_main.rowconfigure(0, weight=1)
         self.frm_main.columnconfigure(0, weight=1)
@@ -76,7 +72,7 @@ class Mainwindow(tk.Tk):
 
         # Sidebar
         self.sidebar = ttk.Frame(self)
-        self.available_plugins = pluginchooser.Pluginchooser(self.sidebar)
+        self.available_plugins = pluginchooser.Pluginchooser(self.sidebar, self.can_main)
         self.available_plugins.pack(fill=tk.BOTH, expand=True)
         self.sidebar.grid(row=0, column=1, sticky="n, s, w, e")
 
@@ -93,7 +89,7 @@ class Mainwindow(tk.Tk):
 
 
     def statusbar_set(self):
-        can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(can_main.canvasx(event.x))}, {int(can_main.canvasy(event.y))}"))
+        self.can_main.bind('<Motion>', lambda event: self.statusbar.configure(text=f"{int(self.can_main.canvasx(event.x))}, {int(self.can_main.canvasy(event.y))}"))
 
 
 
@@ -105,7 +101,7 @@ class Mainwindow(tk.Tk):
             style.widget_padding = var_padding.get()
 
             for pluginfrm in pluginframe.get_all().values():
-                can_main.widget_reset(pluginfrm.id)
+                self.can_main.widget_reset(pluginfrm.id)
 
             dlg.destroy()
 
@@ -212,7 +208,7 @@ class Mainwindow(tk.Tk):
         pcs_plugins = pluginframe.widget_plugins_get_all()
         plugins = pluginbase.get_all_as_dict()
         for key in pluginframe.get_all().keys():
-            box = can_main.bbox(f"{key}:move")
+            box = self.can_main.bbox(f"{key}:move")
             pcs_boxes.update({key: {"x": box[0], "y": box[1]}})
 
         project = {
@@ -229,7 +225,7 @@ class Mainwindow(tk.Tk):
 
 
     def run(self):
-        can_main.run()
+        self.can_main.run()
         self.after(100, self.run)
 
 

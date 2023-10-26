@@ -181,7 +181,7 @@ class OutputLabel(DataLabel):
                     target_widget_tag = widget_tags[0].split('*')[0]
                     input_object_list = []
                     pluginframe = self.canvas.pluginframe_get(target_widget_tag)
-                    for plugin_object in pluginframe.plugin_get().values():
+                    for plugin_object in pluginframe.pluginview_get().values():
                         for input_object in plugin_object.input_container_get().values():
                             input_object_list.append(input_object)
                     for input_object in input_object_list:

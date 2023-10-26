@@ -21,48 +21,94 @@ class Maincanvas(tk.Canvas):
         self.__widget_backgrounds = {}
 
 
-    def plugin_add(self, plugin_name: str, pluginframe_object: pluginframe.Pluginframe):
-        plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
+    def plugin_add(self, plugin_name):
+        '''
+        Add new plugin to canvas
+        '''
+        widget_ids = self.cursor_widget_ids_get()
 
+        if not bool(widget_ids):
+            self.__plugin_create(plugin_name)
+        elif len(widget_ids) == 1:
+            self.__plugin_insert(plugin_name, widget_ids[0])
+        else:
+            print("too many widget are overlapped:", widget_ids)
+
+
+    def __plugin_create(self, plugin_name: str):
+        '''
+        Add new plugin to new widget
+        '''
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+        pluginframe_object = self.widget_create(canvas_x, canvas_y)
+        widget_id = pluginframe_object.id_get()
+
+        plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
         plugin_object = plugincontroller.new_object(plugin_name, plugin_id, pluginframe_object, self)
         self.__plugin_container.update({plugin_id: plugin_object})
         pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
 
+        self.widget_reset(widget_id)
 
-    def plugin_move(self, plugin_id, pluginframe_id=None, x=24, y=24):
+
+    def __plugin_insert(self, plugin_name: str, widget_id):
+        '''
+        Insert new plugin to existing widget
+        '''
+        pluginframe_object = self.pluginframe_get(widget_id)
+
+        plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
+        plugin_object = plugincontroller.new_object(plugin_name, plugin_id, pluginframe_object, self)
+        self.__plugin_container.update({plugin_id: plugin_object})
+        pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
+
+        self.widget_reset(widget_id)
+
+
+    def plugin_move(self, plugin_id, pluginframe_id_target=None, plugin_id_target=None, x=24, y=24):
+        '''
+        Move existing plugin
+        '''
         pluginframe_object = None
 
-        if bool(pluginframe_id):
-            pluginframe_object = self.pluginframe_get(pluginframe_id)
+        plugin_object = self.plugin_get(plugin_id)
+        pluginframe_object_old = plugin_object.pluginframe_get()
+
+        if bool(pluginframe_id_target):
+            # Move plugint to other existing widget
+            pluginframe_object = self.pluginframe_get(pluginframe_id_target)
         else:
-            pluginframe_object = self.widget_create(x, y)
+            if pluginframe_object_old.pluginview_count_get() > 1:
+                # Move plugin to new widget
+                pluginframe_object = self.widget_create(x, y)
+            else:
+                # Plugin is alone so it stays in the original widget
+                pluginframe_object = pluginframe_object_old
         widget_id = pluginframe_object.id_get()
 
-        plugin_object = self.plugin_get(plugin_id)
-        pluginframe_object_old = plugin_object.view_get().pluginframe
-        pluginframe_object_old.pluginview_remove(plugin_id)
+        if not widget_id == pluginframe_object_old.id_get():
+            # Plugin moves to other (new or existing) widget
+            pluginframe_object_old.pluginview_remove(plugin_id)
 
-        if pluginframe_object_old.pluginview_count_get() < 1:
-            widget_id_old = pluginframe_object_old.id_get()
-            self.widget_delete(widget_id_old)
+            if pluginframe_object_old.pluginview_count_get() < 1:
+                # Delete old widget if empty
+                self.widget_delete(pluginframe_object_old.id_get())
 
-        plugin_object.view_create(pluginframe_object)
-        plugin_object.content_set()
+            plugin_object.view_create(pluginframe_object)
+            plugin_object.content_set()
 
-        plugin_object_view = plugin_object.view_get()
-        plugin_object_view.pack(anchor="nw", fill=tk.BOTH)
-        plugin_object_view.setting_mode_set(pluginframe_object.setting_mode_get())
-        pluginframe_object.pluginview_insert(plugin_id, plugin_object_view)
+            plugin_object_view = plugin_object.view_get()
+            pluginframe_object.pluginview_insert(plugin_id, plugin_object_view)
 
-        self.update()
-        self.widget_name_set(widget_id)
-        self.widget_pluginframe_set(widget_id)
-        self.widget_background_set(widget_id)
-        self.widget_resizer_set(widget_id)
-        self.widget_settings_button_set(widget_id)
+        if not plugin_id == plugin_id_target:
+            # Plugin moves to other position inside the widget
+            if bool(plugin_id_target):
+                new_position = pluginframe_object.pluginview_position_get(plugin_id_target)
+            else:
+                new_position = plugin_id_target
+            pluginframe_object.pluginview_position_change(plugin_id, new_position)
 
-        for plugin_object in pluginframe_object.pluginview_get().values():
-            plugin_object.datalabels_box_set()
+        self.widget_reset(widget_id)
 
 
     def plugin_get(self, plugin_id: str=None):
@@ -77,11 +123,6 @@ class Maincanvas(tk.Canvas):
             plugin_object = self.__plugin_container
 
         return plugin_object
-
-
-    def plugin_box_set_all(self):
-        for plugin_object in self.plugin_get_all().values():
-            plugin_object.box_set()
 
 
     def __plugin_counter_get(self) -> int:
@@ -117,23 +158,6 @@ class Maincanvas(tk.Canvas):
         ret = self.__pluginframe_counter
         self.__pluginframe_counter += 1
         return ret
-
-
-    def widget_add(self, plugin_name, x=24, y=24):
-        pluginframe_object = self.widget_create(x, y)
-        widget_id = pluginframe_object.id_get()
-
-        self.plugin_add(plugin_name, pluginframe_object)
-
-        self.update()
-        self.widget_name_set(widget_id)
-        self.widget_pluginframe_set(widget_id)
-        self.widget_background_set(widget_id)
-        self.widget_resizer_set(widget_id)
-        self.widget_settings_button_set(widget_id)
-
-        for plugin_object in pluginframe_object.plugins_get().values():
-            plugin_object.datalabels_box_set()
 
 
     # create new widget
@@ -233,7 +257,7 @@ class Maincanvas(tk.Canvas):
         self.update()
 
         plugin_container = self.pluginframe_get(widget_id)
-        for plugin_object in plugin_container.plugin_get().values():
+        for plugin_object in plugin_container.pluginview_get().values():
             plugin_object.datalabels_box_set()
             plugin_object.connect()
 
@@ -254,6 +278,76 @@ class Maincanvas(tk.Canvas):
             self.delete(f"{widget_id}*resize_wh")
         else:
             print(f"{widget_id} deletion disabled, there are some plugin in pluginframe")
+
+
+    def cursor_widget_ids_get(self):
+        '''
+        Return widget ids under the cursor in canvas region
+        '''
+        ret = None
+
+        _, _, canvas_x, canvas_y = self.cursor_position_get()
+
+        try:
+            widgets = self.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+            widget_ids = set()
+            for id in widgets:
+                tags = self.gettags(id)
+                if len(tags) > 0:
+                    widget_id, _ = tags[0].split('*')
+                    widget_ids.add(widget_id)
+            if len(widget_ids) > 0:
+                ret = list(widget_ids)
+        except Exception as ex:
+            print(ex)
+
+        return ret
+
+
+    def cursor_plugin_ids_get(self):
+        '''
+        Return plugin ids under the cursor in canvas region
+        '''
+        ret = None
+        pluginframe_ids = self.cursor_widget_ids_get()
+
+        if bool(pluginframe_ids):
+            _, _, canvas_x, canvas_y = self.cursor_position_get()
+            plugin_ids = []
+            for pluginframe_id in pluginframe_ids:
+                for plugin_id, pluginview_object in self.pluginframe_get(pluginframe_id).pluginview_get().items():
+                    pluginview_object.box_set()
+                    x1, y1, x2, y2 = pluginview_object.box_get()
+                    if canvas_y >= y1 and canvas_y <= y2:
+                        plugin_ids.append(plugin_id)
+            if len(plugin_ids) > 0:
+                ret = plugin_ids
+
+        return ret
+
+
+    def cursor_position_get(self):
+        '''
+        Return cursor position in display and canvas
+        '''
+        display_x = self.winfo_pointerx() - self.winfo_rootx()
+        display_y = self.winfo_pointery() - self.winfo_rooty()
+        canvas_x = self.canvasx(display_x)
+        canvas_y = self.canvasy(display_y)
+
+        return (display_x, display_y, canvas_x, canvas_y)
+
+
+    def is_cursor_in_canvas(self):
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.cget("scrollregion").split()))
+        if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
+            if display_x > self.winfo_x() and display_y > self.winfo_y() and display_x < (self.winfo_x() + self.winfo_width()) and display_y < (self.winfo_y() + self.winfo_height()):
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
     # set position and size of widget name

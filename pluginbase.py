@@ -3,8 +3,8 @@ from tkinter import ttk
 from PIL import ImageTk
 from datalabel import InputLabel, OutputLabel
 import style
-# import maincanvas
 import pluginframe
+import maincanvas
 
 
 
@@ -12,10 +12,11 @@ class Pluginbase():
     '''
         Pluginbase controller
     '''
-    def __init__(self, plugin_id, pluginframe_object, canvas_object, **kwargs):
+    def __init__(self, plugin_id, pluginframe_object: pluginframe.Pluginframe, canvas_object: maincanvas.Maincanvas, **kwargs):
         self.__view = None
         self.__model = PluginbaseModel(plugin_id)
         self.__canvas = canvas_object
+        self.__pluginframe = pluginframe_object
 
         self.view_create(pluginframe_object)
 
@@ -24,9 +25,14 @@ class Pluginbase():
         return self.__model.id_get()
 
 
+    def pluginframe_get(self):
+        return self.__pluginframe
+
+
     def view_create(self, pluginframe_object: pluginframe.Pluginframe, **kwargs):
-        self.__view = PluginbaseView(pluginframe_object, self.__canvas, self.__model, **kwargs)
-        self.__view.setting_mode_set(pluginframe_object.setting_mode_get())
+        self.__pluginframe = pluginframe_object
+        self.__view = PluginbaseView(self.__pluginframe, self.__canvas, self.__model, **kwargs)
+        self.__view.setting_mode_set(self.__pluginframe.setting_mode_get())
 
 
     def view_init(self):
@@ -141,15 +147,15 @@ class PluginbaseView(ttk.Frame):
     '''
         Pluginbase view
     '''
-    def __init__(self, master: pluginframe.Pluginframe, canvas_object, model: PluginbaseModel, **kwargs):
+    def __init__(self, master: pluginframe.Pluginframe, canvas_object:maincanvas.Maincanvas, model: PluginbaseModel, **kwargs):
         super().__init__(master, **kwargs)
-        self.model = model
-        self.box = ()   # box in canvas
-        self.canvas = canvas_object
-        self.pluginframe = master
+        self.__model = model
+        self.__box = ()   # box in canvas
+        self.__canvas = canvas_object
+        self.__pluginframe = master
 
-        self.floating_widget = None
-        self.marker_widget = None
+        self.__floating_widget = None
+        self.__marker_widget = None
 
         self.__input_container = {}
         self.__output_container = {}
@@ -202,13 +208,17 @@ class PluginbaseView(ttk.Frame):
         for output_object in self.__output_container.values():
             outputs.update(output_object.to_dict())
 
-        ret = {self.model.id_get(): {"inputs": inputs, "outputs": outputs}}
+        ret = {self.__model.id_get(): {"inputs": inputs, "outputs": outputs}}
         return ret
+
+
+    def id_get(self):
+        return self.__model.id_get()
 
 
     # set box in canvas
     def box_set(self, event=None):
-        pluginframe_box = self.canvas.bbox(f"{self.pluginframe.id_get()}*pluginframe")
+        pluginframe_box = self.__canvas.bbox(f"{self.__pluginframe.id_get()}*pluginframe")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
 
         x1 = int(pluginframe_box[0]) + int(plugin_geometry[2])
@@ -216,7 +226,11 @@ class PluginbaseView(ttk.Frame):
         x2 = int(x1 + int(plugin_geometry[0]))
         y2 = int(y1 + int(plugin_geometry[1]))
 
-        self.box = (x1, y1, x2, y2)
+        self.__box = (x1, y1, x2, y2)
+
+
+    def box_get(self):
+        return self.__box
 
 
     def arranger_init(self):
@@ -230,82 +244,37 @@ class PluginbaseView(ttk.Frame):
 
     def dnd_arrange_start(self, event):
         # self.leave()
-        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
-        y = self.winfo_pointery() - self.canvas.winfo_rooty()
+        display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
 
-        self.floating_widget = ttk.Label(self.winfo_toplevel(), text=self.model.id_get())
-        self.floating_widget.place(x=x, y=y)
+        self.__floating_widget = ttk.Label(self.winfo_toplevel(), text=self.__model.id_get())
+        self.__floating_widget.place(x=display_x, y=display_y)
 
 
     def dnd_arrange_motion(self, event):
-        if bool(self.floating_widget):
-            x = self.winfo_pointerx() - self.canvas.winfo_rootx()
-            y = self.winfo_pointery() - self.canvas.winfo_rooty()
-
-            self.floating_widget.place(x=x, y=y)
+        if bool(self.__floating_widget):
+            display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
+            self.__floating_widget.place(x=display_x, y=display_y)
 
 
     def dnd_arrange_stop(self, event):
-        plugin_id_move = self.floating_widget.cget("text")
-        if bool(self.floating_widget):
-            self.floating_widget.place_forget()
-            self.floating_widget.destroy()
-            self.floating_widget = None
+        plugin_id = self.__model.id_get()
+        if bool(self.__floating_widget):
+            self.__floating_widget.place_forget()
+            self.__floating_widget.destroy()
+            self.__floating_widget = None
 
-        x = self.winfo_pointerx() - self.canvas.winfo_rootx()
-        y = self.winfo_pointery() - self.canvas.winfo_rooty()
-        canvas_x = self.canvas.canvasx(x)
-        canvas_y = self.canvas.canvasy(y)
+        display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
 
-        # pointer pozíció:
-        #   - ugyanazon pluginframe
-        #       - ugyanazon pozíciójában
-        #       - másik pozícióban
-        #   - másik pluginframe valamelyik pozíciójában
-        #   - pluginframe-en kívül, üres területen
-        #       - ha csak egy plugin van a forrás pluginframe-ben, akkor ne történjen semmi (értelmetlen)
+        pluginframe_target_id = self.__canvas.cursor_widget_ids_get()
+        plugin_target_id = self.__canvas.cursor_plugin_ids_get()
 
-        # box_set_all()
+        if bool(pluginframe_target_id):
+            pluginframe_target_id = pluginframe_target_id[0]
 
-        pluginframe_target = None
-        plugin_id_target = None
+        if bool(plugin_target_id):
+            plugin_target_id = plugin_target_id[0]
 
-        for widget_id in self.canvas.pluginframe_get().keys():
-            widget_box = self.canvas.bbox(f"{widget_id}*background")
-            x1, y1, x2, y2 = widget_box
-            if canvas_x >= x1 and canvas_x <= x2 and canvas_y >= y1 and canvas_y <= y2:
-                pluginframe_target = widget_id
-                for plugin_id, pluginview_object in self.canvas.pluginframe_get(pluginframe_target).pluginview_get().items():
-                    pluginview_object.box_set()
-                    x1, y1, x2, y2 = pluginview_object.box
-                    if canvas_y >= y1 and canvas_y <= y2:
-                        plugin_id_target = plugin_id
-
-        if bool(pluginframe_target):
-            if pluginframe_target == self.pluginframe.id_get():
-                # A plugin widgeten belül marad
-                if bool(plugin_id_target):
-                    if plugin_id_target == plugin_id_move:
-                        # A widgeten belüli sorrend sem változik
-                        pass
-                    else:
-                        # A plugin pozíciója a widgeten belűl változik
-                        self.pluginframe.pluginview_position_change(plugin_id_move, self.pluginframe.pluginview_position_get(plugin_id_target))
-                else:
-                    # A plugin a jelenlegi widget végére kerül
-                    self.pluginframe.pluginview_position_change(plugin_id_move, self.pluginframe.pluginview_count_get())
-            else:
-                # widget váltás történik
-                if bool(plugin_id_target):
-                    # A plugin egy létező másik widgetben egy létező plugin elé kerül
-                    self.canvas.plugin_move(plugin_id_move, pluginframe_id=pluginframe_target)
-                else:
-                    # A plugin egy létező másik widget végére kerül
-                    self.canvas.plugin_move(plugin_id_move, pluginframe_id=pluginframe_target)
-        else:
-            # A plugin egy új üres widgetbe kerül, de csak akkor, ha eleve nem egyedül volt az eredeti widgetben
-            if self.pluginframe.pluginview_count_get() > 1:
-                self.canvas.plugin_move(plugin_id_move, x=canvas_x, y=canvas_y)
+        self.__canvas.plugin_move(plugin_id, pluginframe_target_id, plugin_target_id, x=canvas_x, y=canvas_y)
 
 
     def settings_init(self):
@@ -316,7 +285,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def settings_open(self, event):
-        print("Settings panel start", type(self), self.model.id_get())
+        print("Settings panel start", type(self), self.__model.id_get())
 
 
     def setting_mode_set(self, setting_mode):
@@ -334,7 +303,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_init(self, input_id):
-        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.model.id_get(), pluginframe_id=self.pluginframe.id_get(), canvas_object=self.canvas)})
+        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.__model.id_get(), pluginframe_id=self.__pluginframe.id_get(), canvas_object=self.__canvas)})
         self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
         self.__input_row_counter += 1
 
@@ -344,11 +313,11 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_value_set(self, input):
-        self.__input_container[input].value_set(text=self.model.input_value_get(input))
+        self.__input_container[input].value_set(text=self.__model.input_value_get(input))
 
 
     def output_init(self, output_id):
-        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.model.id_get(), pluginframe_id=self.pluginframe.id_get(), canvas_object=self.canvas)})
+        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.__model.id_get(), pluginframe_id=self.__pluginframe.id_get(), canvas_object=self.__canvas)})
         self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
         self.__output_row_counter += 1
 
@@ -358,7 +327,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def output_value_set(self, output):
-        text = self.model.output_value_get(output)
+        text = self.__model.output_value_get(output)
         self.__output_container[output].value_set(text=text)
 
 
