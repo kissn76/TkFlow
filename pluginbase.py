@@ -18,8 +18,6 @@ class Pluginbase():
         self.__canvas = canvas_object
         self.__pluginframe = pluginframe_object
 
-        self.view_create(pluginframe_object)
-
 
     def id_get(self):
         return self.__model.id_get()

@@ -14,13 +14,17 @@ class Plugin(pluginbase.Pluginbase):
         self.output_init("value")
 
         # init own plugin
-        self.content_set()
+        self.content_set(pluginframe_object)
 
         # set input, output init values
         self.output_value_set("value", self.sc.get())
 
 
-    def content_set(self):
+
+    def content_set(self, pluginframe_object):
+        self.view_create(pluginframe_object)
+        self.view_init()
+
         content_frame = ttk.Frame(self.view_get())
 
         marker_widget = ttk.Label(content_frame, text=f"{self.pluginframe_get().id_get()}-{self.id_get()}")
@@ -32,7 +36,6 @@ class Plugin(pluginbase.Pluginbase):
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
 
-        self.view_init()
         self.content_init(content_frame)
 
         if bool(self.output_value_get("value")):

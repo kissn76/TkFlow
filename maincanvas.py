@@ -94,11 +94,9 @@ class Maincanvas(tk.Canvas):
                 # Delete old widget if empty
                 self.widget_delete(pluginframe_object_old.id_get())
 
-            plugin_object.view_create(pluginframe_object)
-            plugin_object.content_set()
+            plugin_object.content_set(pluginframe_object)
 
-            plugin_object_view = plugin_object.view_get()
-            pluginframe_object.pluginview_insert(plugin_id, plugin_object_view)
+            pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
 
         if not plugin_id == plugin_id_target:
             # Plugin moves to other position inside the widget
@@ -531,8 +529,9 @@ class Maincanvas(tk.Canvas):
             for id in widgets:
                 tags = self.gettags(id)
                 if len(tags) > 0:
-                    widget_id, _ = tags[0].split('*')
-                    widget_ids.add(widget_id)
+                    widget_id, widget_type = tags[0].split('*')
+                    if widget_type == "background":
+                        widget_ids.add(widget_id)
             if len(widget_ids) > 0:
                 ret = list(widget_ids)
         except Exception as ex:
