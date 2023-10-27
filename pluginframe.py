@@ -94,3 +94,8 @@ class Pluginframe(ttk.Frame):
     def box_set(self):
         for plugin_view_object in self.pluginview_get().values():
             plugin_view_object.box_set()
+
+
+    def connect(self):
+        for plugin_view_object in self.pluginview_get().values():
+            plugin_view_object.connect()

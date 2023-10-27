@@ -31,8 +31,8 @@ class Pluginbase():
 
     def view_create(self, pluginframe_object: pluginframe.Pluginframe, **kwargs):
         self.__pluginframe = pluginframe_object
-        self.__view = PluginbaseView(self.__pluginframe, self.__canvas, self.__model, **kwargs)
-        self.__view.setting_mode_set(self.__pluginframe.setting_mode_get())
+        self.__view = PluginbaseView(self.pluginframe_get(), self.__canvas, self.__model, **kwargs)
+        self.__view.setting_mode_set(self.pluginframe_get().setting_mode_get())
 
 
     def view_init(self):
@@ -47,6 +47,10 @@ class Pluginbase():
         return self.__view
 
 
+    def content_init(self, content_object):
+        self.__view.content_init(content_object)
+
+
     def input_init(self, *args):
         for var_name in args:
             self.__model.input_value_set(var_name, None)
@@ -58,7 +62,6 @@ class Pluginbase():
 
     def input_value_set(self, input, value):
         self.__model.input_value_set(input, value)
-        self.__view.input_value_set(input)
 
 
     def input_value_get(self, input=None):
@@ -87,15 +90,10 @@ class Pluginbase():
 
     def output_value_set(self, output, value):
         self.__model.output_value_set(output, value)
-        self.__view.output_value_set(output)
 
 
     def output_value_get(self, output=None):
         return self.__model.output_value_get(output)
-
-
-    def content_init(self, content_object):
-        self.__view.content_init(content_object)
 
 
 
@@ -178,25 +176,6 @@ class PluginbaseView(ttk.Frame):
 
         self.arranger_init()
         self.settings_init()
-
-        # self.bind('<Enter>', lambda event: self.enter(event))
-        # self.bind('<Leave>', lambda event: self.leave())
-
-
-    # def enter(self, event):
-    #     self.leave()
-    #     self.box_set()
-    #     self.marker_widget = ttk.Label(self.winfo_toplevel(), text=f"{self.pluginframe.id_get()}-{self.model.id_get()}")
-    #     x = self.box[2]
-    #     y = self.box[1]
-    #     self.marker_widget.place(x=x, y=y)
-
-
-    # def leave(self):
-    #     if bool(self.marker_widget):
-    #         self.marker_widget.place_forget()
-    #         self.marker_widget.destroy()
-    #         self.marker_widget = None
 
 
     def to_dict(self):
@@ -325,10 +304,6 @@ class PluginbaseView(ttk.Frame):
         return ret
 
 
-    def input_value_set(self, input):
-        self.__input_container[input].value_set(text=self.__model.input_value_get(input))
-
-
     def output_init(self, output_id):
         self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.__model.id_get(), pluginframe_id=self.__pluginframe.id_get(), canvas_object=self.__canvas)})
         self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
@@ -346,14 +321,24 @@ class PluginbaseView(ttk.Frame):
         return ret
 
 
-    def output_value_set(self, output):
-        text = self.__model.output_value_get(output)
-        self.__output_container[output].value_set(text=text)
-
-
     def input_container_get(self):
         return self.__input_container
 
 
     def output_container_get(self):
         return self.__output_container
+
+
+    def connect(self):
+        for input_object in self.input_object_get().values():
+            start = self.__model.input_value_get(input_object.id_get())
+            end = f"{input_object.plugin_id_get()}:{input_object.id_get()}"
+            if bool(start) and bool(end):
+                self.__canvas.connect(start, end)
+
+        for output_object in self.output_object_get().values():
+            start = f"{output_object.plugin_id_get()}:{output_object.id_get()}"
+            input_ids = self.__canvas.input_find(start)
+            if bool(input_ids):
+                for input_id in input_ids:
+                    self.__canvas.connect(start, input_id)

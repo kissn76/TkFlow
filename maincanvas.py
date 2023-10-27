@@ -107,8 +107,18 @@ class Maincanvas(tk.Canvas):
             else:
                 new_position = plugin_id_target
             pluginframe_object.pluginview_position_change(plugin_id, new_position)
+            pluginframe_object.box_set()
+            pluginframe_object.connect()
 
         self.widget_reset(widget_id)
+
+        if bool(pluginframe_object_old):
+            pluginframe_object_old.box_set()
+            pluginframe_object_old.connect()
+
+        if bool(pluginframe_object):
+            pluginframe_object.box_set()
+            pluginframe_object.connect()
 
 
     def plugin_get(self, plugin_id: str=None):
@@ -123,6 +133,17 @@ class Maincanvas(tk.Canvas):
             plugin_object = self.__plugin_container
 
         return plugin_object
+
+
+    def plugin_input_value_set(self, plugin_id, input_id, value):
+        plugin_object = self.plugin_get(plugin_id)
+        plugin_object.input_value_set(input_id, value)
+
+
+    def plugin_input_value_get(self, plugin_id, input_id):
+        plugin_object = self.plugin_get(plugin_id)
+        ret = plugin_object.input_value_get(input_id)
+        return ret
 
 
     def __plugin_counter_get(self) -> int:
@@ -278,76 +299,6 @@ class Maincanvas(tk.Canvas):
             self.delete(f"{widget_id}*resize_wh")
         else:
             print(f"{widget_id} deletion disabled, there are some plugin in pluginframe")
-
-
-    def cursor_widget_ids_get(self):
-        '''
-        Return widget ids under the cursor in canvas region
-        '''
-        ret = None
-
-        _, _, canvas_x, canvas_y = self.cursor_position_get()
-
-        try:
-            widgets = self.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
-            widget_ids = set()
-            for id in widgets:
-                tags = self.gettags(id)
-                if len(tags) > 0:
-                    widget_id, _ = tags[0].split('*')
-                    widget_ids.add(widget_id)
-            if len(widget_ids) > 0:
-                ret = list(widget_ids)
-        except Exception as ex:
-            print(ex)
-
-        return ret
-
-
-    def cursor_plugin_ids_get(self):
-        '''
-        Return plugin ids under the cursor in canvas region
-        '''
-        ret = None
-        pluginframe_ids = self.cursor_widget_ids_get()
-
-        if bool(pluginframe_ids):
-            _, _, canvas_x, canvas_y = self.cursor_position_get()
-            plugin_ids = []
-            for pluginframe_id in pluginframe_ids:
-                for plugin_id, pluginview_object in self.pluginframe_get(pluginframe_id).pluginview_get().items():
-                    pluginview_object.box_set()
-                    x1, y1, x2, y2 = pluginview_object.box_get()
-                    if canvas_y >= y1 and canvas_y <= y2:
-                        plugin_ids.append(plugin_id)
-            if len(plugin_ids) > 0:
-                ret = plugin_ids
-
-        return ret
-
-
-    def cursor_position_get(self):
-        '''
-        Return cursor position in display and canvas
-        '''
-        display_x = self.winfo_pointerx() - self.winfo_rootx()
-        display_y = self.winfo_pointery() - self.winfo_rooty()
-        canvas_x = self.canvasx(display_x)
-        canvas_y = self.canvasy(display_y)
-
-        return (display_x, display_y, canvas_x, canvas_y)
-
-
-    def is_cursor_in_canvas(self):
-        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
-        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.cget("scrollregion").split()))
-        if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
-            if display_x > self.winfo_x() and display_y > self.winfo_y() and display_x < (self.winfo_x() + self.winfo_width()) and display_y < (self.winfo_y() + self.winfo_height()):
-                return True
-            else:
-                return False
-        else:
-            return False
 
 
     # set position and size of widget name
@@ -563,8 +514,140 @@ class Maincanvas(tk.Canvas):
 
         pluginframe_object = self.pluginframe_get(widget_id)
         pluginframe_object.box_set()
-        for plugin_object in pluginframe_object.pluginview_get().values():
-            plugin_object.connect()
+        pluginframe_object.connect()
+
+
+    def cursor_widget_ids_get(self):
+        '''
+        Return widget ids under the cursor in canvas region
+        '''
+        ret = None
+
+        _, _, canvas_x, canvas_y = self.cursor_position_get()
+
+        try:
+            widgets = self.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1)
+            widget_ids = set()
+            for id in widgets:
+                tags = self.gettags(id)
+                if len(tags) > 0:
+                    widget_id, _ = tags[0].split('*')
+                    widget_ids.add(widget_id)
+            if len(widget_ids) > 0:
+                ret = list(widget_ids)
+        except Exception as ex:
+            print(ex)
+
+        return ret
+
+
+    def cursor_plugin_ids_get(self):
+        '''
+        Return plugin ids under the cursor in canvas region
+        '''
+        ret = None
+        pluginframe_ids = self.cursor_widget_ids_get()
+
+        if bool(pluginframe_ids):
+            _, _, canvas_x, canvas_y = self.cursor_position_get()
+            plugin_ids = []
+            for pluginframe_id in pluginframe_ids:
+                for plugin_id, pluginview_object in self.pluginframe_get(pluginframe_id).pluginview_get().items():
+                    pluginview_object.box_set()
+                    x1, y1, x2, y2 = pluginview_object.box_get()
+                    if canvas_y >= y1 and canvas_y <= y2:
+                        plugin_ids.append(plugin_id)
+            if len(plugin_ids) > 0:
+                ret = plugin_ids
+
+        return ret
+
+
+    def cursor_inputlabel_find(self):
+        '''
+        Find InputLabel under cursor
+        '''
+        ret = None
+        input_objects = []
+
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+
+        if self.is_cursor_in_canvas():
+            widgets = self.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1) # widgets under cursor position
+
+            if len(widgets) > 0:
+                widget_tags = []
+                for widget_id in widgets:
+                    tags = self.gettags(widget_id)
+                    for tag in tags:
+                        widget_unpack = tag.split('*')
+                        if len(widget_unpack) > 1:
+                            if widget_unpack[1] == "pluginframe":
+                                widget_tags.append(tag)
+
+                widget_tags = list(set(widget_tags))
+
+                if len(widget_tags) > 0:
+                    for widget_tag in widget_tags:
+                        target_widget_tag = widget_tag.split('*')[0]
+                        input_object_list = []
+                        pluginframe = self.pluginframe_get(target_widget_tag)
+                        for plugin_object in pluginframe.pluginview_get().values():
+                            for input_object in plugin_object.input_container_get().values():
+                                input_object_list.append(input_object)
+                        for input_object in input_object_list:
+                            input_box = input_object.box_get()
+                            if canvas_x >= input_box[0] and canvas_x <= input_box[2] and canvas_y >= input_box[1] and canvas_y <= input_box[3]:
+                                input_objects.append(input_object)
+                                break
+
+        if bool(input_objects):
+            ret = input_objects
+
+        return ret
+
+
+    def cursor_position_get(self):
+        '''
+        Return cursor position in display and canvas
+        '''
+        display_x = self.winfo_pointerx() - self.winfo_rootx()
+        display_y = self.winfo_pointery() - self.winfo_rooty()
+        canvas_x = self.canvasx(display_x)
+        canvas_y = self.canvasy(display_y)
+
+        return (display_x, display_y, canvas_x, canvas_y)
+
+
+    def is_cursor_in_canvas(self):
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+        can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.cget("scrollregion").split()))
+        if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
+            if display_x > self.winfo_x() and display_y > self.winfo_y() and display_x < (self.winfo_x() + self.winfo_width()) and display_y < (self.winfo_y() + self.winfo_height()):
+                return True
+            else:
+                return False
+        else:
+            return False
+
+
+
+    def input_find(self, value):
+        '''
+        Find inputs thet contain value
+        '''
+        ret = None
+        input_ids = []
+
+        for plugin_object in self.plugin_get().values():
+            for input_id, input_value in plugin_object.input_value_get().items():
+                if input_value == value:
+                    input_ids.append(f"{plugin_object.id_get()}:{input_id}")
+
+        if bool(input_ids):
+            ret = input_ids
+
+        return ret
 
 
     def connect(self, start_id, end_id):
@@ -582,9 +665,14 @@ class Maincanvas(tk.Canvas):
         end_x = end_box[0]
         end_y = end_box[1] + ((end_box[3] - end_box[1]) / 2)
 
-        line_id = f"{start_id}:{end_id}*connect_line"
+        line_id = f"{start_id}-{end_id}*connect_line"
 
         self.connect_line_create(start_x, start_y, end_x, end_y, line_id)
+
+
+    def disconnect(self, start_id, end_id):
+        line_id = f"{start_id}-{end_id}*connect_line"
+        self.connect_line_delete(line_id)
 
 
     def connect_line_create(self, start_x, start_y, end_x, end_y, tag):
