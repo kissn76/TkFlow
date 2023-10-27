@@ -25,6 +25,10 @@ class Pluginframe(ttk.Frame):
         for pluginview_object in self.__pluginview_container.values():
             pluginview_object.setting_mode_set(self.__setting_mode)
 
+        self.update()
+        self.box_set()
+        self.connect()
+
 
     def setting_mode_get(self):
         return self.__setting_mode

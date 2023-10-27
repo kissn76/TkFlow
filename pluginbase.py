@@ -94,6 +94,19 @@ class Pluginbase():
         return self.__model.output_value_get(output)
 
 
+    def setting_init(self, *args):
+        for var_name in args:
+            self.__model.setting_value_set(var_name, None)
+
+
+    def setting_value_set(self, setting, value):
+        self.__model.setting_value_set(setting, value)
+
+
+    def setting_value_get(self, setting=None):
+        return self.__model.setting_value_get(setting)
+
+
 
 class PluginbaseModel():
     '''
@@ -104,6 +117,7 @@ class PluginbaseModel():
 
         self.__input_value_container = {}
         self.__output_value_container = {}
+        self.__setting_value_container = {}
 
 
     def id_get(self):
@@ -138,6 +152,20 @@ class PluginbaseModel():
         return ret
 
 
+    def setting_value_set(self, setting, value):
+        self.__setting_value_container[setting] = value
+
+
+    def setting_value_get(self, setting=None):
+        ret = None
+        if bool(setting):
+            ret = self.__setting_value_container[setting]
+        else:
+            ret = self.__setting_value_container.copy()
+
+        return ret
+
+
 
 class PluginbaseView(ttk.Frame):
     '''
@@ -151,7 +179,7 @@ class PluginbaseView(ttk.Frame):
         self.__pluginframe = master
 
         self.__floating_widget = None
-        self.__marker_widget = None
+        self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
 
         self.__input_container = {}
         self.__output_container = {}
@@ -172,6 +200,7 @@ class PluginbaseView(ttk.Frame):
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
+        self.content_init(self.__marker_widget)
         self.arranger_init()
         self.settings_init()
 

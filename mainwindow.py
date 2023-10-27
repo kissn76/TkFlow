@@ -85,7 +85,7 @@ class Mainwindow(tk.Tk):
 
         self.selected_theme = tk.StringVar()
 
-        # self.after(0, self.run)
+        self.after(0, self.run)
 
 
     def statusbar_set(self):
