@@ -17,6 +17,7 @@ class Pluginbase():
         self.__model = PluginbaseModel(plugin_id)
         self.__canvas = canvas_object
         self.__pluginframe = pluginframe_object
+        self.__settings_view = PluginbaseSettingsView(self.__canvas, self.__model)
 
 
     def id_get(self):
@@ -29,7 +30,7 @@ class Pluginbase():
 
     def view_create(self, pluginframe_object: pluginframe.Pluginframe, **kwargs):
         self.__pluginframe = pluginframe_object
-        self.__view = PluginbaseView(self.pluginframe_get(), self.__canvas, self.__model, **kwargs)
+        self.__view = PluginbaseView(self.pluginframe_get(), self.__canvas, self.__model, self.__settings_view, **kwargs)
         self.__view.setting_mode_set(self.pluginframe_get().setting_mode_get())
 
 
@@ -43,6 +44,14 @@ class Pluginbase():
 
     def view_get(self):
         return self.__view
+
+
+    def settings_view_get(self):
+        return self.__settings_view
+
+
+    def settings_content_init(self, label_text, content_object):
+        self.__settings_view.content_init(label_text, content_object)
 
 
     def content_init(self, content_object):
@@ -171,12 +180,14 @@ class PluginbaseView(ttk.Frame):
     '''
         Pluginbase view
     '''
-    def __init__(self, master: pluginframe.Pluginframe, canvas_object:maincanvas.Maincanvas, model: PluginbaseModel, **kwargs):
+    def __init__(self, master: pluginframe.Pluginframe, canvas_object:maincanvas.Maincanvas, model: PluginbaseModel, settings_view, **kwargs):
         super().__init__(master, **kwargs)
         self.__model = model
         self.__box = ()   # box in canvas
         self.__canvas = canvas_object
         self.__pluginframe = master
+        self.__settings_view = settings_view
+        self.__settings_view_opened = False
 
         self.__floating_widget = None
         self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
@@ -297,7 +308,12 @@ class PluginbaseView(ttk.Frame):
 
 
     def settings_open(self, event):
-        print("Settings panel start", type(self), self.__model.id_get())
+        if self.__settings_view_opened:
+            self.__settings_view.place_forget()
+            self.__settings_view_opened = False
+        else:
+            self.__settings_view.place(x=0, y=0)
+            self.__settings_view_opened = True
 
 
     def setting_mode_set(self, setting_mode):
@@ -369,3 +385,25 @@ class PluginbaseView(ttk.Frame):
             if bool(input_ids):
                 for input_id in input_ids:
                     self.__canvas.connect(start, input_id)
+
+
+
+class PluginbaseSettingsView(ttk.Frame):
+    '''
+        Pluginbase settings view
+    '''
+    def __init__(self, master, model: PluginbaseModel, **kwargs):
+        super().__init__(master, **kwargs)
+        self.__model = model
+
+        self.__gridcoulmn_label = 0
+        self.__gridcolumn_content = 1
+
+        self.__content_row_counter = 0
+
+
+    def content_init(self, label_text, content_object):
+        label = ttk.Label(self, text=label_text)
+        label.grid(row=self.__content_row_counter, column=self.__gridcoulmn_label, sticky="we")
+        content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
+        self.__content_row_counter += 1

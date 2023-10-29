@@ -453,7 +453,7 @@ class Maincanvas(tk.Canvas):
 
         pluginframe_object = self.pluginframe_get(widget_id)
         pluginframe_object.box_set()
-        for plugin_object in pluginframe_object.plugin_get().values():
+        for plugin_object in pluginframe_object.pluginview_get().values():
             plugin_object.connect()
 
 

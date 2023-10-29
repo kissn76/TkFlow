@@ -17,6 +17,7 @@ class Plugin(pluginbase.Pluginbase):
         self.setting_init("to")
         self.setting_value_set("from", -100)
         self.setting_value_set("to", 100)
+        self.setting_value_set("value", 10)
 
         # init own plugin
         self.content_set(pluginframe_object)
@@ -24,13 +25,14 @@ class Plugin(pluginbase.Pluginbase):
         # set input, output init values
         self.output_value_set("value", self.sc.get())
 
+        self.settings_set()
 
 
     def content_set(self, pluginframe_object):
         self.view_create(pluginframe_object)
         self.view_init()
 
-        self.sc = ttk.Scale(self.view_get(), from_=self.setting_value_get("from"), to=self.setting_value_get("to"), orient='horizontal', command=lambda _: self.run())
+        self.sc = ttk.Scale(self.view_get(), from_=self.setting_value_get("from"), to=self.setting_value_get("to"), value=self.setting_value_get("value"), orient='horizontal', command=lambda _: self.run())
 
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
@@ -41,9 +43,19 @@ class Plugin(pluginbase.Pluginbase):
             self.sc.set(self.output_value_get("value"))
 
 
+    def settings_set(self):
+        entry_from = ttk.Entry(self.settings_view_get())
+        entry_to = ttk.Entry(self.settings_view_get())
+        entry_value = ttk.Entry(self.settings_view_get())
+
+        entry_from.insert(0, self.setting_value_get("from"))
+        entry_to.insert(0, self.setting_value_get("to"))
+        entry_value.insert(0, self.setting_value_get("value"))
+
+        self.settings_content_init("From", entry_from)
+        self.settings_content_init("To", entry_to)
+        self.settings_content_init("Value", entry_value)
+
+
     def run(self):
         self.output_value_set("value", int(self.sc.get()))
-
-
-    # def settings(self, event):
-    #     print("overwrited")
