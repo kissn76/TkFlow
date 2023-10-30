@@ -133,6 +133,37 @@ class Maincanvas(tk.Canvas):
         return plugin_object
 
 
+    def plugin_delete(self, plugin_id):
+        plugin_object = self.plugin_get(plugin_id)
+        pluginframe_object = plugin_object.pluginframe_get()
+        widget_id = pluginframe_object.id_get()
+        # delete all reference from inputs
+        for output_key in plugin_object.output_value_get().keys():
+            plugin_input_ids = self.input_find(f"{plugin_id}:{output_key}")
+            if bool(plugin_input_ids):
+                for plugin_input_id in plugin_input_ids:
+                    plugin_id_del, input_id_del = plugin_input_id.split(':')
+                    plugin_object_del = self.plugin_get(plugin_id_del)
+                    plugin_object_del.input_value_delete(input_id_del)
+                    # delete connection output lines
+                    self.disconnect(f"{plugin_id}:{output_key}", f"{plugin_id_del}:{input_id_del}")
+        # delete connection input lines
+        for input_key, input_value in plugin_object.input_value_get().items():
+            if bool(input_value):
+                self.disconnect(input_value, f"{plugin_id}:{input_key}")
+        # delete pluginview from pluginframe
+        pluginframe_object.pluginview_remove(plugin_id)
+        if pluginframe_object.pluginview_count_get() < 1:
+            # Delete widget if empty
+            self.widget_delete(widget_id)
+        else:
+            pluginframe_object.box_set()
+            pluginframe_object.connect()
+        # delete plugin
+        del plugin_object
+        self.__plugin_container.pop(plugin_id)
+
+
     def plugin_input_value_set(self, plugin_id, input_id, value):
         plugin_object = self.plugin_get(plugin_id)
         plugin_object.input_value_set(input_id, value)
@@ -286,6 +317,7 @@ class Maincanvas(tk.Canvas):
 
         if pluginframe_object.pluginview_count_get() < 1:
             pluginframe_object.destroy()
+            del pluginframe_object
             self.__pluginframe_container.pop(widget_id)
             self.delete(f"{widget_id}*move")
             self.delete(f"{widget_id}*name")
@@ -628,7 +660,6 @@ class Maincanvas(tk.Canvas):
                 return False
         else:
             return False
-
 
 
     def input_find(self, value):

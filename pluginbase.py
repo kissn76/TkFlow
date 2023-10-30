@@ -71,6 +71,10 @@ class Pluginbase():
         self.__model.input_value_set(input, value)
 
 
+    def input_value_delete(self, input):
+        self.__model.input_value_set(input, None)
+
+
     def input_value_get(self, input=None):
         return self.__model.input_value_get(input)
 
@@ -201,12 +205,14 @@ class PluginbaseView(ttk.Frame):
 
         self.__gridcolumn_arranger = 0
         self.__gridcolumn_setting = 1
-        self.__gridcoulmn_input = 2
-        self.__gridcolumn_content = 3
-        self.__gridcolumn_output = 4
+        self.__gridcolumn_delete = 2
+        self.__gridcoulmn_input = 3
+        self.__gridcolumn_content = 4
+        self.__gridcolumn_output = 5
 
         self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
         self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
+        self.__image_delete = ImageTk.PhotoImage(style.image_delete_12)
         self.__image_move = ImageTk.PhotoImage(style.image_move_12)
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
@@ -214,6 +220,7 @@ class PluginbaseView(ttk.Frame):
         self.content_init(self.__marker_widget)
         self.arranger_init()
         self.settings_init()
+        self.delete_init()
 
 
     def to_dict(self):
@@ -308,11 +315,13 @@ class PluginbaseView(ttk.Frame):
 
 
     def settings_open(self, event):
+        widget_id = self.__pluginframe.id_get()
+        background_box = self.__canvas.bbox(f"{widget_id}*background")
         if self.__settings_view_opened:
-            self.__settings_view.place_forget()
+            self.__settings_view.close()
             self.__settings_view_opened = False
         else:
-            self.__settings_view.place(x=0, y=0)
+            self.__settings_view.open(background_box[0], background_box[1])
             self.__settings_view_opened = True
 
 
@@ -320,9 +329,18 @@ class PluginbaseView(ttk.Frame):
         if not setting_mode:
             self.arranger.grid_remove()
             self.config.grid_remove()
+            self.delete.grid_remove()
         else:
             self.arranger.grid(row=0, column=self.__gridcolumn_arranger, sticky="nswe")
             self.config.grid(row=0, column=self.__gridcolumn_setting, sticky="nswe")
+            self.delete.grid(row=0, column=self.__gridcolumn_delete, sticky="nswe")
+
+
+    def delete_init(self):
+        self.delete = ttk.Frame(self)
+        self.btn_delete = tk.Button(self.delete, image=self.__image_delete, compound=tk.CENTER)
+        self.btn_delete.grid(row=0, column=0, sticky="nswe")
+        self.btn_delete.bind('<Button-1>', lambda event: self.__canvas.plugin_delete(self.id_get()))
 
 
     def content_init(self, content_object):
@@ -373,14 +391,14 @@ class PluginbaseView(ttk.Frame):
 
 
     def connect(self):
-        for input_object in self.input_object_get().values():
-            start = self.__model.input_value_get(input_object.id_get())
-            end = f"{input_object.plugin_id_get()}:{input_object.id_get()}"
+        for input_id, input_value in self.__model.input_value_get().items():
+            start = input_value
+            end = f"{self.id_get()}:{input_id}"
             if bool(start) and bool(end):
                 self.__canvas.connect(start, end)
 
-        for output_object in self.output_object_get().values():
-            start = f"{output_object.plugin_id_get()}:{output_object.id_get()}"
+        for output_id in self.__model.output_value_get().keys():
+            start = f"{self.id_get()}:{output_id}"
             input_ids = self.__canvas.input_find(start)
             if bool(input_ids):
                 for input_id in input_ids:
@@ -400,6 +418,14 @@ class PluginbaseSettingsView(ttk.Frame):
         self.__gridcolumn_content = 1
 
         self.__content_row_counter = 0
+
+
+    def open(self, x=0, y=0):
+        self.place(x=x, y=y)
+
+
+    def close(self):
+        self.place_forget()
 
 
     def content_init(self, label_text, content_object):

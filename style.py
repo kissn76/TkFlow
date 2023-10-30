@@ -43,6 +43,9 @@ image_directory_12.thumbnail(MAX_SIZE_12)
 image_work_12 = Image.open("./resources/icon/scrawdriver.png")
 image_work_12.thumbnail(MAX_SIZE_12)
 
+image_delete_12 = Image.open("./resources/icon/delete.png")
+image_delete_12.thumbnail(MAX_SIZE_12)
+
 image_datatype_any_12 = Image.open(f"./resources/icon/anydata.png")
 image_datatype_any_12.thumbnail(MAX_SIZE_12)
 
