@@ -369,8 +369,8 @@ class Maincanvas(tk.Canvas):
             )
 
         # TEST
-        background_box = self.bbox(f"{widget_id}*background")
-        self.itemconfigure(f"{widget_id}*name", text=f"({background_box[0]}, {background_box[1]}) ({background_box[2]}, {background_box[3]})")
+        # background_box = self.bbox(f"{widget_id}*background")
+        # self.itemconfigure(f"{widget_id}*name", text=f"({background_box[0]}, {background_box[1]}) ({background_box[2]}, {background_box[3]})")
         # TEST END
 
 
@@ -545,6 +545,15 @@ class Maincanvas(tk.Canvas):
         pluginframe_object = self.pluginframe_get(widget_id)
         pluginframe_object.box_set()
         pluginframe_object.connect()
+
+        x0_self, y0_self, x1_self, y1_self = self.bbox(f"{widget_id}*background")
+        for widget_id_other in self.pluginframe_get().keys():
+            if not widget_id_other == widget_id:
+                x0, y0, x1, y1 = self.bbox(f"{widget_id_other}*background")
+                if x1_self >= x0 and x1_self <= x1 and ((y1_self >= y0 and y1_self <= y1) or (y0_self >= y0 and y0_self <= y1)):
+                    self.widget_move(widget_id, x - 1, y)
+                elif x0_self >= x0 and x0_self <= x1 and ((y1_self >= y0 and y1_self <= y1) or (y0_self >= y0 and y0_self <= y1)):
+                    self.widget_move(widget_id, x + 1, y)
 
 
     def cursor_widget_ids_get(self):

@@ -17,7 +17,7 @@ class Pluginbase():
         self.__model = PluginbaseModel(plugin_id)
         self.__canvas = canvas_object
         self.__pluginframe = pluginframe_object
-        self.__settings_view = PluginbaseSettingsView(self.__canvas, self.__model)
+        self.__settings_view = PluginbaseSettingsView(self.__canvas.winfo_toplevel(), self.__model)
 
 
     def id_get(self):
@@ -47,7 +47,7 @@ class Pluginbase():
 
 
     def settings_view_get(self):
-        return self.__settings_view
+        return self.__settings_view.main_frame
 
 
     def settings_content_init(self, label_text, content_object):
@@ -419,6 +419,12 @@ class PluginbaseSettingsView(ttk.Frame):
 
         self.__content_row_counter = 0
 
+        ttk.Label(self, text=model.id_get()).pack()
+        self.main_frame = ttk.Frame(self)
+        self.main_frame.pack()
+        ttk.Button(self, text="Cancel", command=self.close).pack(side="left")
+        ttk.Button(self, text="Save").pack(side="right")
+
 
     def open(self, x=0, y=0):
         self.place(x=x, y=y)
@@ -429,7 +435,7 @@ class PluginbaseSettingsView(ttk.Frame):
 
 
     def content_init(self, label_text, content_object):
-        label = ttk.Label(self, text=label_text)
+        label = ttk.Label(self.main_frame, text=label_text)
         label.grid(row=self.__content_row_counter, column=self.__gridcoulmn_label, sticky="we")
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
