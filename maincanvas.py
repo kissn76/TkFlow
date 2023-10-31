@@ -534,6 +534,18 @@ class Maincanvas(tk.Canvas):
         if canvas_y < style.widget_padding:
             canvas_y = style.widget_padding
 
+        x0, y0, x1, y1 = self.bbox(f"{widget_id}*background")
+        items = self.find_overlapping(
+                canvas_x - style.widget_padding - style.widget_resizer_width,
+                canvas_y - style.widget_padding - style.widget_resizer_width,
+                canvas_x + x1 - x0 - style.widget_padding,
+                canvas_y + y1 - y0 - style.widget_padding
+            )
+        for item in items:
+            w_id, w_item_type = self.gettags(item)[0].split('*')
+            if not w_id == widget_id and w_item_type == "background":
+                return
+
         self.coords(f"{widget_id}*move", canvas_x, canvas_y)
 
         self.widget_name_set(widget_id)
@@ -545,15 +557,6 @@ class Maincanvas(tk.Canvas):
         pluginframe_object = self.pluginframe_get(widget_id)
         pluginframe_object.box_set()
         pluginframe_object.connect()
-
-        x0_self, y0_self, x1_self, y1_self = self.bbox(f"{widget_id}*background")
-        for widget_id_other in self.pluginframe_get().keys():
-            if not widget_id_other == widget_id:
-                x0, y0, x1, y1 = self.bbox(f"{widget_id_other}*background")
-                if x1_self >= x0 and x1_self <= x1 and ((y1_self >= y0 and y1_self <= y1) or (y0_self >= y0 and y0_self <= y1)):
-                    self.widget_move(widget_id, x - 1, y)
-                elif x0_self >= x0 and x0_self <= x1 and ((y1_self >= y0 and y1_self <= y1) or (y0_self >= y0 and y0_self <= y1)):
-                    self.widget_move(widget_id, x + 1, y)
 
 
     def cursor_widget_ids_get(self):
