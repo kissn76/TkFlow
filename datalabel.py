@@ -70,6 +70,24 @@ class InputLabel(DataLabel):
     def __init__(self, master, id, plugin_id, pluginframe_id, canvas_object):
         super().__init__(master, id, plugin_id, pluginframe_id, canvas_object)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
+        self.lbl_data.bind('<Button-1>', self.dnd_start)
+        self.lbl_data.bind('<Button1-Motion>', self.dnd_motion)
+        # self.lbl_data.bind('<ButtonRelease-1>', self.dnd_stop)
+
+
+    def dnd_start(self, event):
+        pass
+
+
+    def dnd_motion(self, event):
+        output_id = self.canvas.plugin_get(self.plugin_id_get()).input_value_get(self.id_get())
+        if bool(output_id):
+            line_id = f"{output_id}-{self.plugin_id_get()}:{self.id_get()}*connect_line"
+            self.canvas.dnd_motion_datalabel(event, output_id, line_id)
+
+
+    def dnd_stop(self, event):
+        self.canvas.plugin_get(self.plugin_id_get()).input_value_delete(self.id_get())
 
 
 
@@ -78,36 +96,12 @@ class OutputLabel(DataLabel):
         super().__init__(master, id, plugin_id, pluginframe_id, canvas_object)
         self.lbl_data.grid(row=0, column=0, sticky="n, s, w, e")
         self.lbl_data.bind('<Button-1>', self.dnd_start)
-        self.lbl_data.bind('<Button1-Motion>', self.dnd_motion)
+        self.lbl_data.bind('<Button1-Motion>', lambda event: self.canvas.dnd_motion_datalabel(event, f"{self.plugin_id_get()}:{self.id_get()}"))
         self.lbl_data.bind('<ButtonRelease-1>', self.dnd_stop)
-
-        self.__last_input_object = None
 
 
     def dnd_start(self, event):
         pass
-
-
-    def dnd_motion(self, event):
-        display_x, display_y, canvas_x, canvas_y = self.canvas.cursor_position_get()
-
-        # draw line between outputlabel and pointer
-        start_box = self.box_get()
-        start_x = start_box[2]
-        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
-
-        self.canvas.connect_line_create(start_x, start_y, canvas_x, canvas_y, "drawing")
-
-        # enter/leave inputlabel
-        if bool(self.__last_input_object):
-            self.__last_input_object.leave()
-            self.__last_input_object = None
-
-        input_objects = self.canvas.cursor_inputlabel_find()
-        if bool(input_objects):
-            input_object = input_objects[0]
-            input_object.enter()
-            self.__last_input_object = input_object
 
 
     def dnd_stop(self, event):

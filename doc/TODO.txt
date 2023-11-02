@@ -8,6 +8,7 @@ app
 plugin
 ======
 - Settings
+- Plugin legyen egy mappa, ne csak egy file. plugin.json kötelező a mappán belül
 * Delete
 * Reorder in container
 * Delete connection line

@@ -20,6 +20,8 @@ class Maincanvas(tk.Canvas):
         self.mainwindow = mainwindow
         self.__widget_backgrounds = {}
 
+        self.__last_input_object = None
+
 
     def plugin_add(self, plugin_name):
         '''
@@ -454,6 +456,31 @@ class Maincanvas(tk.Canvas):
         self.dtag('selected')    # removes the 'selected' tag
         self.unbind('<Motion>')
         self.mainwindow.statusbar_set()
+
+
+    def dnd_motion_datalabel(self, event, output_id, line_tag="drawing"):
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+
+        output_plugin_id, output_output_id = output_id.split(':')
+        outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
+
+        # draw line between outputlabel and pointer
+        start_box = outputlabel_object.box_get()
+        start_x = start_box[2]
+        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
+
+        self.connect_line_create(start_x, start_y, canvas_x, canvas_y, line_tag)
+
+        # enter/leave inputlabel
+        if bool(self.__last_input_object):
+            self.__last_input_object.leave()
+            self.__last_input_object = None
+
+        input_objects = self.cursor_inputlabel_find()
+        if bool(input_objects):
+            input_object = input_objects[0]
+            input_object.enter()
+            self.__last_input_object = input_object
 
 
     def widget_resize(self, widget_id, x, y):
