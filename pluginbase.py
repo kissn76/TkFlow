@@ -72,7 +72,7 @@ class Pluginbase():
 
 
     def input_value_delete(self, input):
-        self.__model.input_value_set(input, None)
+        self.__model.input_value_delete(input)
 
 
     def input_value_get(self, input=None):
@@ -149,6 +149,10 @@ class PluginbaseModel():
             ret = self.__input_value_container.copy()
 
         return ret
+
+
+    def input_value_delete(self, input):
+        self.input_value_set(input, None)
 
 
     def output_value_set(self, output, value):
@@ -349,7 +353,7 @@ class PluginbaseView(ttk.Frame):
 
 
     def input_init(self, input_id):
-        self.__input_container.update({input_id: InputLabel(self, id=input_id, plugin_id=self.__model.id_get(), pluginframe_id=self.__pluginframe.id_get(), canvas_object=self.__canvas)})
+        self.__input_container.update({input_id: InputLabel(self, id=input_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
         self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
         self.__input_row_counter += 1
 
@@ -365,8 +369,16 @@ class PluginbaseView(ttk.Frame):
         return ret
 
 
+    def input_value_get(self, input=None):
+        return self.__model.input_value_get(input)
+
+
+    def input_value_delete(self, input):
+        self.__model.input_value_delete(input)
+
+
     def output_init(self, output_id):
-        self.__output_container.update({output_id: OutputLabel(self, id=output_id, plugin_id=self.__model.id_get(), pluginframe_id=self.__pluginframe.id_get(), canvas_object=self.__canvas)})
+        self.__output_container.update({output_id: OutputLabel(self, id=output_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
         self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
         self.__output_row_counter += 1
 

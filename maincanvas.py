@@ -483,6 +483,27 @@ class Maincanvas(tk.Canvas):
             self.__last_input_object = input_object
 
 
+    def dnd_stop_datalabel(self, event, output_id, line_tag="drawing"):
+        self.connect_line_delete(line_tag)
+
+        output_plugin_id, output_output_id = output_id.split(':')
+        outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
+
+        input_objects = self.cursor_inputlabel_find()    # find inputlabel under cursor position
+        if bool(input_objects):
+            input_object = input_objects[0]
+            new_value = f"{outputlabel_object.plugin_id_get()}:{outputlabel_object.id_get()}"
+            old_value = self.plugin_input_value_get(input_object.plugin_id_get(), input_object.id_get()) # get old value of found inputlabel
+
+            if not old_value == new_value:  # if value modified
+                if bool(old_value): # if found inputlabel is not empty
+                    # delete old line
+                    self.disconnect(old_value, f"{input_object.plugin_id_get()}:{input_object.id_get()}")
+                # insert new value, create new line
+                self.plugin_input_value_set(input_object.plugin_id_get(), input_object.id_get(), new_value)
+                self.connect(output_id, f"{input_object.plugin_id_get()}:{input_object.id_get()}")
+
+
     def widget_resize(self, widget_id, x, y):
         self.widget_resize_width(widget_id, x)
         self.widget_resize_height(widget_id, y)
@@ -767,9 +788,6 @@ class Maincanvas(tk.Canvas):
                     end_x, end_y,
                     smooth=True, tags=tag, arrow="last", arrowshape=(16, 20, 5)
                 )
-
-            # self.tag_bind(tag, "<Button-1>", lambda event: mainwindow.can_main.itemconfigure(tag, fill="red", width=6))
-            self.tag_bind(tag, "<Double-Button-1>", lambda event: self.connect_line_delete(tag))
 
 
     def connect_line_delete(self, tag):
