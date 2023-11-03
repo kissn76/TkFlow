@@ -64,7 +64,6 @@ class Mainwindow(tk.Tk):
         self.can_main.grid(row=0, column=0, sticky="n, s, w, e")
         self.can_main.rowconfigure(0, weight=1)
         self.can_main.columnconfigure(0, weight=1)
-        self.can_main.bind('<Button-1>', self.can_main.dnd_start)
         self.frm_main.grid(row=0, column=0, sticky="n, s, w, e")
         self.frm_main.rowconfigure(0, weight=1)
         self.frm_main.columnconfigure(0, weight=1)

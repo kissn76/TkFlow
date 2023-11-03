@@ -44,9 +44,9 @@ class Plugin(pluginbase.Pluginbase):
 
 
     def settings_set(self):
-        entry_from = ttk.Entry(self.settings_view_get())
-        entry_to = ttk.Entry(self.settings_view_get())
-        entry_value = ttk.Entry(self.settings_view_get())
+        entry_from = ttk.Entry(self.settings_viewframe_get())
+        entry_to = ttk.Entry(self.settings_viewframe_get())
+        entry_value = ttk.Entry(self.settings_viewframe_get())
 
         entry_from.insert(0, self.setting_value_get("from"))
         entry_to.insert(0, self.setting_value_get("to"))

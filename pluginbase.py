@@ -46,21 +46,13 @@ class Pluginbase():
         return self.__view
 
 
-    def settings_view_get(self):
-        return self.__settings_view.main_frame
-
-
-    def settings_content_init(self, label_text, content_object):
-        self.__settings_view.content_init(label_text, content_object)
-
-
     def content_init(self, content_object):
         self.__view.content_init(content_object)
 
 
     def input_init(self, *args):
         for var_name in args:
-            self.__model.input_value_set(var_name, None)
+            self.input_value_set(var_name, None)
 
 
     def input_object_get(self, input):
@@ -71,7 +63,7 @@ class Pluginbase():
         self.__model.input_value_set(input, value)
 
 
-    def input_value_delete(self, input):
+    def input_value_delete(self, input=None):
         self.__model.input_value_delete(input)
 
 
@@ -79,20 +71,21 @@ class Pluginbase():
         return self.__model.input_value_get(input)
 
 
-    # get output value that represented by input
     def input_value_get_referenced(self, input):
+        '''
+        get output value that represented by input
+        '''
         result = None
-        input_value = self.__model.input_value_get(input)
+        input_value = self.input_value_get(input)
         if bool(input_value):
             plugin_id, output_id  = input_value.split(':')
-            plugin_object = self.__canvas.plugin_get(plugin_id)
-            result = plugin_object.output_value_get(output_id)
+            result = self.__canvas.plugin_get(plugin_id).output_value_get(output_id)
         return result
 
 
     def output_init(self, *args):
         for var_name in args:
-            self.__model.output_value_set(var_name, None)
+            self.output_value_set(var_name, None)
 
 
     def output_object_get(self, output):
@@ -109,7 +102,15 @@ class Pluginbase():
 
     def setting_init(self, *args):
         for var_name in args:
-            self.__model.setting_value_set(var_name, None)
+            self.setting_value_set(var_name, None)
+
+
+    def settings_viewframe_get(self):
+        return self.__settings_view.main_frame
+
+
+    def settings_content_init(self, label_text, content_object):
+        self.__settings_view.content_init(label_text, content_object)
 
 
     def setting_value_set(self, setting, value):
@@ -151,8 +152,12 @@ class PluginbaseModel():
         return ret
 
 
-    def input_value_delete(self, input):
-        self.input_value_set(input, None)
+    def input_value_delete(self, input=None):
+        if not bool(input):
+            for key in self.__input_value_container.keys():
+                self.input_value_set(key, None)
+        else:
+            self.input_value_set(input, None)
 
 
     def output_value_set(self, output, value):
@@ -169,6 +174,14 @@ class PluginbaseModel():
         return ret
 
 
+    def output_value_delete(self, output=None):
+        if not bool(output):
+            for key in self.__output_value_container.keys():
+                self.output_value_set(output, None)
+        else:
+            self.output_value_set(output, None)
+
+
     def setting_value_set(self, setting, value):
         self.__setting_value_container[setting] = value
 
@@ -181,6 +194,14 @@ class PluginbaseModel():
             ret = self.__setting_value_container.copy()
 
         return ret
+
+
+    def setting_value_delete(self, setting=None):
+        if not bool(setting):
+            for key in self.__setting_value_container.keys():
+                self.setting_value_set(setting, None)
+        else:
+            self.setting_value_set(setting, None)
 
 
 
@@ -244,7 +265,6 @@ class PluginbaseView(ttk.Frame):
         return self.__model.id_get()
 
 
-    # set box in canvas
     def box_set(self, event=None):
         pluginframe_box = self.__canvas.bbox(f"{self.__pluginframe.id_get()}*pluginframe")
         plugin_geometry = self.winfo_geometry().replace('x', '+').split("+") # plugin geometry
@@ -271,33 +291,32 @@ class PluginbaseView(ttk.Frame):
         self.arranger = ttk.Frame(self)
         self.btn_arranger = tk.Button(self.arranger, image=self.__image_move, compound=tk.CENTER)
         self.btn_arranger.grid(row=0, column=0, sticky="nswe")
-        self.btn_arranger.bind('<Button-1>', lambda event: self.dnd_arrange_start(event))
-        self.btn_arranger.bind('<B1-Motion>', lambda event: self.dnd_arrange_motion(event))
-        self.btn_arranger.bind('<ButtonRelease-1>', lambda event: self.dnd_arrange_stop(event))
+        self.btn_arranger.bind('<Button-1>', self.__dnd_arrange_start)
 
 
-    def dnd_arrange_start(self, event):
-        # self.leave()
+    def __dnd_arrange_start(self, event):
         display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
 
         self.__floating_widget = ttk.Label(self.winfo_toplevel(), text=self.__model.id_get())
         self.__floating_widget.place(x=display_x, y=display_y)
 
+        self.btn_arranger.bind('<B1-Motion>', self.__dnd_arrange_motion)
+        self.btn_arranger.bind('<ButtonRelease-1>', self.__dnd_arrange_stop)
 
-    def dnd_arrange_motion(self, event):
+
+    def __dnd_arrange_motion(self, event):
         if bool(self.__floating_widget):
             display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
             self.__floating_widget.place(x=display_x, y=display_y)
 
 
-    def dnd_arrange_stop(self, event):
-        plugin_id = self.__model.id_get()
+    def __dnd_arrange_stop(self, event):
+        self.btn_arranger.unbind('<B1-Motion>')
+        self.btn_arranger.unbind('<ButtonRelease-1>')
         if bool(self.__floating_widget):
             self.__floating_widget.place_forget()
             self.__floating_widget.destroy()
             self.__floating_widget = None
-
-        display_x, display_y, canvas_x, canvas_y = self.__canvas.cursor_position_get()
 
         pluginframe_target_id = self.__canvas.cursor_widget_ids_get()
         plugin_target_id = self.__canvas.cursor_plugin_ids_get()
@@ -308,14 +327,14 @@ class PluginbaseView(ttk.Frame):
         if bool(plugin_target_id):
             plugin_target_id = plugin_target_id[0]
 
-        self.__canvas.plugin_move(plugin_id, pluginframe_target_id, plugin_target_id, x=canvas_x, y=canvas_y)
+        self.__canvas.plugin_move(self.id_get(), pluginframe_target_id, plugin_target_id)
 
 
     def settings_init(self):
         self.config = ttk.Frame(self)
         self.btn_config = tk.Button(self.config, image=self.__image_setting, compound=tk.CENTER)
         self.btn_config.grid(row=0, column=0, sticky="nswe")
-        self.btn_config.bind('<Button-1>', lambda event: self.settings_open(event))
+        self.btn_config.bind('<Button-1>', self.settings_open)
 
 
     def settings_open(self, event):
@@ -373,7 +392,7 @@ class PluginbaseView(ttk.Frame):
         return self.__model.input_value_get(input)
 
 
-    def input_value_delete(self, input):
+    def input_value_delete(self, input=None):
         self.__model.input_value_delete(input)
 
 
@@ -392,14 +411,6 @@ class PluginbaseView(ttk.Frame):
             ret = self.__output_container
 
         return ret
-
-
-    def input_container_get(self):
-        return self.__input_container
-
-
-    def output_container_get(self):
-        return self.__output_container
 
 
     def connect(self):

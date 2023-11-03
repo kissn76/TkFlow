@@ -11,17 +11,23 @@ import style
 class Maincanvas(tk.Canvas):
     def __init__(self, mainwindow, **kwargs):
         super().__init__(mainwindow.frm_main, **kwargs)
-        self.image_move = ImageTk.PhotoImage(style.image_move_16)
-        self.image_settings = ImageTk.PhotoImage(style.image_setting_16)
+        self.__image_move = ImageTk.PhotoImage(style.image_move_16)
+        self.__image_settings = ImageTk.PhotoImage(style.image_setting_16)
+
         self.__plugin_container = {}    # contains all plugin
         self.__plugin_counter = 0
         self.__pluginframe_container = {}
         self.__pluginframe_counter = 0
-        self.mainwindow = mainwindow
-        self.__widget_backgrounds = {}
+        self.__mainwindow = mainwindow
 
-        self.__last_input_object = None
+        self.__last_datalabel_object = None
 
+        self.bind('<Button-1>', self.__dnd_start_widget)
+
+
+    ##
+    # Plugin functions
+    ##
 
     def plugin_add(self, plugin_name):
         '''
@@ -67,7 +73,7 @@ class Maincanvas(tk.Canvas):
         self.widget_reset(widget_id)
 
 
-    def plugin_move(self, plugin_id, pluginframe_id_target=None, plugin_id_target=None, x=24, y=24):
+    def plugin_move(self, plugin_id, pluginframe_id_target=None, plugin_id_target=None):
         '''
         Move existing plugin
         '''
@@ -82,7 +88,8 @@ class Maincanvas(tk.Canvas):
         else:
             if pluginframe_object_old.pluginview_count_get() > 1:
                 # Move plugin to new widget
-                pluginframe_object = self.widget_create(x, y)
+                display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+                pluginframe_object = self.widget_create(canvas_x, canvas_y)
             else:
                 # Plugin is alone so it stays in the original widget
                 pluginframe_object = pluginframe_object_old
@@ -182,6 +189,9 @@ class Maincanvas(tk.Canvas):
         self.__plugin_counter += 1
         return ret
 
+    ##
+    # Pluginframe functions
+    ##
 
     def pluginframe_add(self) -> str | pluginframe.Pluginframe:
         pluginframe_id = f"widget.{self.__pluginframe_counter_get()}"
@@ -212,7 +222,10 @@ class Maincanvas(tk.Canvas):
         return ret
 
 
-    # create new widget
+    ##
+    # Widget functions
+    ##
+
     def widget_create(self, x=0, y=0):
         if x < style.widget_padding:
             x = style.widget_padding
@@ -223,7 +236,7 @@ class Maincanvas(tk.Canvas):
         widget_id = pluginframe_object.id_get()
 
         # mover
-        self.create_image(x, y, image=self.image_move, anchor="nw", tags=[f"{widget_id}*move"])
+        self.create_image(x, y, image=self.__image_move, anchor="nw", tags=[f"{widget_id}*move"])
         self.tag_bind(f"{widget_id}*move", "<Enter>", lambda event: self.config(cursor="hand1"))
         self.tag_bind(f"{widget_id}*move", "<Leave>", lambda event: self.config(cursor=""))
 
@@ -231,7 +244,7 @@ class Maincanvas(tk.Canvas):
         self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}*name"])
 
         # settings button
-        self.create_image(x, y, image=self.image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
+        self.create_image(x, y, image=self.__image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
         self.tag_bind(f"{widget_id}*settings", "<Button-1>", lambda event: pluginframe_object.setting_mode_toggle())
 
         # plugin container add
@@ -333,20 +346,26 @@ class Maincanvas(tk.Canvas):
             print(f"{widget_id} deletion disabled, there are some plugin in pluginframe")
 
 
-    # set position and size of widget name
     def widget_name_set(self, widget_id):
+        '''
+        set position and size of widget name
+        '''
         move_box = self.bbox(f"{widget_id}*move")
         self.coords(f"{widget_id}*name", move_box[2] + style.widget_padding, move_box[1])
 
 
-    # set position and size of plugin container
     def widget_pluginframe_set(self, widget_id):
+        '''
+        set position and size of plugin container
+        '''
         move_box = self.bbox(f"{widget_id}*move")
         self.coords(f"{widget_id}*pluginframe", move_box[0], move_box[3] + style.widget_padding)
 
 
-    # set position and size of background
     def widget_background_set(self, widget_id, keep_height=False):
+        '''
+        set position and size of background
+        '''
         move_box = self.bbox(f"{widget_id}*move")
         plugin_container_box = self.bbox(f"{widget_id}*pluginframe")
         background_box = self.bbox(f"{widget_id}*background")
@@ -376,8 +395,10 @@ class Maincanvas(tk.Canvas):
         # TEST END
 
 
-    # set position and size of settings button
     def widget_settings_button_set(self, widget_id):
+        '''
+        set position and size of settings button
+        '''
         move_box = self.bbox(f"{widget_id}*move")
         background_box = self.bbox(f"{widget_id}*background")
         settings = self.bbox(f"{widget_id}*settings")
@@ -431,13 +452,13 @@ class Maincanvas(tk.Canvas):
                     )
 
 
-    def dnd_start(self, move):
-        self.bind('<Motion>', self.dnd_motion)
-        self.bind('<ButtonRelease-1>', self.dnd_stop)
+    def __dnd_start_widget(self, move):
+        self.bind('<Motion>', self.__dnd_motion_widget)
+        self.bind('<ButtonRelease-1>', self.__dnd_stop_widget)
         self.addtag_withtag('selected', tk.CURRENT)
 
 
-    def dnd_motion(self, event):
+    def __dnd_motion_widget(self, event):
         tags = self.gettags('selected')
         if len(tags) > 0:
             widget_id, widget_function = tags[0].split('*')
@@ -452,56 +473,10 @@ class Maincanvas(tk.Canvas):
                 self.widget_resize(widget_id, mouse_x, mouse_y)
 
 
-    def dnd_stop(self, event):
+    def __dnd_stop_widget(self, event):
         self.dtag('selected')    # removes the 'selected' tag
         self.unbind('<Motion>')
-        self.mainwindow.statusbar_set()
-
-
-    def dnd_motion_datalabel(self, event, output_id, line_tag="drawing"):
-        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
-
-        output_plugin_id, output_output_id = output_id.split(':')
-        outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
-
-        # draw line between outputlabel and pointer
-        start_box = outputlabel_object.box_get()
-        start_x = start_box[2]
-        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
-
-        self.connect_line_create(start_x, start_y, canvas_x, canvas_y, line_tag)
-
-        # enter/leave inputlabel
-        if bool(self.__last_input_object):
-            self.__last_input_object.leave()
-            self.__last_input_object = None
-
-        input_objects = self.cursor_inputlabel_find()
-        if bool(input_objects):
-            input_object = input_objects[0]
-            input_object.enter()
-            self.__last_input_object = input_object
-
-
-    def dnd_stop_datalabel(self, event, output_id, line_tag="drawing"):
-        self.connect_line_delete(line_tag)
-
-        output_plugin_id, output_output_id = output_id.split(':')
-        outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
-
-        input_objects = self.cursor_inputlabel_find()    # find inputlabel under cursor position
-        if bool(input_objects):
-            input_object = input_objects[0]
-            new_value = f"{outputlabel_object.plugin_id_get()}:{outputlabel_object.id_get()}"
-            old_value = self.plugin_input_value_get(input_object.plugin_id_get(), input_object.id_get()) # get old value of found inputlabel
-
-            if not old_value == new_value:  # if value modified
-                if bool(old_value): # if found inputlabel is not empty
-                    # delete old line
-                    self.disconnect(old_value, f"{input_object.plugin_id_get()}:{input_object.id_get()}")
-                # insert new value, create new line
-                self.plugin_input_value_set(input_object.plugin_id_get(), input_object.id_get(), new_value)
-                self.connect(output_id, f"{input_object.plugin_id_get()}:{input_object.id_get()}")
+        self.__mainwindow.statusbar_set()
 
 
     def widget_resize(self, widget_id, x, y):
@@ -607,6 +582,72 @@ class Maincanvas(tk.Canvas):
         pluginframe_object.connect()
 
 
+    ##
+    # Connection line functions
+    ##
+
+    def connect(self, start_id, end_id):
+        start_plugin_id, output_id = start_id.split(':')
+        start_plugin_object = self.plugin_get(start_plugin_id)
+        output_object = start_plugin_object.output_object_get(output_id)
+        start_box = output_object.box_get()
+        start_x = start_box[2]
+        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
+
+        end_plugin_id, input_id = end_id.split(':')
+        end_plugin_object = self.plugin_get(end_plugin_id)
+        input_object = end_plugin_object.input_object_get(input_id)
+        end_box = input_object.box_get()
+        end_x = end_box[0]
+        end_y = end_box[1] + ((end_box[3] - end_box[1]) / 2)
+
+        line_id = f"{start_id}-{end_id}*connect_line"
+
+        self.connect_line_create(start_x, start_y, end_x, end_y, line_id)
+
+
+    def disconnect(self, start_id, end_id):
+        line_id = f"{start_id}-{end_id}*connect_line"
+        self.connect_line_delete(line_id)
+
+
+    def connect_line_create(self, start_x, start_y, end_x, end_y, tag):
+        offset = (end_x - start_x) / 3
+        mid_0_x = start_x + offset
+        mid_0_y = start_y
+        mid_1_x = end_x - offset
+        mid_1_y = end_y
+
+        if len(self.find_withtag(tag)) > 0:
+            self.coords(
+                    tag,
+                    start_x, start_y,
+                    mid_0_x, mid_0_y,
+                    mid_1_x, mid_1_y,
+                    end_x, end_y
+                )
+        else:
+            self.create_line(
+                    start_x, start_y,
+                    mid_0_x, mid_0_y,
+                    mid_1_x, mid_1_y,
+                    end_x, end_y,
+                    smooth=True, tags=tag, arrow="last", arrowshape=(16, 20, 5)
+                )
+
+
+    def connect_line_delete(self, tag):
+        try:
+            plugin_id, input_id = tag.split('*')[0].split(':')
+            self.plugin_get(plugin_id).input_value_set(input_id, None)
+        except:
+            pass
+        self.delete(tag)
+
+
+    ##
+    # Cursor, pointer dependent functions
+
     def cursor_widget_ids_get(self):
         '''
         Return widget ids under the cursor in canvas region
@@ -681,19 +722,57 @@ class Maincanvas(tk.Canvas):
                 if len(widget_tags) > 0:
                     for widget_tag in widget_tags:
                         target_widget_tag = widget_tag.split('*')[0]
-                        input_object_list = []
                         pluginframe = self.pluginframe_get(target_widget_tag)
-                        for plugin_object in pluginframe.pluginview_get().values():
-                            for input_object in plugin_object.input_container_get().values():
-                                input_object_list.append(input_object)
-                        for input_object in input_object_list:
-                            input_box = input_object.box_get()
-                            if canvas_x >= input_box[0] and canvas_x <= input_box[2] and canvas_y >= input_box[1] and canvas_y <= input_box[3]:
-                                input_objects.append(input_object)
-                                break
+                        for pluginview_object in pluginframe.pluginview_get().values():
+                            for input_object in pluginview_object.input_object_get().values():
+                                input_box = input_object.box_get()
+                                if canvas_x >= input_box[0] and canvas_x <= input_box[2] and canvas_y >= input_box[1] and canvas_y <= input_box[3]:
+                                    input_objects.append(input_object)
+                                    break
 
         if bool(input_objects):
             ret = input_objects
+
+        return ret
+
+
+    def cursor_outputlabel_find(self):
+        '''
+        Find OutputLabel under cursor
+        '''
+        ret = None
+        output_objects = []
+
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+
+        if self.is_cursor_in_canvas():
+            widgets = self.find_overlapping(canvas_x - 1, canvas_y - 1, canvas_x + 1, canvas_y + 1) # widgets under cursor position
+
+            if len(widgets) > 0:
+                widget_tags = []
+                for widget_id in widgets:
+                    tags = self.gettags(widget_id)
+                    for tag in tags:
+                        widget_unpack = tag.split('*')
+                        if len(widget_unpack) > 1:
+                            if widget_unpack[1] == "pluginframe":
+                                widget_tags.append(tag)
+
+                widget_tags = list(set(widget_tags))
+
+                if len(widget_tags) > 0:
+                    for widget_tag in widget_tags:
+                        target_widget_tag = widget_tag.split('*')[0]
+                        pluginframe = self.pluginframe_get(target_widget_tag)
+                        for pluginview_object in pluginframe.pluginview_get().values():
+                            for output_object in pluginview_object.output_object_get().values():
+                                output_box = output_object.box_get()
+                                if canvas_x >= output_box[0] and canvas_x <= output_box[2] and canvas_y >= output_box[1] and canvas_y <= output_box[3]:
+                                    output_objects.append(output_object)
+                                    break
+
+        if bool(output_objects):
+            ret = output_objects
 
         return ret
 
@@ -711,6 +790,9 @@ class Maincanvas(tk.Canvas):
 
 
     def is_cursor_in_canvas(self):
+        '''
+        Is pointer in canvas region
+        '''
         display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
         can_main_x, can_main_y, can_main_width, can_main_height = list(map(int, self.cget("scrollregion").split()))
         if canvas_x > 0 and canvas_y > 0 and canvas_x < can_main_width - style.widget_padding * 2 and canvas_y < can_main_height - style.widget_padding * 2:
@@ -720,6 +802,118 @@ class Maincanvas(tk.Canvas):
                 return False
         else:
             return False
+
+
+    ##
+    # Other functions
+    ##
+
+    def dnd_motion_datalabel(self, event, output_id=None, input_id=None, line_tag="drawing"):
+        if not bool(output_id) and not bool(input_id):
+            return
+
+        if bool(output_id) and bool(input_id):
+            return
+
+        if bool(self.__last_datalabel_object):
+            # pointer leaves datalabel
+            self.__last_datalabel_object.leave()
+            self.__last_datalabel_object = None
+
+        display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+        start_x = None
+        start_y = None
+        end_x = None
+        end_y = None
+
+        if bool(output_id):
+            '''
+            Ha az output_id van megadva, akkor húz egy vonalat az outputlabel-től a pointerig
+            '''
+            output_plugin_id, output_output_id = output_id.split(':')
+            outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
+
+            # draw line between outputlabel and pointer
+            start_box = outputlabel_object.box_get()
+            start_x = start_box[2]
+            start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
+
+            end_x = canvas_x
+            end_y = canvas_y
+
+            datalabel_objects = self.cursor_inputlabel_find()
+
+        if bool(input_id):
+            '''
+            Ha az input_id van megadva, akkor húz egy vonalat a pointertől az inputlabel-ig
+            '''
+            start_x = canvas_x
+            start_y = canvas_y
+
+            input_plugin_id, input_input_id = input_id.split(':')
+            inputlabel_object = self.plugin_get(input_plugin_id).input_object_get(input_input_id)
+
+            # draw line between pointer and inputlabel
+            end_box = inputlabel_object.box_get()
+            end_x = end_box[0]
+            end_y = end_box[1] + ((end_box[3] - end_box[1]) / 2)
+
+            datalabel_objects = self.cursor_outputlabel_find()
+
+        self.connect_line_create(start_x, start_y, end_x, end_y, line_tag)
+
+        if bool(datalabel_objects):
+            # pointer enters datalabel object
+            datalabel_object = datalabel_objects[0]
+            datalabel_object.enter()
+            self.__last_datalabel_object = datalabel_object
+
+
+    def dnd_stop_datalabel(self, event, output_id=None, input_id=None, line_tag="drawing"):
+        if not bool(output_id) and not bool(input_id):
+            return
+
+        if bool(output_id) and bool(input_id):
+            return
+
+        if bool(self.__last_datalabel_object):
+            self.__last_datalabel_object = None
+
+        self.connect_line_delete(line_tag)
+
+        if bool(output_id):
+            '''
+            Ha az output_id van megadva, akkor húz egy vonalat az outputlabel-től a pointer alatt levő inputlabel-ig
+            Itt az outputlabel-től kezdtük a vonal húzását
+            '''
+            output_plugin_id, output_output_id = output_id.split(':')
+            outputlabel_object = self.plugin_get(output_plugin_id).output_object_get(output_output_id)
+
+            input_objects = self.cursor_inputlabel_find()    # find inputlabel under cursor position
+            if bool(input_objects):
+                input_object = input_objects[0]
+                new_value = f"{outputlabel_object.plugin_id_get()}:{outputlabel_object.id_get()}"               # new value of the input object
+                old_value = self.plugin_input_value_get(input_object.plugin_id_get(), input_object.id_get())    # get old value of found inputlabel
+
+                if not old_value == new_value:  # if value modified
+                    if bool(old_value):             # if found inputlabel is not empty
+                        self.disconnect(old_value, f"{input_object.plugin_id_get()}:{input_object.id_get()}")       # delete old line
+                    self.plugin_input_value_set(input_object.plugin_id_get(), input_object.id_get(), new_value) # insert new value
+                    self.connect(output_id, f"{input_object.plugin_id_get()}:{input_object.id_get()}")          # create new line
+
+        if bool(input_id):
+            '''
+            Ha az input_id van megadva, akkor húz egy vonalat a pointer alatt levő outputlabel-től az inputlabel-ig
+            Itt az inputlabel-től kezdtük a vonal húzását
+            '''
+            input_plugin_id, input_input_id = input_id.split(':')
+
+            output_objects = self.cursor_outputlabel_find()    # find outputlabel under cursor position
+            if bool(output_objects):
+                output_object = output_objects[0]
+                new_value = f"{output_object.plugin_id_get()}:{output_object.id_get()}"
+                self.plugin_input_value_set(input_plugin_id, input_input_id, new_value) # insert new value, create new line
+                self.connect(new_value, input_id)
 
 
     def input_find(self, value):
@@ -738,65 +932,6 @@ class Maincanvas(tk.Canvas):
             ret = input_ids
 
         return ret
-
-
-    def connect(self, start_id, end_id):
-        start_plugin_id, output_id = start_id.split(':')
-        start_plugin_object = self.plugin_get(start_plugin_id)
-        output_object = start_plugin_object.output_object_get(output_id)
-        start_box = output_object.box_get()
-        start_x = start_box[2]
-        start_y = start_box[1] + ((start_box[3] - start_box[1]) / 2)
-
-        end_plugin_id, input_id = end_id.split(':')
-        end_plugin_object = self.plugin_get(end_plugin_id)
-        input_object = end_plugin_object.input_object_get(input_id)
-        end_box = input_object.box_get()
-        end_x = end_box[0]
-        end_y = end_box[1] + ((end_box[3] - end_box[1]) / 2)
-
-        line_id = f"{start_id}-{end_id}*connect_line"
-
-        self.connect_line_create(start_x, start_y, end_x, end_y, line_id)
-
-
-    def disconnect(self, start_id, end_id):
-        line_id = f"{start_id}-{end_id}*connect_line"
-        self.connect_line_delete(line_id)
-
-
-    def connect_line_create(self, start_x, start_y, end_x, end_y, tag):
-        offset = (end_x - start_x) / 3
-        mid_0_x = start_x + offset
-        mid_0_y = start_y
-        mid_1_x = end_x - offset
-        mid_1_y = end_y
-
-        if len(self.find_withtag(tag)) > 0:
-            self.coords(
-                    tag,
-                    start_x, start_y,
-                    mid_0_x, mid_0_y,
-                    mid_1_x, mid_1_y,
-                    end_x, end_y
-                )
-        else:
-            self.create_line(
-                    start_x, start_y,
-                    mid_0_x, mid_0_y,
-                    mid_1_x, mid_1_y,
-                    end_x, end_y,
-                    smooth=True, tags=tag, arrow="last", arrowshape=(16, 20, 5)
-                )
-
-
-    def connect_line_delete(self, tag):
-        try:
-            plugin_id, input_id = tag.split('*')[0].split(':')
-            self.plugin_get(plugin_id).input_value_set(input_id, None)
-        except:
-            pass
-        self.delete(tag)
 
 
     def run(self):

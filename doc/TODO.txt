@@ -4,20 +4,21 @@ app
 - Open project from json
 - Settings to/from ini
 - Style
+- running order
 
 plugin
 ======
 - Settings
-- Plugin legyen egy mappa, ne csak egy file. plugin.json kötelező a mappán belül
+! Plugin legyen egy mappa, ne csak egy file. plugin.json kötelező a mappán belül. - Nem lehet megoldani pythonban. Minden plugin file nevének különbözőnek kell lennie.
 * Delete
 * Reorder in container
 * Delete connection line
-- Move connection line
+* Move connection line
 
 InputLabel
 ==========
 * Dizájn megváltozatása, amikor vonal vonszolás közben fölötte van az egér, aztán vissza
-- Ráklikkelek:
-    - Ha van hozzá csatlakoztatva bemenet, akkor azt "leakasztja", és átrakhatom máshova (klikkeléskor törli a kapcsolatot, és elkezd egy újat az eredeti outputtal)
-    - Ha vonszolás közben elengedem, törli a kapcsolatot
-    - Ha nincs bemenet, akkor húzok egy vonalat egy bemenetig
+* Ráklikkelek:
+    * Ha van hozzá csatlakoztatva bemenet, akkor azt "leakasztja", és átrakhatom máshova (klikkeléskor törli a kapcsolatot, és elkezd egy újat az eredeti outputtal)
+    * Ha vonszolás közben elengedem, törli a kapcsolatot
+    * Ha nincs bemenet, akkor húzok egy vonalat egy bemenetig
