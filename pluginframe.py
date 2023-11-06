@@ -34,9 +34,9 @@ class Pluginframe(ttk.Frame):
         return self.__setting_mode
 
 
-    def pluginview_insert(self, plugin_id, pluginview_object):
-        self.__pluginview_container.update({plugin_id: pluginview_object})
-        self.__pluginview_order.append(plugin_id)
+    def pluginview_insert(self, pluginview_object):
+        self.__pluginview_container.update({pluginview_object.id_get(): pluginview_object})
+        self.__pluginview_order.append(pluginview_object.id_get())
         pluginview_object.setting_mode_set(self.setting_mode_get())
         self.__unpack_all()
         self.__pack_all()
@@ -74,17 +74,18 @@ class Pluginframe(ttk.Frame):
 
 
     def pluginview_position_get(self, plugin_id):
-        return self.__pluginview_order.index(plugin_id)
+        ret = None
+        if bool(plugin_id) and plugin_id in self.__pluginview_order:
+            ret = self.__pluginview_order.index(plugin_id)
+
+        return ret
 
 
     def pluginview_get(self, plugin_id=None):
         plugin_object = None
 
-        if bool(plugin_id):
-            try:
-                plugin_object = self.__pluginview_container[plugin_id]
-            except:
-                pass
+        if bool(plugin_id) and plugin_id in self.__pluginview_container.keys():
+            plugin_object = self.__pluginview_container[plugin_id]
         else:
             plugin_object = self.__pluginview_container
 

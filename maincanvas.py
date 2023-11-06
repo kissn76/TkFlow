@@ -14,6 +14,7 @@ class Maincanvas(tk.Canvas):
         self.__image_move = ImageTk.PhotoImage(style.image_move_16)
         self.__image_settings = ImageTk.PhotoImage(style.image_setting_16)
 
+        self.__plugin_model_container = {}
         self.__plugin_container = {}    # contains all plugin
         self.__plugin_counter = 0
         self.__pluginframe_container = {}
@@ -52,9 +53,11 @@ class Maincanvas(tk.Canvas):
         widget_id = pluginframe_object.id_get()
 
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
-        plugin_object = plugincontroller.new_object(plugin_name, plugin_id, pluginframe_object, self)
+        plugin_model = pluginbase.PluginbaseModel(plugin_id)
+        self.__plugin_model_container.update({plugin_id: plugin_model})
+        plugin_object = plugincontroller.new_object(plugin_name, pluginframe_object, self, plugin_model)
         self.__plugin_container.update({plugin_id: plugin_object})
-        pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
+        pluginframe_object.pluginview_insert(plugin_object)
 
         self.widget_reset(widget_id)
 
@@ -66,9 +69,11 @@ class Maincanvas(tk.Canvas):
         pluginframe_object = self.pluginframe_get(widget_id)
 
         plugin_id = f"{plugin_name}.{self.__plugin_counter_get()}"
-        plugin_object = plugincontroller.new_object(plugin_name, plugin_id, pluginframe_object, self)
+        plugin_model = pluginbase.PluginbaseModel(plugin_id)
+        self.__plugin_model_container.update({plugin_id: plugin_model})
+        plugin_object = plugincontroller.new_object(plugin_name, pluginframe_object, self, plugin_model)
         self.__plugin_container.update({plugin_id: plugin_object})
-        pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
+        pluginframe_object.pluginview_insert(plugin_object)
 
         self.widget_reset(widget_id)
 
@@ -79,49 +84,42 @@ class Maincanvas(tk.Canvas):
         '''
         pluginframe_object = None
 
+        plugin_name = plugin_id.split('.')[0]
         plugin_object = self.plugin_get(plugin_id)
-        pluginframe_object_old = plugin_object.pluginframe_get()
+        widget_id = plugin_object.pluginframe_get().id_get()
+        plugin_model = self.__plugin_model_container[plugin_id]
+        pluginframe_object = plugin_object.pluginframe_get()
 
-        if bool(pluginframe_id_target):
-            # Move plugint to other existing widget
-            pluginframe_object = self.pluginframe_get(pluginframe_id_target)
-        else:
-            if pluginframe_object_old.pluginview_count_get() > 1:
-                # Move plugin to new widget
-                display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
-                pluginframe_object = self.widget_create(canvas_x, canvas_y)
-            else:
-                # Plugin is alone so it stays in the original widget
-                pluginframe_object = pluginframe_object_old
-        widget_id = pluginframe_object.id_get()
+        if not widget_id == pluginframe_id_target:   # move to other widget
+            if not (pluginframe_id_target == None and pluginframe_object.pluginview_count_get() == 1):
+                pluginframe_object.pluginview_remove(plugin_id)
 
-        if not widget_id == pluginframe_object_old.id_get():
-            # Plugin moves to other (new or existing) widget
-            pluginframe_object_old.pluginview_remove(plugin_id)
+                if pluginframe_object.pluginview_count_get() < 1:
+                    self.widget_delete(widget_id)
+                else:
+                    self.widget_reset(widget_id)
+                    pluginframe_object.box_set()
+                    pluginframe_object.connect()
 
-            if pluginframe_object_old.pluginview_count_get() < 1:
-                # Delete old widget if empty
-                self.widget_delete(pluginframe_object_old.id_get())
+                pluginframe_object = None
+                plugin_object = None
 
-            plugin_object.content_set(pluginframe_object)
+                if bool(pluginframe_id_target):             # move to existing widget
+                    pluginframe_object = self.pluginframe_get(pluginframe_id_target)
+                else:                                       # move to new widget
+                    display_x, display_y, canvas_x, canvas_y = self.cursor_position_get()
+                    pluginframe_object = self.widget_create(canvas_x, canvas_y)
 
-            pluginframe_object.pluginview_insert(plugin_id, plugin_object.view_get())
+                plugin_object = plugincontroller.new_object(plugin_name, pluginframe_object, self, plugin_model)
+                self.__plugin_container.update({plugin_object.id_get(): plugin_object})
+                pluginframe_object.pluginview_insert(plugin_object)
 
-        if not plugin_id == plugin_id_target:
-            # Plugin moves to other position inside the widget
-            if bool(plugin_id_target):
-                new_position = pluginframe_object.pluginview_position_get(plugin_id_target)
-            else:
-                new_position = plugin_id_target
+        # Plugin moves to other position inside the widget
+        if not plugin_id_target == plugin_id:
+            new_position = pluginframe_object.pluginview_position_get(plugin_id_target)
             pluginframe_object.pluginview_position_change(plugin_id, new_position)
-            pluginframe_object.box_set()
-            pluginframe_object.connect()
 
-        self.widget_reset(widget_id)
-
-        if bool(pluginframe_object_old):
-            pluginframe_object_old.box_set()
-            pluginframe_object_old.connect()
+        self.widget_reset(pluginframe_object.id_get())
 
         if bool(pluginframe_object):
             pluginframe_object.box_set()
@@ -936,4 +934,7 @@ class Maincanvas(tk.Canvas):
 
     def run(self):
         for plugin_object in self.plugin_get().values():
-            plugin_object.run()
+            try:
+                plugin_object.run()
+            except:
+                break

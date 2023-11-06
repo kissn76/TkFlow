@@ -5,8 +5,8 @@ import pluginbase
 
 
 class Plugin(pluginbase.Pluginbase):
-    def __init__(self, plugin_id, pluginframe_object, canvas_object, **kwargs):
-        super().__init__(plugin_id, pluginframe_object, canvas_object, **kwargs)
+    def __init__(self, pluginframe_object, canvas_object, model, **kwargs):
+        super().__init__(pluginframe_object, canvas_object, model, **kwargs)
 
         self.sc = None
 
@@ -17,10 +17,10 @@ class Plugin(pluginbase.Pluginbase):
         self.setting_init("to")
         self.setting_value_set("from", -100)
         self.setting_value_set("to", 100)
-        self.setting_value_set("value", 10)
+        self.setting_value_set("value", 0)
 
         # init own plugin
-        self.content_set(pluginframe_object)
+        self.content_set()
 
         # set input, output init values
         self.output_value_set("value", self.sc.get())
@@ -28,11 +28,8 @@ class Plugin(pluginbase.Pluginbase):
         self.settings_set()
 
 
-    def content_set(self, pluginframe_object):
-        self.view_create(pluginframe_object)
-        self.view_init()
-
-        self.sc = ttk.Scale(self.view_get(), from_=self.setting_value_get("from"), to=self.setting_value_get("to"), value=self.setting_value_get("value"), orient='horizontal', command=lambda _: self.run())
+    def content_set(self):
+        self.sc = ttk.Scale(self, from_=self.setting_value_get("from"), to=self.setting_value_get("to"), value=self.setting_value_get("value"), orient='horizontal', command=lambda _: self.run())
 
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
