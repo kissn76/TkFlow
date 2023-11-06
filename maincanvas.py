@@ -35,11 +35,16 @@ class Maincanvas(tk.Canvas):
         Add new plugin to canvas
         '''
         widget_ids = self.cursor_widget_ids_get()
+        plugin_ids = self.cursor_plugin_ids_get()
+        plugin_id = None
+
+        if bool(plugin_ids):
+            plugin_id = plugin_ids[0]
 
         if not bool(widget_ids):
             self.__plugin_create(plugin_name)
         elif len(widget_ids) == 1:
-            self.__plugin_insert(plugin_name, widget_ids[0])
+            self.__plugin_insert(plugin_name, widget_ids[0], plugin_id)
         else:
             print("too many widget are overlapped:", widget_ids)
 
@@ -62,7 +67,7 @@ class Maincanvas(tk.Canvas):
         self.widget_reset(widget_id)
 
 
-    def __plugin_insert(self, plugin_name: str, widget_id):
+    def __plugin_insert(self, plugin_name: str, widget_id, plugin_id_before=None):
         '''
         Insert new plugin to existing widget
         '''
@@ -75,7 +80,15 @@ class Maincanvas(tk.Canvas):
         self.__plugin_container.update({plugin_id: plugin_object})
         pluginframe_object.pluginview_insert(plugin_object)
 
+        if bool(plugin_id_before):
+            new_position = pluginframe_object.pluginview_position_get(plugin_id_before)
+            pluginframe_object.pluginview_position_change(plugin_id, new_position)
+
         self.widget_reset(widget_id)
+
+        if bool(pluginframe_object):
+            pluginframe_object.box_set()
+            pluginframe_object.connect()
 
 
     def plugin_move(self, plugin_id, pluginframe_id_target=None, plugin_id_target=None):
@@ -169,6 +182,7 @@ class Maincanvas(tk.Canvas):
         # delete plugin
         del plugin_object
         self.__plugin_container.pop(plugin_id)
+        self.__plugin_model_container.pop(plugin_id)
 
 
     def plugin_input_value_set(self, plugin_id, input_id, value):

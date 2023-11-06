@@ -111,7 +111,8 @@ class Pluginbase(ttk.Frame):
         self.__settings_view_opened = False
 
         self.__floating_widget = None
-        self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
+        # self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
+        self.__marker_widget = ttk.Label(self, text=self.id_get())
 
         self.__input_container = {}
         self.__output_container = {}
