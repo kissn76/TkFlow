@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import plugincontroller
 
 
 
@@ -34,10 +35,24 @@ class Pluginframe(ttk.Frame):
         return self.__setting_mode
 
 
+    def pluginview_add(self, plugin_id, plugin_model, canvas):
+        '''
+        Create new plugin in pluginframe
+        '''
+        plugin_name = plugin_id.split('.')[0]
+        plugin_object = plugincontroller.new_object(plugin_name, self, canvas, plugin_model)
+        self.pluginview_insert(plugin_object)
+
+        return plugin_object
+
+
     def pluginview_insert(self, pluginview_object):
+        '''
+        Insert existing plugin in pluginframe
+        '''
+        pluginview_object.setting_mode_set(self.setting_mode_get())
         self.__pluginview_container.update({pluginview_object.id_get(): pluginview_object})
         self.__pluginview_order.append(pluginview_object.id_get())
-        pluginview_object.setting_mode_set(self.setting_mode_get())
         self.__unpack_all()
         self.__pack_all()
 
