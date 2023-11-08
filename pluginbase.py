@@ -24,6 +24,9 @@ class PluginbaseModel():
         return self.__id
 
 
+    ##
+    # Input functions
+    ##
 
     def input_value_set(self, input, value):
         self.__input_value_container[input] = value
@@ -48,6 +51,9 @@ class PluginbaseModel():
                 self.input_value_set(input, None)
 
 
+    ##
+    # Output functions
+    ##
 
     def output_value_set(self, output, value):
         self.__output_value_container[output] = value
@@ -72,6 +78,9 @@ class PluginbaseModel():
                 self.output_value_set(output, None)
 
 
+    ##
+    # Setting functions
+    ##
 
     def setting_value_set(self, setting, value):
         self.__setting_value_container[setting] = value
@@ -239,10 +248,10 @@ class Pluginbase(ttk.Frame):
         self.config = ttk.Frame(self)
         self.btn_config = tk.Button(self.config, image=self.__image_setting, compound=tk.CENTER)
         self.btn_config.grid(row=0, column=0, sticky="nswe")
-        self.btn_config.bind('<Button-1>', self.__frame_settings_open)
+        self.btn_config.bind('<Button-1>', self.__frame_settings_toggle)
 
 
-    def __frame_settings_open(self, event):
+    def __frame_settings_toggle(self, event):
         widget_id = self.pluginframe_get().id_get()
         background_box = self.__canvas.bbox(f"{widget_id}*background")
 
