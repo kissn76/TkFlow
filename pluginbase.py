@@ -34,8 +34,9 @@ class PluginbaseModel():
 
     def input_value_get(self, input=None):
         ret = None
-        if bool(input) and input in self.__input_value_container.keys():
-            ret = self.__input_value_container[input]
+        if bool(input):
+            if input in self.__input_value_container.keys():
+                ret = self.__input_value_container[input]
         else:
             ret = self.__input_value_container.copy()
 
@@ -61,8 +62,9 @@ class PluginbaseModel():
 
     def output_value_get(self, output=None):
         ret = None
-        if bool(output) and output in self.__output_value_container.keys():
-            ret = self.__output_value_container[output]
+        if bool(output):
+            if output in self.__output_value_container.keys():
+                ret = self.__output_value_container[output]
         else:
             ret = self.__output_value_container.copy()
 
@@ -88,8 +90,9 @@ class PluginbaseModel():
 
     def setting_value_get(self, setting=None):
         ret = None
-        if bool(setting) and setting in self.__setting_value_container.keys():
-            ret = self.__setting_value_container[setting]
+        if bool(setting):
+            if setting in self.__setting_value_container.keys():
+                ret = self.__setting_value_container[setting]
         else:
             ret = self.__setting_value_container.copy()
 
@@ -304,8 +307,9 @@ class Pluginbase(ttk.Frame):
         '''
         ret = None
 
-        if bool(input_id) and input_id in self.__input_container.keys():
-            ret = self.__input_container[input_id]
+        if bool(input_id):
+            if input_id in self.__input_container.keys():
+                ret = self.__input_container[input_id]
         else:
             ret = self.__input_container
 
@@ -354,8 +358,9 @@ class Pluginbase(ttk.Frame):
     def output_object_get(self, output_id=None):
         ret = None
 
-        if bool(output_id) and output_id in self.__output_container.keys():
-            ret = self.__output_container[output_id]
+        if bool(output_id):
+            if output_id in self.__output_container.keys():
+                ret = self.__output_container[output_id]
         else:
             ret = self.__output_container
 
