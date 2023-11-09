@@ -116,7 +116,7 @@ class Pluginbase(ttk.Frame):
         self.__box = ()   # box in canvas
         self.__canvas = canvas_object
         self.__pluginframe = master
-        self.__settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
+        self.settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
         self.__settings_view_opened = False
 
         self.__floating_widget = None
@@ -144,7 +144,7 @@ class Pluginbase(ttk.Frame):
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
-        self.content_init(self.__marker_widget)
+        self.contentrow_init(self.__marker_widget)
         self.button_arranger_init()
         self.button_settings_init()
         self.button_delete_init()
@@ -256,10 +256,10 @@ class Pluginbase(ttk.Frame):
         background_box = self.__canvas.bbox(f"{widget_id}*background")
 
         if self.__settings_view_opened:
-            self.__settings_view.close()
+            self.settings_view.close()
             self.__settings_view_opened = False
         else:
-            self.__settings_view.open(background_box[0], background_box[1])
+            self.settings_view.open(background_box[0], background_box[1])
             self.__settings_view_opened = True
 
 
@@ -285,7 +285,7 @@ class Pluginbase(ttk.Frame):
     # Content functions
     ##
 
-    def content_init(self, content_object):
+    def contentrow_init(self, content_object):
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
 
@@ -294,10 +294,10 @@ class Pluginbase(ttk.Frame):
     # Input functions
     ##
 
-    def input_init(self, *input_id):
+    def inputvariable_init(self, *input_id):
         for var_name in input_id:
-            if not bool(self.input_value_get(var_name)):
-                self.input_value_set(var_name, None)
+            if not bool(self.inputvariable_get(var_name)):
+                self.inputvariable_set(var_name, None)
 
             if not bool(self.input_object_get(var_name)):
                 self.__input_container.update({var_name: InputLabel(self, id=var_name, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
@@ -319,24 +319,24 @@ class Pluginbase(ttk.Frame):
         return ret
 
 
-    def input_value_get(self, input_id=None):
+    def inputvariable_get(self, input_id=None):
         return self.__model.input_value_get(input_id)
 
 
-    def input_value_set(self, input_id, value):
+    def inputvariable_set(self, input_id, value):
         self.__model.input_value_set(input_id, value)
 
 
-    def input_value_delete(self, input_id=None):
+    def inputvariable_delete(self, input_id=None):
         self.__model.input_value_delete(input_id)
 
 
-    def input_value_get_referenced(self, input_id):
+    def input_value_get(self, input_id):
         '''
         get output value that represented by input
         '''
         result = None
-        input_value = self.input_value_get(input_id)
+        input_value = self.inputvariable_get(input_id)
         if bool(input_value):
             plugin_id, output_id  = input_value.split(':')
             result = self.__canvas.plugin_get(plugin_id).output_value_get(output_id)
@@ -347,10 +347,10 @@ class Pluginbase(ttk.Frame):
     # Output functions
     ##
 
-    def output_init(self, *output_id):
+    def outputvariable_init(self, *output_id):
         for var_name in output_id:
-            if not bool(self.output_value_get(var_name)):
-                self.output_value_set(var_name, None)
+            if not bool(self.outputvariable_get(var_name)):
+                self.outputvariable_set(var_name, None)
 
             if not bool(self.output_object_get(var_name)):
                 self.__output_container.update({var_name: OutputLabel(self, id=var_name, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
@@ -369,15 +369,15 @@ class Pluginbase(ttk.Frame):
         return ret
 
 
-    def output_value_get(self, output_id=None):
+    def outputvariable_get(self, output_id=None):
         return self.__model.output_value_get(output_id)
 
 
-    def output_value_set(self, output_id, value):
+    def outputvariable_set(self, output_id, value):
         self.__model.output_value_set(output_id, value)
 
 
-    def output_value_delete(self, output_id=None):
+    def outputvariable_delete(self, output_id=None):
         self.__model.output_value_delete(output_id)
 
 
@@ -385,26 +385,22 @@ class Pluginbase(ttk.Frame):
     # Setting functions
     ##
 
-    def setting_init(self, *setting_id):
+    def settingvariable_init(self, *setting_id):
         for var_name in setting_id:
-            if not bool(self.setting_value_get(var_name)):
-                self.setting_value_set(var_name, None)
+            if not bool(self.settingvariable_get(var_name)):
+                self.settingvariable_set(var_name, None)
 
 
-    def settings_content_init(self, label_text, content_object):
-        self.__settings_view.content_init(label_text, content_object)
+    def settingrow_init(self, row_type, variable_name, row_label_text):
+        self.settings_view.content_init(row_type, variable_name, row_label_text)
 
 
-    def setting_value_set(self, setting_id, value):
+    def settingvariable_set(self, setting_id, value):
         self.__model.setting_value_set(setting_id, value)
 
 
-    def setting_value_get(self, setting_id=None):
+    def settingvariable_get(self, setting_id=None):
         return self.__model.setting_value_get(setting_id)
-
-
-    def settings_viewframe_get(self):
-        return self.__settings_view.main_frame
 
 
     ##
@@ -435,19 +431,27 @@ class PluginbaseSettingsView(ttk.Frame):
         super().__init__(master, **kwargs)
         self.__model = model
 
+        self.__setting_rows = {}
+        self.__setting_rows_properties = {}
+
         self.__gridcoulmn_label = 0
         self.__gridcolumn_content = 1
 
         self.__content_row_counter = 0
 
         ttk.Label(self, text=model.id_get()).pack()
-        self.main_frame = ttk.Frame(self)
-        self.main_frame.pack()
+        self.__main_frame = ttk.Frame(self)
+        self.__main_frame.pack()
         ttk.Button(self, text="Cancel", command=self.close).pack(side="left")
-        ttk.Button(self, text="Save").pack(side="right")
+        self.save_btn = ttk.Button(self, text="Save", command=self.save)
+        self.save_btn.pack(side="right")
 
 
     def open(self, x=0, y=0):
+        for variable_name, row_object in self.__setting_rows.items():
+            if self.__setting_rows_properties[variable_name]["type"] == "entry":
+                row_object.delete(0, "end")
+                row_object.insert(0, self.__model.setting_value_get(variable_name))
         self.place(x=x, y=y)
 
 
@@ -455,8 +459,25 @@ class PluginbaseSettingsView(ttk.Frame):
         self.place_forget()
 
 
-    def content_init(self, label_text, content_object):
-        label = ttk.Label(self.main_frame, text=label_text)
+    def save(self):
+        for variable_name, row_object in self.__setting_rows.items():
+            row_value = None
+            if self.__setting_rows_properties[variable_name]["type"] == "entry":
+                row_value = row_object.get()
+            self.__model.setting_value_set(variable_name, row_value)
+
+        self.close()
+
+
+    def content_init(self, row_type, variable_name, row_label_text):
+        self.__setting_rows_properties.update({variable_name: {"type": row_type, "label": row_label_text}})
+        label = ttk.Label(self.__main_frame, text=row_label_text)
         label.grid(row=self.__content_row_counter, column=self.__gridcoulmn_label, sticky="we")
-        content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
-        self.__content_row_counter += 1
+
+        if row_type == "entry":
+            content_object = ttk.Entry(self.__main_frame)
+            content_object.delete(0, "end")
+            content_object.insert(0, str(self.__model.setting_value_get(variable_name)))
+            content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
+            self.__content_row_counter += 1
+            self.__setting_rows.update({variable_name: content_object})

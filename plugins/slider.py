@@ -11,48 +11,52 @@ class Plugin(pluginbase.Pluginbase):
         self.sc = None
 
         # init input, output, setting
-        self.output_init("value")
+        self.outputvariable_init("value")
 
-        self.setting_init("from")
-        self.setting_init("to")
-        self.setting_value_set("from", -100)
-        self.setting_value_set("to", 100)
-        self.setting_value_set("value", 0)
+        self.settingvariable_init("from")
+        self.settingvariable_init("to")
+        self.settingvariable_set("from", -100)
+        self.settingvariable_set("to", 100)
+        self.settingvariable_set("value", 0)
 
         # init own plugin
+        self.content_init()
         self.content_set()
 
         # set input, output init values
-        self.output_value_set("value", self.sc.get())
+        self.outputvariable_set("value", self.sc.get())
 
-        self.settings_set()
+        self.settings_init()
 
 
-    def content_set(self):
-        self.sc = ttk.Scale(self, from_=self.setting_value_get("from"), to=self.setting_value_get("to"), value=self.setting_value_get("value"), orient='horizontal', command=lambda _: self.run())
+    def content_init(self):
+        self.sc = ttk.Scale(self, orient='horizontal', command=lambda _: self.run())
 
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
 
-        self.content_init(self.sc)
-
-        if bool(self.output_value_get("value")):
-            self.sc.set(self.output_value_get("value"))
+        self.contentrow_init(self.sc)
 
 
-    def settings_set(self):
-        entry_from = ttk.Entry(self.settings_viewframe_get())
-        entry_to = ttk.Entry(self.settings_viewframe_get())
-        entry_value = ttk.Entry(self.settings_viewframe_get())
+    def content_set(self):
+        if not self.settingvariable_get("from") == None:
+            self.sc.configure(from_=self.settingvariable_get("from"))
+        if not self.settingvariable_get("to") == None:
+            print(self.settingvariable_get("to"))
+            self.sc.configure(to=self.settingvariable_get("to"))
+        if not self.outputvariable_get("value") == None:
+            self.sc.set(self.outputvariable_get("value"))
 
-        entry_from.insert(0, self.setting_value_get("from"))
-        entry_to.insert(0, self.setting_value_get("to"))
-        entry_value.insert(0, self.setting_value_get("value"))
+        self.settings_view.save()
 
-        self.settings_content_init("From", entry_from)
-        self.settings_content_init("To", entry_to)
-        self.settings_content_init("Value", entry_value)
+
+    def settings_init(self):
+        self.settingrow_init("entry", "from", "From")
+        self.settingrow_init("entry", "to", "To")
+
+        self.settings_view.save_btn.configure(command=self.content_set)
 
 
     def run(self):
-        self.output_value_set("value", int(self.sc.get()))
+        print(self.sc.get())
+        self.outputvariable_set("value", int(self.sc.get()))

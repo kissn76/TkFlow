@@ -11,7 +11,7 @@ class Plugin(pluginbase.Pluginbase):
         self.show = None
 
         # init input, output
-        self.input_init("in")
+        self.inputvariable_init("in")
 
         # init own plugin
         self.content_set(pluginframe_object)
@@ -23,11 +23,11 @@ class Plugin(pluginbase.Pluginbase):
 
         self.show = ttk.Label(self.view_get(), text="")
 
-        self.content_init(self.show)
+        self.contentrow_init(self.show)
 
 
     def run(self):
-        inp = self.input_value_get_referenced("in")
+        inp = self.input_value_get("in")
 
         if not bool(inp):
             inp = 0

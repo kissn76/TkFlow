@@ -949,7 +949,7 @@ class Maincanvas(tk.Canvas):
         input_ids = []
 
         for plugin_object in self.plugin_get().values():
-            for input_id, input_value in plugin_object.input_value_get().items():
+            for input_id, input_value in plugin_object.inputvariable_get().items():
                 if input_value == value:
                     input_ids.append(f"{plugin_object.id_get()}:{input_id}")
 
