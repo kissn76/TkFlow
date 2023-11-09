@@ -171,17 +171,17 @@ class Maincanvas(tk.Canvas):
         pluginframe_object = plugin_object.pluginframe_get()
         widget_id = pluginframe_object.id_get()
         # delete all reference from inputs
-        for output_key in plugin_object.output_value_get().keys():
+        for output_key in plugin_object.outputvariable_get().keys():
             plugin_input_ids = self.input_find(f"{plugin_id}:{output_key}")
             if bool(plugin_input_ids):
                 for plugin_input_id in plugin_input_ids:
                     plugin_id_del, input_id_del = plugin_input_id.split(':')
                     plugin_object_del = self.plugin_get(plugin_id_del)
-                    plugin_object_del.input_value_delete(input_id_del)
+                    plugin_object_del.inputvariable_delete(input_id_del)
                     # delete connection output lines
                     self.disconnect(f"{plugin_id}:{output_key}", f"{plugin_id_del}:{input_id_del}")
         # delete connection input lines
-        for input_key, input_value in plugin_object.input_value_get().items():
+        for input_key, input_value in plugin_object.inputvariable_get().items():
             if bool(input_value):
                 self.disconnect(input_value, f"{plugin_id}:{input_key}")
         # delete pluginview from pluginframe
@@ -200,12 +200,12 @@ class Maincanvas(tk.Canvas):
 
     def plugin_input_value_set(self, plugin_id, input_id, value):
         plugin_object = self.plugin_get(plugin_id)
-        plugin_object.input_value_set(input_id, value)
+        plugin_object.inputvariable_set(input_id, value)
 
 
     def plugin_input_value_get(self, plugin_id, input_id):
         plugin_object = self.plugin_get(plugin_id)
-        ret = plugin_object.input_value_get(input_id)
+        ret = plugin_object.inputvariable_get(input_id)
         return ret
 
 
@@ -664,7 +664,7 @@ class Maincanvas(tk.Canvas):
     def connect_line_delete(self, tag):
         try:
             plugin_id, input_id = tag.split('*')[0].split(':')
-            self.plugin_get(plugin_id).input_value_set(input_id, None)
+            self.plugin_get(plugin_id).inputvariable_set(input_id, None)
         except:
             pass
         self.delete(tag)

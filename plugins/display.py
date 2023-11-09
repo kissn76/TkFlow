@@ -5,8 +5,8 @@ import pluginbase
 
 
 class Plugin(pluginbase.Pluginbase):
-    def __init__(self, plugin_id, pluginframe_object, canvas_object, **kwargs):
-        super().__init__(plugin_id, pluginframe_object, canvas_object, **kwargs)
+    def __init__(self, pluginframe_object, canvas_object, model, **kwargs):
+        super().__init__(pluginframe_object, canvas_object, model, **kwargs)
 
         self.show = None
 
@@ -14,14 +14,11 @@ class Plugin(pluginbase.Pluginbase):
         self.inputvariable_init("in")
 
         # init own plugin
-        self.content_set(pluginframe_object)
+        self.content_init()
 
 
-    def content_set(self, pluginframe_object):
-        self.view_create(pluginframe_object)
-        self.view_init()
-
-        self.show = ttk.Label(self.view_get(), text="")
+    def content_init(self):
+        self.show = ttk.Label(self, text="")
 
         self.contentrow_init(self.show)
 

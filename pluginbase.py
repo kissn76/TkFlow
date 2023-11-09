@@ -117,7 +117,6 @@ class Pluginbase(ttk.Frame):
         self.__canvas = canvas_object
         self.__pluginframe = master
         self.settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
-        self.__settings_view_opened = False
 
         self.__floating_widget = None
         # self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
@@ -248,19 +247,13 @@ class Pluginbase(ttk.Frame):
         self.config = ttk.Frame(self)
         self.btn_config = tk.Button(self.config, image=self.__image_setting, compound=tk.CENTER)
         self.btn_config.grid(row=0, column=0, sticky="nswe")
-        self.btn_config.bind('<Button-1>', self.__frame_settings_toggle)
+        self.btn_config.bind('<Button-1>', self.__frame_settings_open)
 
 
-    def __frame_settings_toggle(self, event):
+    def __frame_settings_open(self, event):
         widget_id = self.pluginframe_get().id_get()
         background_box = self.__canvas.bbox(f"{widget_id}*background")
-
-        if self.__settings_view_opened:
-            self.settings_view.close()
-            self.__settings_view_opened = False
-        else:
-            self.settings_view.open(background_box[0], background_box[1])
-            self.__settings_view_opened = True
+        self.settings_view.open(background_box[0], background_box[1])
 
 
     def setting_mode_set(self, setting_mode):
@@ -311,7 +304,7 @@ class Pluginbase(ttk.Frame):
         '''
         ret = None
 
-        if bool(input_id):
+        if bool(input_id) and input_id in self.__input_container.keys():
             ret = self.__input_container[input_id]
         else:
             ret = self.__input_container
@@ -339,7 +332,7 @@ class Pluginbase(ttk.Frame):
         input_value = self.inputvariable_get(input_id)
         if bool(input_value):
             plugin_id, output_id  = input_value.split(':')
-            result = self.__canvas.plugin_get(plugin_id).output_value_get(output_id)
+            result = self.__canvas.plugin_get(plugin_id).outputvariable_get(output_id)
         return result
 
 
@@ -447,6 +440,10 @@ class PluginbaseSettingsView(ttk.Frame):
         self.save_btn.pack(side="right")
 
 
+    def savebtn_configure(self, command):
+        self.save_btn.configure(command=command)
+
+
     def open(self, x=0, y=0):
         for variable_name, row_object in self.__setting_rows.items():
             if self.__setting_rows_properties[variable_name]["type"] == "entry":
@@ -464,6 +461,7 @@ class PluginbaseSettingsView(ttk.Frame):
             row_value = None
             if self.__setting_rows_properties[variable_name]["type"] == "entry":
                 row_value = row_object.get()
+
             self.__model.setting_value_set(variable_name, row_value)
 
         self.close()

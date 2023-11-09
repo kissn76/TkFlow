@@ -39,24 +39,23 @@ class Plugin(pluginbase.Pluginbase):
 
 
     def content_set(self):
+        self.settings_view.save()
+
         if not self.settingvariable_get("from") == None:
             self.sc.configure(from_=self.settingvariable_get("from"))
         if not self.settingvariable_get("to") == None:
-            print(self.settingvariable_get("to"))
             self.sc.configure(to=self.settingvariable_get("to"))
         if not self.outputvariable_get("value") == None:
             self.sc.set(self.outputvariable_get("value"))
 
-        self.settings_view.save()
-
 
     def settings_init(self):
+        self.settings_view.savebtn_configure(self.content_set)
+
         self.settingrow_init("entry", "from", "From")
         self.settingrow_init("entry", "to", "To")
 
-        self.settings_view.save_btn.configure(command=self.content_set)
-
 
     def run(self):
-        print(self.sc.get())
+        # print(self.sc.get())
         self.outputvariable_set("value", int(self.sc.get()))

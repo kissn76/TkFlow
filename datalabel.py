@@ -84,7 +84,7 @@ class InputLabel(DataLabel):
     def __dnd_start(self, event):
         self._lbl_data.bind('<Button1-Motion>', self.__dnd_motion)
         self._lbl_data.bind('<ButtonRelease-1>', self.__dnd_stop)
-        self.__output_id = self.pluginview_get().input_value_get(self.id_get())
+        self.__output_id = self.pluginview_get().inputvariable_get(self.id_get())
 
         if bool(self.__output_id):
             self.__line_id = f"{self.__output_id}-{self.plugin_id_get()}:{self.id_get()}*connect_line"
@@ -103,7 +103,7 @@ class InputLabel(DataLabel):
         self._lbl_data.unbind('<Button1-Motion>')
         self._lbl_data.unbind('<ButtonRelease-1>')
         if bool(self.__output_id):
-            self.pluginview_get().input_value_delete(self.id_get())
+            self.pluginview_get().inputvariable_delete(self.id_get())
             self.canvas_get().dnd_stop_datalabel(event, output_id=self.__output_id, line_tag=self.__line_id)
         else:
             self.canvas_get().dnd_stop_datalabel(event, input_id=f"{self.plugin_id_get()}:{self.id_get()}", line_tag=self.__line_id)
