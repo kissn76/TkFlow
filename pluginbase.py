@@ -23,7 +23,6 @@ class PluginbaseModel():
     def id_get(self):
         return self.__id
 
-
     ##
     # Input functions
     ##
@@ -57,7 +56,6 @@ class PluginbaseModel():
             if input_id in self.__input_value_container.keys():
                 self.input_value_set(input_id, None)
 
-
     ##
     # Output functions
     ##
@@ -84,7 +82,6 @@ class PluginbaseModel():
         else:
             if output_id in self.__output_value_container.keys():
                 self.output_value_set(output_id, None)
-
 
     ##
     # Setting functions
@@ -126,6 +123,7 @@ class Pluginbase(ttk.Frame):
         self.__canvas = canvas_object
         self.__pluginframe = master
         self.__settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
+        self.__setting_frame = ttk.Frame(master)
 
         self.__floating_widget = None
         self.__plugin_label = ttk.Label(self, text=self.id_get())
@@ -133,16 +131,13 @@ class Pluginbase(ttk.Frame):
         self.__input_container = {}
         self.__output_container = {}
 
-        self.__input_row_counter = 0
-        self.__output_row_counter = 0
+        self.__input_row_counter = 1
+        self.__output_row_counter = 1
         self.__content_row_counter = 0
 
         self.__gridcoulmn_input = 0
-        self.__gridcolumn_arranger = 1
-        self.__gridcolumn_setting = 2
-        self.__gridcolumn_delete = 3
-        self.__gridcolumn_content = 4
-        self.__gridcolumn_output = 5
+        self.__gridcolumn_content = 1
+        self.__gridcolumn_output = 2
 
         self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
         self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
@@ -183,7 +178,11 @@ class Pluginbase(ttk.Frame):
 
     def pluginlabel_set(self):
         if not self.settingvariable_get("__pluginlabel__") == None:
-            self.__plugin_label.configure(text=self.settingvariable_get("__pluginlabel__"))
+            if self.settingvariable_get("__pluginlabel__") == "":
+                self.__plugin_label.grid_remove()
+            else:
+                self.__plugin_label.configure(text=self.settingvariable_get("__pluginlabel__"))
+                self.__plugin_label.grid(row=0, column=self.__gridcolumn_content, sticky="we")
 
     ##
     # Position functions
@@ -210,15 +209,15 @@ class Pluginbase(ttk.Frame):
     def box_get(self):
         return self.__box
 
-
     ##
     # Plugin manipulation buttons
     ##
 
     def button_arranger_init(self):
-        self.arranger = ttk.Frame(self)
+        self.arranger = ttk.Frame(self.__setting_frame)
         self.btn_arranger = tk.Button(self.arranger, image=self.__image_move, compound=tk.CENTER)
-        self.btn_arranger.grid(row=0, column=0, sticky="nswe")
+        self.btn_arranger.pack()
+        self.arranger.pack(side=tk.LEFT)
         self.btn_arranger.bind('<Button-1>', self.__dnd_arrange_start)
 
 
@@ -259,9 +258,10 @@ class Pluginbase(ttk.Frame):
 
 
     def button_settings_init(self):
-        self.config = ttk.Frame(self)
+        self.config = ttk.Frame(self.__setting_frame)
         self.btn_config = tk.Button(self.config, image=self.__image_setting, compound=tk.CENTER)
-        self.btn_config.grid(row=0, column=0, sticky="nswe")
+        self.btn_config.pack()
+        self.config.pack(side=tk.LEFT)
         self.btn_config.bind('<Button-1>', self.__frame_settings_open)
 
 
@@ -271,23 +271,20 @@ class Pluginbase(ttk.Frame):
         self.__settings_view.open(background_box[0], background_box[1])
 
 
-    def setting_mode_set(self, setting_mode):
-        if not setting_mode:
-            self.arranger.grid_remove()
-            self.config.grid_remove()
-            self.delete.grid_remove()
-        else:
-            self.arranger.grid(row=0, column=self.__gridcolumn_arranger, sticky="nswe")
-            self.config.grid(row=0, column=self.__gridcolumn_setting, sticky="nswe")
-            self.delete.grid(row=0, column=self.__gridcolumn_delete, sticky="nswe")
-
-
     def button_delete_init(self):
-        self.delete = ttk.Frame(self)
+        self.delete = ttk.Frame(self.__setting_frame)
         self.btn_delete = tk.Button(self.delete, image=self.__image_delete, compound=tk.CENTER)
-        self.btn_delete.grid(row=0, column=0, sticky="nswe")
+        self.btn_delete.pack()
+        self.delete.pack(side=tk.LEFT)
         self.btn_delete.bind('<Button-1>', lambda event: self.__canvas.plugin_delete(self.id_get()))
 
+
+    def setting_mode_set(self, setting_mode):
+        if not setting_mode:
+            self.__setting_frame.place_forget()
+        else:
+            self.__setting_frame.place(x=0, y=0)
+            print(self.__setting_frame)
 
     ##
     # Content functions
@@ -296,7 +293,6 @@ class Pluginbase(ttk.Frame):
     def contentrow_init(self, content_object):
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
-
 
     ##
     # Input functions
@@ -350,7 +346,6 @@ class Pluginbase(ttk.Frame):
             result = self.__canvas.plugin_get(plugin_id).outputvariable_get(output_id)
         return result
 
-
     ##
     # Output functions
     ##
@@ -388,7 +383,6 @@ class Pluginbase(ttk.Frame):
     def outputvariable_delete(self, output_id=None):
         self.__model.output_value_delete(output_id)
 
-
     ##
     # Setting functions
     ##
@@ -412,7 +406,6 @@ class Pluginbase(ttk.Frame):
 
     def settingrow_init(self, row_type, variable_name, row_label_text):
         self.settingsview_get().content_init(row_type, variable_name, row_label_text)
-
 
     ##
     # Other functions
