@@ -8,18 +8,11 @@ class Plugin(pluginbase.Pluginbase):
     def __init__(self, pluginframe_object, canvas_object, model, **kwargs):
         super().__init__(pluginframe_object, canvas_object, model, **kwargs)
 
-        self.show = None
-
-        # init input, output
+        # init input, output, setting variables
         self.inputvariable_init("in")
 
-        # init own plugin
-        self.content_init()
-
-
-    def content_init(self):
+        # init own plugin view
         self.show = ttk.Label(self, text="")
-
         self.contentrow_init(self.show)
 
 

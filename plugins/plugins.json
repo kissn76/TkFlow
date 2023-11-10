@@ -1,16 +1,16 @@
 [
     {
+        "file": "scale.py",
+        "name": "Scale",
+        "parents": [
+            "Widgets"
+        ]
+    },
+    {
         "file": "addition.py",
         "name": "Addition",
         "parents": [
             "Mathematical operations"
-        ]
-    },
-    {
-        "file": "slider.py",
-        "name": "Slider",
-        "parents": [
-            "Widgets"
         ]
     },
     {

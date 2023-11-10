@@ -28,84 +28,90 @@ class PluginbaseModel():
     # Input functions
     ##
 
-    def input_value_set(self, input, value):
-        self.__input_value_container[input] = value
+    def input_value_set(self, input_id, value):
+        self.__input_value_container[input_id] = value
 
 
-    def input_value_get(self, input=None):
+    def input_value_get(self, input_id=None):
+        '''
+        Return:
+            None  - input_id doesn't exist
+            dict  - input_id is None
+            value - input_id exists
+        '''
         ret = None
-        if bool(input):
-            if input in self.__input_value_container.keys():
-                ret = self.__input_value_container[input]
+        if bool(input_id):
+            if input_id in self.__input_value_container.keys():
+                ret = self.__input_value_container[input_id]
         else:
             ret = self.__input_value_container.copy()
 
         return ret
 
 
-    def input_value_delete(self, input=None):
-        if not bool(input):
+    def input_value_delete(self, input_id=None):
+        if not bool(input_id):
             for key in self.__input_value_container.keys():
                 self.input_value_set(key, None)
         else:
-            if input in self.__input_value_container.keys():
-                self.input_value_set(input, None)
+            if input_id in self.__input_value_container.keys():
+                self.input_value_set(input_id, None)
 
 
     ##
     # Output functions
     ##
 
-    def output_value_set(self, output, value):
-        self.__output_value_container[output] = value
+    def output_value_set(self, output_id, value):
+        self.__output_value_container[output_id] = value
 
 
-    def output_value_get(self, output=None):
+    def output_value_get(self, output_id=None):
         ret = None
-        if bool(output):
-            if output in self.__output_value_container.keys():
-                ret = self.__output_value_container[output]
+        if bool(output_id):
+            if output_id in self.__output_value_container.keys():
+                ret = self.__output_value_container[output_id]
         else:
             ret = self.__output_value_container.copy()
 
         return ret
 
 
-    def output_value_delete(self, output=None):
-        if not bool(output):
+    def output_value_delete(self, output_id=None):
+        if not bool(output_id):
             for key in self.__output_value_container.keys():
                 self.output_value_set(key, None)
         else:
-            if output in self.__output_value_container.keys():
-                self.output_value_set(output, None)
+            if output_id in self.__output_value_container.keys():
+                self.output_value_set(output_id, None)
 
 
     ##
     # Setting functions
     ##
 
-    def setting_value_set(self, setting, value):
-        self.__setting_value_container[setting] = value
+    def setting_value_set(self, setting_id, value):
+        self.__setting_value_container[setting_id] = value
 
 
-    def setting_value_get(self, setting=None):
+    def setting_value_get(self, setting_id=None):
         ret = None
-        if bool(setting):
-            if setting in self.__setting_value_container.keys():
-                ret = self.__setting_value_container[setting]
+        if bool(setting_id):
+            if setting_id in self.__setting_value_container.keys():
+                ret = self.__setting_value_container[setting_id]
         else:
             ret = self.__setting_value_container.copy()
 
         return ret
 
 
-    def setting_value_delete(self, setting=None):
-        if not bool(setting):
+    def setting_value_delete(self, setting_id=None):
+        if not bool(setting_id):
             for key in self.__setting_value_container.keys():
                 self.setting_value_set(key, None)
         else:
-            if setting in self.__setting_value_container.keys():
-                self.setting_value_set(setting, None)
+            if setting_id in self.__setting_value_container.keys():
+                self.setting_value_set(setting_id, None)
 
 
 
@@ -119,11 +125,10 @@ class Pluginbase(ttk.Frame):
         self.__box = ()   # box in canvas
         self.__canvas = canvas_object
         self.__pluginframe = master
-        self.settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
+        self.__settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
 
         self.__floating_widget = None
-        # self.__marker_widget = ttk.Label(self, text=f"{self.__pluginframe.id_get()}-{self.id_get()}")
-        self.__marker_widget = ttk.Label(self, text=self.id_get())
+        self.__plugin_label = ttk.Label(self, text=self.id_get())
 
         self.__input_container = {}
         self.__output_container = {}
@@ -132,10 +137,10 @@ class Pluginbase(ttk.Frame):
         self.__output_row_counter = 0
         self.__content_row_counter = 0
 
-        self.__gridcolumn_arranger = 0
-        self.__gridcolumn_setting = 1
-        self.__gridcolumn_delete = 2
-        self.__gridcoulmn_input = 3
+        self.__gridcoulmn_input = 0
+        self.__gridcolumn_arranger = 1
+        self.__gridcolumn_setting = 2
+        self.__gridcolumn_delete = 3
         self.__gridcolumn_content = 4
         self.__gridcolumn_output = 5
 
@@ -146,7 +151,10 @@ class Pluginbase(ttk.Frame):
 
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
-        self.contentrow_init(self.__marker_widget)
+        self.contentrow_init(self.__plugin_label)
+        self.settingvariable_init("__pluginlabel__", self.id_get())
+        self.settingrow_init("entry", "__pluginlabel__", "Plugin label")
+
         self.button_arranger_init()
         self.button_settings_init()
         self.button_delete_init()
@@ -172,6 +180,10 @@ class Pluginbase(ttk.Frame):
     def pluginframe_get(self):
         return self.__pluginframe
 
+
+    def pluginlabel_set(self):
+        if not self.settingvariable_get("__pluginlabel__") == None:
+            self.__plugin_label.configure(text=self.settingvariable_get("__pluginlabel__"))
 
     ##
     # Position functions
@@ -256,7 +268,7 @@ class Pluginbase(ttk.Frame):
     def __frame_settings_open(self, event):
         widget_id = self.pluginframe_get().id_get()
         background_box = self.__canvas.bbox(f"{widget_id}*background")
-        self.settings_view.open(background_box[0], background_box[1])
+        self.__settings_view.open(background_box[0], background_box[1])
 
 
     def setting_mode_set(self, setting_mode):
@@ -290,15 +302,14 @@ class Pluginbase(ttk.Frame):
     # Input functions
     ##
 
-    def inputvariable_init(self, *input_id):
-        for var_name in input_id:
-            if not bool(self.inputvariable_get(var_name)):
-                self.inputvariable_set(var_name, None)
+    def inputvariable_init(self, input_id, value=None):
+        if not bool(self.inputvariable_get(input_id)):
+            self.inputvariable_set(input_id, value)
 
-            if not bool(self.input_object_get(var_name)):
-                self.__input_container.update({var_name: InputLabel(self, id=var_name, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
-                self.__input_container[var_name].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
-                self.__input_row_counter += 1
+        if not bool(self.input_object_get(input_id)):
+            self.__input_container.update({input_id: InputLabel(self, id=input_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
+            self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
+            self.__input_row_counter += 1
 
 
     def input_object_get(self, input_id=None):
@@ -344,15 +355,14 @@ class Pluginbase(ttk.Frame):
     # Output functions
     ##
 
-    def outputvariable_init(self, *output_id):
-        for var_name in output_id:
-            if not bool(self.outputvariable_get(var_name)):
-                self.outputvariable_set(var_name, None)
+    def outputvariable_init(self, output_id, value=None):
+        if not bool(self.outputvariable_get(output_id)):
+            self.outputvariable_set(output_id, value)
 
-            if not bool(self.output_object_get(var_name)):
-                self.__output_container.update({var_name: OutputLabel(self, id=var_name, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
-                self.__output_container[var_name].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
-                self.__output_row_counter += 1
+        if not bool(self.output_object_get(output_id)):
+            self.__output_container.update({output_id: OutputLabel(self, id=output_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
+            self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
+            self.__output_row_counter += 1
 
 
     def output_object_get(self, output_id=None):
@@ -383,14 +393,9 @@ class Pluginbase(ttk.Frame):
     # Setting functions
     ##
 
-    def settingvariable_init(self, *setting_id):
-        for var_name in setting_id:
-            if not bool(self.settingvariable_get(var_name)):
-                self.settingvariable_set(var_name, None)
-
-
-    def settingrow_init(self, row_type, variable_name, row_label_text):
-        self.settings_view.content_init(row_type, variable_name, row_label_text)
+    def settingvariable_init(self, setting_id, value=None):
+        if not bool(self.settingvariable_get(setting_id)):
+            self.settingvariable_set(setting_id, value)
 
 
     def settingvariable_set(self, setting_id, value):
@@ -399,6 +404,14 @@ class Pluginbase(ttk.Frame):
 
     def settingvariable_get(self, setting_id=None):
         return self.__model.setting_value_get(setting_id)
+
+
+    def settingsview_get(self):
+        return self.__settings_view
+
+
+    def settingrow_init(self, row_type, variable_name, row_label_text):
+        self.settingsview_get().content_init(row_type, variable_name, row_label_text)
 
 
     ##
