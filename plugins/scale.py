@@ -12,35 +12,25 @@ class Plugin(pluginbase.Pluginbase):
         self.outputvariable_init("value")
         self.settingvariable_init("from", -100)
         self.settingvariable_init("to", 100)
-        self.settingvariable_init("sc", "Scale")
+
+        # init settings view
+        self.settingsview_get().savebtn_configure(self.content_set)
+        self.settingrow_init("entry", "from", "From")
+        self.settingrow_init("entry", "to", "To")
 
         # init own plugin view
-        self.frm = ttk.Frame(self)
-        self.sc_lbl = ttk.Label(self.frm)
-        self.sc = ttk.Scale(self.frm, orient='horizontal', command=lambda _: self.run())
+        self.sc = ttk.Scale(self, orient='horizontal', command=lambda _: self.run())
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
-        self.sc_lbl.pack(side=tk.LEFT)
-        self.sc.pack(side=tk.LEFT, expand=True, fill=tk.X)
-        self.contentrow_init(self.frm)
-        self.content_set()
+        self.contentrow_init(self.sc)
 
         # set input, output init values
         self.outputvariable_set("value", self.sc.get())
 
-        # init settings view
-        self.settingsview_get().savebtn_configure(self.content_set)
-        self.settingrow_init("entry", "sc", "Label")
-        self.settingrow_init("entry", "from", "From")
-        self.settingrow_init("entry", "to", "To")
-
 
     def content_set(self):
-        self.settingsview_get().save()
-        self.pluginlabel_set()
+        self.setting_save()
 
-        if not self.settingvariable_get("sc") == None:
-            self.sc_lbl.configure(text=self.settingvariable_get("sc"))
         if not self.settingvariable_get("from") == None:
             self.sc.configure(from_=self.settingvariable_get("from"))
         if not self.settingvariable_get("to") == None:

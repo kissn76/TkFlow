@@ -123,11 +123,12 @@ class Pluginbase(ttk.Frame):
         self.__canvas = canvas_object
         self.__pluginframe = master
         self.__settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
-        self.__setting_frame = ttk.Frame(master)
+        self.__setting_frame = ttk.Frame(self)
 
         self.__floating_widget = None
         self.__plugin_label = ttk.Label(self, text=self.id_get())
 
+        self.__content_label_container = {}
         self.__input_container = {}
         self.__output_container = {}
 
@@ -136,8 +137,9 @@ class Pluginbase(ttk.Frame):
         self.__content_row_counter = 0
 
         self.__gridcoulmn_input = 0
-        self.__gridcolumn_content = 1
-        self.__gridcolumn_output = 2
+        self.__gridcolumn_content_label = 1
+        self.__gridcolumn_content = 2
+        self.__gridcolumn_output = 3
 
         self.__image_setting = ImageTk.PhotoImage(style.image_setting_12)
         self.__image_arranger = ImageTk.PhotoImage(style.image_arranger_12)
@@ -153,6 +155,8 @@ class Pluginbase(ttk.Frame):
         self.button_arranger_init()
         self.button_settings_init()
         self.button_delete_init()
+
+        self.settingsview_get().savebtn_configure(self.setting_save)
 
 
     def to_dict(self):
@@ -182,7 +186,7 @@ class Pluginbase(ttk.Frame):
                 self.__plugin_label.grid_remove()
             else:
                 self.__plugin_label.configure(text=self.settingvariable_get("__pluginlabel__"))
-                self.__plugin_label.grid(row=0, column=self.__gridcolumn_content, sticky="we")
+                self.__plugin_label.grid(row=0, column=0, columnspan=4, sticky="we")
 
     ##
     # Position functions
@@ -284,15 +288,32 @@ class Pluginbase(ttk.Frame):
             self.__setting_frame.place_forget()
         else:
             self.__setting_frame.place(x=0, y=0)
-            print(self.__setting_frame)
+            self.__setting_frame.lift()
 
     ##
     # Content functions
     ##
 
-    def contentrow_init(self, content_object):
+    def contentrow_init(self, content_object, row_label=""):
+        if self.__content_row_counter > 0:
+            self.settingvariable_init(f"cl_{self.__content_row_counter}", row_label)
+            if row_label == "":
+                row_label = f"Label {self.__content_row_counter}"
+            else:
+                row_label = f"Label {row_label}"
+            self.settingrow_init("entry", f"cl_{self.__content_row_counter}", row_label)
+            cl = ttk.Label(self, text=self.settingvariable_get(f"cl_{self.__content_row_counter}"))
+            cl.grid(row=self.__content_row_counter, column=self.__gridcolumn_content_label)
+            self.__content_label_container.update({f"cl_{self.__content_row_counter}": cl})
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
+        self.setting_save()
+
+
+    def contentlabel_set(self, id=None):
+        if id == None:
+            for content_label_id, content_label_object in self.__content_label_container.items():
+                content_label_object.configure(text=self.settingvariable_get(content_label_id))
 
     ##
     # Input functions
@@ -406,6 +427,12 @@ class Pluginbase(ttk.Frame):
 
     def settingrow_init(self, row_type, variable_name, row_label_text):
         self.settingsview_get().content_init(row_type, variable_name, row_label_text)
+
+
+    def setting_save(self):
+        self.settingsview_get().save()
+        self.pluginlabel_set()
+        self.contentlabel_set()
 
     ##
     # Other functions

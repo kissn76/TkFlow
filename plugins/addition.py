@@ -22,9 +22,9 @@ class Plugin(pluginbase.Pluginbase):
         self.show_1 = ttk.Label(self, text="")
         self.show_2 = ttk.Label(self, text="")
         self.show_r = ttk.Label(self, text="")
-        self.contentrow_init(self.show_1)
-        self.contentrow_init(self.show_2)
-        self.contentrow_init(self.show_r)
+        self.contentrow_init(self.show_1, "in_1")
+        self.contentrow_init(self.show_2, "in_2")
+        self.contentrow_init(self.show_r, "out")
 
 
     def run(self):
