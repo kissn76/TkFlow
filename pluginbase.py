@@ -128,7 +128,7 @@ class Pluginbase(ttk.Frame):
         self.__floating_widget = None
         self.__plugin_label = ttk.Label(self, text=self.id_get())
 
-        self.__content_label_container = {}
+        self.__contentrow_label_container = {}
         self.__input_container = {}
         self.__output_container = {}
 
@@ -149,8 +149,10 @@ class Pluginbase(ttk.Frame):
         self.columnconfigure(self.__gridcolumn_content, weight=1)
 
         self.contentrow_init(self.__plugin_label)
-        self.settingvariable_init("__pluginlabel__", self.id_get())
-        self.settingrow_init("entry", "__pluginlabel__", "Plugin label")
+        self.settingvariable_init("__system_pluginlabel__", self.id_get())
+        self.settingvariable_init("__system_pluginlabel_show__", True)
+        self.settingrow_init("entry", "__system_pluginlabel__", "Plugin label")
+        self.settingrow_init("checkbutton", "__system_pluginlabel_show__", "Plugin label show")
 
         self.button_arranger_init()
         self.button_settings_init()
@@ -181,12 +183,11 @@ class Pluginbase(ttk.Frame):
 
 
     def pluginlabel_set(self):
-        if not self.settingvariable_get("__pluginlabel__") == None:
-            if self.settingvariable_get("__pluginlabel__") == "":
-                self.__plugin_label.grid_remove()
-            else:
-                self.__plugin_label.configure(text=self.settingvariable_get("__pluginlabel__"))
-                self.__plugin_label.grid(row=0, column=0, columnspan=4, sticky="we")
+        if self.settingvariable_get("__system_pluginlabel_show__") == False:
+            self.__plugin_label.grid_remove()
+        else:
+            self.__plugin_label.configure(text=self.settingvariable_get("__system_pluginlabel__"))
+            self.__plugin_label.grid(row=0, column=0, columnspan=4, sticky="we")
 
     ##
     # Position functions
@@ -296,24 +297,31 @@ class Pluginbase(ttk.Frame):
 
     def contentrow_init(self, content_object, row_label=""):
         if self.__content_row_counter > 0:
-            self.settingvariable_init(f"cl_{self.__content_row_counter}", row_label)
+            id = f"__system_content_label_{self.__content_row_counter}"
+            id_show = f"__system_content_label_{self.__content_row_counter}_show"
+            self.settingvariable_init(id, row_label)
+            self.settingvariable_init(id_show, True)
             if row_label == "":
                 row_label = f"Label {self.__content_row_counter}"
             else:
                 row_label = f"Label {row_label}"
-            self.settingrow_init("entry", f"cl_{self.__content_row_counter}", row_label)
-            cl = ttk.Label(self, text=self.settingvariable_get(f"cl_{self.__content_row_counter}"))
-            cl.grid(row=self.__content_row_counter, column=self.__gridcolumn_content_label)
-            self.__content_label_container.update({f"cl_{self.__content_row_counter}": cl})
+            self.settingrow_init("entry", id, row_label)
+            self.settingrow_init("checkbutton", id_show, f"{row_label} show")
+            contentrow_label = ttk.Label(self, text=self.settingvariable_get(id))
+            contentrow_label.grid(row=self.__content_row_counter, column=self.__gridcolumn_content_label)
+            self.__contentrow_label_container.update({id: contentrow_label})
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
         self.setting_save()
 
 
-    def contentlabel_set(self, id=None):
+    def contentrow_label_set(self, id=None):
         if id == None:
-            for content_label_id, content_label_object in self.__content_label_container.items():
-                content_label_object.configure(text=self.settingvariable_get(content_label_id))
+            for content_label_id, content_label_object in self.__contentrow_label_container.items():
+                if self.settingvariable_get(f"{content_label_id}_show") == True:
+                    content_label_object.configure(text=self.settingvariable_get(content_label_id))
+                else:
+                    content_label_object.configure(text="")
 
     ##
     # Input functions
@@ -432,7 +440,7 @@ class Pluginbase(ttk.Frame):
     def setting_save(self):
         self.settingsview_get().save()
         self.pluginlabel_set()
-        self.contentlabel_set()
+        self.contentrow_label_set()
 
     ##
     # Other functions
@@ -465,7 +473,7 @@ class PluginbaseSettingsView(ttk.Frame):
         self.__setting_rows = {}
         self.__setting_rows_properties = {}
 
-        self.__gridcoulmn_label = 0
+        self.__gridcolumn_label = 0
         self.__gridcolumn_content = 1
 
         self.__content_row_counter = 0
@@ -487,6 +495,8 @@ class PluginbaseSettingsView(ttk.Frame):
             if self.__setting_rows_properties[variable_name]["type"] == "entry":
                 row_object.delete(0, "end")
                 row_object.insert(0, self.__model.setting_value_get(variable_name))
+            elif self.__setting_rows_properties[variable_name]["type"] == "checkbutton":
+                self.__setting_rows_properties[variable_name]["variable"].set(self.__model.setting_value_get(variable_name))
         self.place(x=x, y=y)
 
 
@@ -499,6 +509,8 @@ class PluginbaseSettingsView(ttk.Frame):
             row_value = None
             if self.__setting_rows_properties[variable_name]["type"] == "entry":
                 row_value = row_object.get()
+            elif self.__setting_rows_properties[variable_name]["type"] == "checkbutton":
+                row_value = self.__setting_rows_properties[variable_name]["variable"].get()
 
             self.__model.setting_value_set(variable_name, row_value)
 
@@ -506,14 +518,23 @@ class PluginbaseSettingsView(ttk.Frame):
 
 
     def content_init(self, row_type, variable_name, row_label_text):
-        self.__setting_rows_properties.update({variable_name: {"type": row_type, "label": row_label_text}})
+        self.__setting_rows_properties.update({variable_name: {"type": row_type, "label": row_label_text, "variable": None}})
         label = ttk.Label(self.__main_frame, text=row_label_text)
-        label.grid(row=self.__content_row_counter, column=self.__gridcoulmn_label, sticky="we")
+        label.grid(row=self.__content_row_counter, column=self.__gridcolumn_label, sticky="we")
 
+        content_object = None
         if row_type == "entry":
             content_object = ttk.Entry(self.__main_frame)
             content_object.delete(0, "end")
             content_object.insert(0, str(self.__model.setting_value_get(variable_name)))
             content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
-            self.__content_row_counter += 1
+        elif row_type == "checkbutton":
+            cb_value = tk.BooleanVar()
+            cb_value.set(self.__model.setting_value_get(variable_name))
+            self.__setting_rows_properties[variable_name]["variable"] = cb_value
+            content_object = ttk.Checkbutton(self.__main_frame, onvalue=True, offvalue=False, variable=cb_value)
+            content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="w")
+
+        if bool(content_object):
             self.__setting_rows.update({variable_name: content_object})
+            self.__content_row_counter += 1

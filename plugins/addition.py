@@ -14,30 +14,25 @@ class Plugin(pluginbase.Pluginbase):
         super().__init__(pluginframe_object, canvas_object, model, **kwargs)
 
         # init input, output, setting variables
-        self.inputvariable_init("one")
-        self.inputvariable_init("two")
+        self.inputvariable_init("input_1", 0)
+        self.inputvariable_init("input_2", 0)
         self.outputvariable_init("result", 0)
 
         # init own plugin view
-        self.show_1 = ttk.Label(self, text="")
-        self.show_2 = ttk.Label(self, text="")
+        # self.show_1 = ttk.Label(self, text="")
         self.show_r = ttk.Label(self, text="")
-        self.contentrow_init(self.show_1, "in_1")
-        self.contentrow_init(self.show_2, "in_2")
-        self.contentrow_init(self.show_r, "out")
+        # self.contentrow_init(self.show_1, "input")
+        self.contentrow_init(self.show_r, "result")
 
 
     def run(self):
-        one = self.input_value_get("one")
-        if not bool(one):
-            one = 0
+        out = 0
+        input = self.inputvariable_get()
+        if bool(input):
+            for input_id, input_value in input.items():
+                out += self.input_value_get(input_value)
 
-        two = self.input_value_get("two")
-        if not bool(two):
-            two = 0
+        self.outputvariable_set("result", float(out))
 
-        self.outputvariable_set("result", float(one) + float(two))
-
-        self.show_1.configure(text=str(one))
-        self.show_2.configure(text=str(two))
+        # self.show_1.configure(text=str(input))
         self.show_r.configure(text=str(self.outputvariable_get("result")))

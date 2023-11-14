@@ -267,6 +267,7 @@ class Maincanvas(tk.Canvas):
 
         # name
         self.create_text(0, 0, text=widget_id, anchor="nw", tags=[f"{widget_id}*name"])
+        self.tag_bind(f"{widget_id}*name", "<Double-Button-1>", lambda event: self.widget_name_text_set(widget_id))
 
         # settings button
         self.create_image(x, y, image=self.__image_settings, anchor="nw", tags=[f"{widget_id}*settings"])
@@ -377,6 +378,27 @@ class Maincanvas(tk.Canvas):
         '''
         move_box = self.bbox(f"{widget_id}*move")
         self.coords(f"{widget_id}*name", move_box[2] + style.widget_padding, move_box[1])
+
+
+    def widget_name_text_set(self, widget_id):
+        def name_set():
+            text = str(ent.get())
+            if text == "":
+                text = "      "
+            self.itemconfigure(targ_id, text=text)
+            main_frame.destroy()
+
+        targ_id = f"{widget_id}*name"
+        main_frame = ttk.Frame(self)
+        ttk.Label(main_frame, text="Widget name").grid(row=0, column=0)
+        ent = ttk.Entry(main_frame)
+        ent.delete(0, "end")
+        ent.insert(0, str(self.itemcget(targ_id, "text")))
+        ent.grid(row=0, column=1)
+        ttk.Button(main_frame, text="Cancel", command=main_frame.destroy).grid(row=1, column=0)
+        ttk.Button(main_frame, text="Save", command=name_set).grid(row=1, column=1)
+        background_box = self.bbox(f"{widget_id}*background")
+        main_frame.place(x=background_box[0], y=background_box[1])
 
 
     def widget_pluginframe_set(self, widget_id):
@@ -925,6 +947,11 @@ class Maincanvas(tk.Canvas):
                         self.disconnect(old_value, f"{input_object.plugin_id_get()}:{input_object.id_get()}")       # delete old line
                     self.plugin_input_value_set(input_object.plugin_id_get(), input_object.id_get(), new_value) # insert new value
                     self.connect(output_id, f"{input_object.plugin_id_get()}:{input_object.id_get()}")          # create new line
+
+                    # DEVELOPMENT
+                    plugin_object = self.plugin_get(input_object.plugin_id_get())
+                    plugin_object.inputvariable_init("dddd")
+                    plugin_object.box_set()
 
         if bool(input_id):
             '''
