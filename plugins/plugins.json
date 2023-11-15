@@ -7,6 +7,13 @@
         ]
     },
     {
+        "file": "arrayizer.py",
+        "name": "Arrayizer",
+        "parents": [
+            "Tools"
+        ]
+    },
+    {
         "file": "addition.py",
         "name": "Addition",
         "parents": [

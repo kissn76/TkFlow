@@ -39,22 +39,30 @@ class PluginbaseModel():
             value - input_id exists
         '''
         ret = None
-        if bool(input_id):
+        if input_id == None:
+            ret = self.__input_value_container.copy()
+        else:
             if input_id in self.__input_value_container.keys():
                 ret = self.__input_value_container[input_id]
-        else:
-            ret = self.__input_value_container.copy()
 
         return ret
 
 
     def input_value_delete(self, input_id=None):
-        if not bool(input_id):
+        if input_id == None:
             for key in self.__input_value_container.keys():
                 self.input_value_set(key, None)
         else:
             if input_id in self.__input_value_container.keys():
                 self.input_value_set(input_id, None)
+
+
+    def input_value_pop(self, input_id=None):
+        if input_id == None:
+            self.__input_value_container.clear()
+        else:
+            if input_id in self.__input_value_container.keys():
+                self.__input_value_container.pop(input_id)
 
     ##
     # Output functions
@@ -66,17 +74,17 @@ class PluginbaseModel():
 
     def output_value_get(self, output_id=None):
         ret = None
-        if bool(output_id):
+        if output_id == None:
+            ret = self.__output_value_container.copy()
+        else:
             if output_id in self.__output_value_container.keys():
                 ret = self.__output_value_container[output_id]
-        else:
-            ret = self.__output_value_container.copy()
 
         return ret
 
 
     def output_value_delete(self, output_id=None):
-        if not bool(output_id):
+        if output_id == None:
             for key in self.__output_value_container.keys():
                 self.output_value_set(key, None)
         else:
@@ -93,17 +101,17 @@ class PluginbaseModel():
 
     def setting_value_get(self, setting_id=None):
         ret = None
-        if bool(setting_id):
+        if setting_id == None:
+            ret = self.__setting_value_container.copy()
+        else:
             if setting_id in self.__setting_value_container.keys():
                 ret = self.__setting_value_container[setting_id]
-        else:
-            ret = self.__setting_value_container.copy()
 
         return ret
 
 
     def setting_value_delete(self, setting_id=None):
-        if not bool(setting_id):
+        if setting_id == None:
             for key in self.__setting_value_container.keys():
                 self.setting_value_set(key, None)
         else:
@@ -131,6 +139,8 @@ class Pluginbase(ttk.Frame):
         self.__contentrow_label_container = {}
         self.__input_container = {}
         self.__output_container = {}
+        self.__inputlist_counter = {}
+        self.__inputlist_max_element = {}
 
         self.__input_row_counter = 1
         self.__output_row_counter = 1
@@ -327,13 +337,76 @@ class Pluginbase(ttk.Frame):
     # Input functions
     ##
 
+    def inputlist_init(self, input_id_prefix, max_element=0):
+        if not input_id_prefix in self.__inputlist_counter.keys():
+            self.__inputlist_counter.update({input_id_prefix: 0})
+            self.inputlist_max_element_set(input_id_prefix, max_element)
+            self.inputlist_append(input_id_prefix)
+
+
+    def inputlist_max_element_set(self, input_id_prefix, max_element):
+        if not input_id_prefix in self.__inputlist_max_element.keys():
+            self.__inputlist_max_element.update({input_id_prefix: max_element})
+        else:
+            if max_element == None or int(max_element) <= 0:
+                max_element = 0
+
+            if len(self.inputlist_get(input_id_prefix)) > int(max_element):
+                max_element = 0
+
+            self.__inputlist_max_element[input_id_prefix] = int(max_element)
+
+
+    def inputlist_append(self, input_id_prefix):
+        if input_id_prefix in self.__inputlist_counter.keys():
+            if self.__inputlist_max_element[input_id_prefix] == None \
+                    or self.__inputlist_max_element[input_id_prefix] <= 0 \
+                    or len(self.inputlist_get(input_id_prefix)) < self.__inputlist_max_element[input_id_prefix]:
+                input_id = f"{input_id_prefix}.{self.__inputlist_counter[input_id_prefix]}"
+                self.inputvariable_init(input_id)
+                self.__inputlist_counter[input_id_prefix] += 1
+
+
+    def inputlist_get(self, input_id_prefix):
+        ret = {}
+        if input_id_prefix in self.__inputlist_counter.keys():
+            input_elements = self.inputvariable_get()
+            for input_id, input_value in input_elements.items():
+                if input_id.startswith(input_id_prefix):
+                    ret.update({input_id: input_value})
+
+        return ret
+
+
+    def inputlist_clean(self, input_id_prefix, exclude=[]):
+        '''
+        Delete empty inputlabels from inputlist
+        '''
+        if input_id_prefix in self.__inputlist_counter.keys():
+            input_elements = self.inputlist_get(input_id_prefix)
+            for input_id, input_value in input_elements.items():
+                if (input_value == None or input_value == "") and not input_id in exclude:
+                    self.inputvariable_pop(input_id)
+
+
     def inputvariable_init(self, input_id, value=None):
         if not bool(self.inputvariable_get(input_id)):
             self.inputvariable_set(input_id, value)
 
         if not bool(self.input_object_get(input_id)):
             self.__input_container.update({input_id: InputLabel(self, id=input_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
-            self.__input_container[input_id].grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
+
+        self.inputlabels_reset()
+
+
+    def inputlabels_reset(self):
+        for input_id, input_object in self.__input_container.items():
+            input_object.grid_forget()
+
+        self.__input_row_counter = 1
+
+        for input_id, input_object in self.__input_container.items():
+            input_object.grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
             self.__input_row_counter += 1
 
 
@@ -362,6 +435,13 @@ class Pluginbase(ttk.Frame):
 
     def inputvariable_delete(self, input_id=None):
         self.__model.input_value_delete(input_id)
+
+
+    def inputvariable_pop(self, input_id=None):
+        self.__model.input_value_pop(input_id)
+        self.__input_container[input_id].grid_forget()
+        self.__input_container[input_id].destroy()
+        self.__input_container.pop(input_id)
 
 
     def input_value_get(self, input_id):

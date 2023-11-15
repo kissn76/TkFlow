@@ -23,6 +23,7 @@ class Plugin(pluginbase.Pluginbase):
         self.sc.bind("<Button-4>", lambda _: self.sc.set(self.sc.get() + 1))
         self.sc.bind("<Button-5>", lambda _: self.sc.set(self.sc.get() - 1))
         self.contentrow_init(self.sc)
+        self.content_set()
 
         # set input, output init values
         self.outputvariable_set("value", self.sc.get())

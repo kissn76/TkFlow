@@ -686,7 +686,7 @@ class Maincanvas(tk.Canvas):
     def connect_line_delete(self, tag):
         try:
             plugin_id, input_id = tag.split('*')[0].split(':')
-            self.plugin_get(plugin_id).inputvariable_set(input_id, None)
+            self.plugin_get(plugin_id).inputvariable_delete(input_id)
         except:
             pass
         self.delete(tag)
@@ -949,9 +949,16 @@ class Maincanvas(tk.Canvas):
                     self.connect(output_id, f"{input_object.plugin_id_get()}:{input_object.id_get()}")          # create new line
 
                     # DEVELOPMENT
-                    plugin_object = self.plugin_get(input_object.plugin_id_get())
-                    plugin_object.inputvariable_init("dddd")
-                    plugin_object.box_set()
+                    # add new inputlist element
+                    try:
+                        plugin_object = self.plugin_get(input_object.plugin_id_get())
+                        input_id_prefix = input_object.id_get().split('.')[0]
+                        plugin_object.inputlist_clean(input_id_prefix, [input_object.id_get()])
+                        plugin_object.inputlist_append(input_id_prefix)
+                        self.widget_reset(plugin_object.pluginframe_get().id_get())
+                        plugin_object.connect()
+                    except Exception as e:
+                        print(e)
 
         if bool(input_id):
             '''
