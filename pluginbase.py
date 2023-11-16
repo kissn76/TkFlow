@@ -132,17 +132,16 @@ class Pluginbase(ttk.Frame):
         self.__pluginframe = master
         self.__settings_view = PluginbaseSettingsView(self.winfo_toplevel(), model)
         self.__setting_frame = ttk.Frame(self)
+        self.__setting_mode = False
 
         self.__floating_widget = None
         self.__plugin_label = ttk.Label(self, text=self.id_get())
 
-        self.__contentrow_label_container = {}
+        self.__contentrow_label_widget_container = {}
         self.__input_container = {}
         self.__output_container = {}
         self.__inputlist_counter = {}
-        self.__inputlist_max_element = {}
 
-        self.__input_row_counter = 1
         self.__output_row_counter = 1
         self.__content_row_counter = 0
 
@@ -295,11 +294,15 @@ class Pluginbase(ttk.Frame):
 
 
     def setting_mode_set(self, setting_mode):
+        self.__setting_mode = setting_mode
         if not setting_mode:
             self.__setting_frame.place_forget()
         else:
             self.__setting_frame.place(x=0, y=0)
             self.__setting_frame.lift()
+
+        for input_object in self.input_object_get().values():
+            input_object.setting_mode_set(self.__setting_mode)
 
     ##
     # Content functions
@@ -319,19 +322,18 @@ class Pluginbase(ttk.Frame):
             self.settingrow_init("checkbutton", id_show, f"{row_label} show")
             contentrow_label = ttk.Label(self, text=self.settingvariable_get(id))
             contentrow_label.grid(row=self.__content_row_counter, column=self.__gridcolumn_content_label)
-            self.__contentrow_label_container.update({id: contentrow_label})
+            self.__contentrow_label_widget_container.update({id: contentrow_label})
         content_object.grid(row=self.__content_row_counter, column=self.__gridcolumn_content, sticky="we")
         self.__content_row_counter += 1
         self.setting_save()
 
 
-    def contentrow_label_set(self, id=None):
-        if id == None:
-            for content_label_id, content_label_object in self.__contentrow_label_container.items():
-                if self.settingvariable_get(f"{content_label_id}_show") == True:
-                    content_label_object.configure(text=self.settingvariable_get(content_label_id))
-                else:
-                    content_label_object.configure(text="")
+    def contentrow_label_widget_set(self):
+        for content_label_id, content_label_object in self.__contentrow_label_widget_container.items():
+            if self.settingvariable_get(f"{content_label_id}_show") == True:
+                content_label_object.configure(text=self.settingvariable_get(content_label_id))
+            else:
+                content_label_object.configure(text="")
 
     ##
     # Input functions
@@ -344,27 +346,69 @@ class Pluginbase(ttk.Frame):
             self.inputlist_append(input_id_prefix)
 
 
-    def inputlist_max_element_set(self, input_id_prefix, max_element):
-        if not input_id_prefix in self.__inputlist_max_element.keys():
-            self.__inputlist_max_element.update({input_id_prefix: max_element})
+    def inputlist_max_element_set(self, input_id_prefix, max_element=0):
+        # TODO
+        # Inputlabel-ek kezelése
+        #   - csökkentéskor inputlabelek törlése
+        #       - ha üresek
+        #       - mi van ha van bennük érték?
+
+        settingvariable_id = f"__system_inputlist_max_element_{input_id_prefix}"
+
+        if self.settingvariable_get(settingvariable_id) == None:
+            self.settingvariable_init(settingvariable_id, max_element)
+            self.settingrow_init("entry", settingvariable_id, f"Max number of {input_id_prefix}")
         else:
+            if max_element == 'e':
+                self.inputlist_clean(input_id_prefix)
+                max_element = 1
+                self.settingvariable_set(settingvariable_id, int(max_element))
+
             if max_element == None or int(max_element) <= 0:
                 max_element = 0
+                self.settingvariable_set(settingvariable_id, int(max_element))
 
-            if len(self.inputlist_get(input_id_prefix)) > int(max_element):
-                max_element = 0
+            if int(max_element) > 0 and len(self.inputlist_get(input_id_prefix)) > int(max_element): # több az inputlabel mint amennyi kéne
+                max_element = len(self.inputlist_get(input_id_prefix))
+                print("WARNING - too much input element exists")
+            elif int(max_element) == 0 or len(self.inputlist_get(input_id_prefix)) < int(max_element): # kevesebb az inputlabel, mint amennyit szeretnénk
+                # van-e üres inputlabel?
+                #   igen, nem kell csinálni semmit
+                #   nem, kell egyet hozzáadni
+                if not len(self.inputlist_empty_get(input_id_prefix)) > 0:
+                    self.inputlist_append(input_id_prefix)
+            else: # pont annyi inputlabel van amennyit szeretnénk, nem kell csinálni semmit
+                pass
 
-            self.__inputlist_max_element[input_id_prefix] = int(max_element)
+            self.settingvariable_set(settingvariable_id, int(max_element))
 
 
     def inputlist_append(self, input_id_prefix):
+        max_element_id = f"__system_inputlist_max_element_{input_id_prefix}"
+
         if input_id_prefix in self.__inputlist_counter.keys():
-            if self.__inputlist_max_element[input_id_prefix] == None \
-                    or self.__inputlist_max_element[input_id_prefix] <= 0 \
-                    or len(self.inputlist_get(input_id_prefix)) < self.__inputlist_max_element[input_id_prefix]:
+            if self.settingvariable_get(max_element_id) == None \
+                    or int(self.settingvariable_get(max_element_id)) <= 0 \
+                    or len(self.inputlist_get(input_id_prefix)) < int(self.settingvariable_get(max_element_id)):
                 input_id = f"{input_id_prefix}.{self.__inputlist_counter[input_id_prefix]}"
                 self.inputvariable_init(input_id)
                 self.__inputlist_counter[input_id_prefix] += 1
+
+
+    def inputlist_pop(self, input_id):
+        '''
+        Delete input element. Inputvariable and inputlabel, if empty, and not only empty element.
+        '''
+        input_id_prefix = input_id.split('.')[0]
+
+        empty = self.inputlist_empty_get(input_id_prefix)
+
+        if not input_id in empty.keys():
+            return
+
+        empty.pop(input_id)
+        if len(empty) > 0:
+            self.inputvariable_pop(input_id)
 
 
     def inputlist_get(self, input_id_prefix):
@@ -378,15 +422,23 @@ class Pluginbase(ttk.Frame):
         return ret
 
 
+    def inputlist_empty_get(self, input_id_prefix):
+        ret = {}
+        input_elements = self.inputlist_get(input_id_prefix)
+        for input_id, input_value in input_elements.items():
+            if (input_value == None or input_value == ""):
+                ret.update({input_id: input_value})
+
+        return ret
+
+
     def inputlist_clean(self, input_id_prefix, exclude=[]):
         '''
         Delete empty inputlabels from inputlist
         '''
-        if input_id_prefix in self.__inputlist_counter.keys():
-            input_elements = self.inputlist_get(input_id_prefix)
-            for input_id, input_value in input_elements.items():
-                if (input_value == None or input_value == "") and not input_id in exclude:
-                    self.inputvariable_pop(input_id)
+        for input_id in self.inputlist_empty_get(input_id_prefix).keys():
+            if not input_id in exclude:
+                self.inputvariable_pop(input_id)
 
 
     def inputvariable_init(self, input_id, value=None):
@@ -394,7 +446,8 @@ class Pluginbase(ttk.Frame):
             self.inputvariable_set(input_id, value)
 
         if not bool(self.input_object_get(input_id)):
-            self.__input_container.update({input_id: InputLabel(self, id=input_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
+            self.__input_container.update({input_id: InputLabel(self, id=input_id, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
+            self.input_object_get(input_id).setting_mode_set(self.__setting_mode)
 
         self.inputlabels_reset()
 
@@ -403,11 +456,11 @@ class Pluginbase(ttk.Frame):
         for input_id, input_object in self.__input_container.items():
             input_object.grid_forget()
 
-        self.__input_row_counter = 1
+        input_row_counter = 1
 
         for input_id, input_object in self.__input_container.items():
-            input_object.grid(row=self.__input_row_counter, column=self.__gridcoulmn_input)
-            self.__input_row_counter += 1
+            input_object.grid(row=input_row_counter, column=self.__gridcoulmn_input)
+            input_row_counter += 1
 
 
     def input_object_get(self, input_id=None):
@@ -438,10 +491,15 @@ class Pluginbase(ttk.Frame):
 
 
     def inputvariable_pop(self, input_id=None):
+        '''
+        Delete inputvariable and inputlabel
+        '''
         self.__model.input_value_pop(input_id)
         self.__input_container[input_id].grid_forget()
         self.__input_container[input_id].destroy()
         self.__input_container.pop(input_id)
+
+        self.inputlabels_reset()
 
 
     def input_value_get(self, input_id):
@@ -464,7 +522,7 @@ class Pluginbase(ttk.Frame):
             self.outputvariable_set(output_id, value)
 
         if not bool(self.output_object_get(output_id)):
-            self.__output_container.update({output_id: OutputLabel(self, id=output_id, pluginview_object=self, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
+            self.__output_container.update({output_id: OutputLabel(self, id=output_id, pluginframe_object=self.__pluginframe, canvas_object=self.__canvas)})
             self.__output_container[output_id].grid(row=self.__output_row_counter, column=self.__gridcolumn_output)
             self.__output_row_counter += 1
 
@@ -520,7 +578,11 @@ class Pluginbase(ttk.Frame):
     def setting_save(self):
         self.settingsview_get().save()
         self.pluginlabel_set()
-        self.contentrow_label_set()
+        self.contentrow_label_widget_set()
+
+        for input_id_prefix in self.__inputlist_counter.keys():
+            value = self.settingvariable_get(f"__system_inputlist_max_element_{input_id_prefix}")
+            self.inputlist_max_element_set(input_id_prefix, value)
 
     ##
     # Other functions

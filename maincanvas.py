@@ -953,8 +953,10 @@ class Maincanvas(tk.Canvas):
                     try:
                         plugin_object = self.plugin_get(input_object.plugin_id_get())
                         input_id_prefix = input_object.id_get().split('.')[0]
-                        plugin_object.inputlist_clean(input_id_prefix, [input_object.id_get()])
-                        plugin_object.inputlist_append(input_id_prefix)
+
+                        if len(plugin_object.inputlist_empty_get(input_id_prefix)) == 0:
+                            plugin_object.inputlist_append(input_id_prefix)
+
                         self.widget_reset(plugin_object.pluginframe_get().id_get())
                         plugin_object.connect()
                     except Exception as e:

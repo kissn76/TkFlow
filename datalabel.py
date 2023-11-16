@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import ttk
 from PIL import ImageTk
 import style
@@ -5,17 +6,18 @@ import style
 
 
 class DataLabel(ttk.Frame):
-    def __init__(self, master, id, pluginview_object, pluginframe_object, canvas_object):
+    def __init__(self, master, id, pluginframe_object, canvas_object):
         super().__init__(master)
         self.__image_anydata = ImageTk.PhotoImage(style.image_datatype_any_12)
         self.__image_data = ImageTk.PhotoImage(style.image_data_12)
 
         self.__id = id
-        self.__pluginview = pluginview_object
+        self.__pluginview = master
         self.__pluginframe = pluginframe_object
         self.__canvas = canvas_object
 
-        self.__box = ()   # box in canvas
+        self.__box_canvas = ()   # box in canvas
+        self.__box_plugin = ()   # box in plugin
 
         self.__gui_style = ttk.Style()
         self.__gui_style.configure('My.TLabel', background='#334353')
@@ -57,11 +59,22 @@ class DataLabel(ttk.Frame):
         x2 = int(x1 + int(datalabel_geometry[0]))
         y2 = int(y1 + int(datalabel_geometry[1]))
 
-        self.__box = (x1, y1, x2, y2)
+        self.__box_canvas = (x1, y1, x2, y2)
+
+        x1 = int(plugin_geometry[2]) + int(datalabel_geometry[2])
+        y1 = int(plugin_geometry[3]) + int(datalabel_geometry[3])
+        x2 = int(x1 + int(datalabel_geometry[0]))
+        y2 = int(y1 + int(datalabel_geometry[1]))
+
+        self.__box_plugin = (x1, y1, x2, y2)
 
 
     def box_get(self):
-        return self.__box
+        return self.__box_canvas
+
+
+    def box_plugin_get(self):
+        return self.__box_plugin
 
 
     def pluginview_get(self):
@@ -74,11 +87,14 @@ class DataLabel(ttk.Frame):
 
 
 class InputLabel(DataLabel):
-    def __init__(self, master, id, pluginview_object, pluginframe_object, canvas_object):
-        super().__init__(master, id, pluginview_object, pluginframe_object, canvas_object)
+    def __init__(self, master, id, pluginframe_object, canvas_object):
+        super().__init__(master, id, pluginframe_object, canvas_object)
         self.__output_id = None
         self.__line_id = None
+        self.__setting_frame = ttk.Frame(self.pluginview_get())
+        self.__image_delete = ImageTk.PhotoImage(style.image_delete_12)
         self._lbl_data.bind('<Button-1>', self.__dnd_start)
+        self.button_delete_init()
 
 
     def __dnd_start(self, event):
@@ -109,10 +125,27 @@ class InputLabel(DataLabel):
             self.canvas_get().dnd_stop_datalabel(event, input_id=f"{self.plugin_id_get()}:{self.id_get()}", line_tag=self.__line_id)
 
 
+    def button_delete_init(self):
+        self.delete = ttk.Frame(self.__setting_frame)
+        self.btn_delete = tk.Button(self.delete, image=self.__image_delete, compound=tk.CENTER)
+        self.btn_delete.pack()
+        self.delete.pack()
+        self.btn_delete.bind('<Button-1>', lambda _: self.pluginview_get().inputlist_pop(self.id_get()))
+
+
+    def setting_mode_set(self, setting_mode):
+        if not setting_mode:
+            self.__setting_frame.place_forget()
+        else:
+            box = self.box_plugin_get()
+            self.__setting_frame.place(x=box[2], y=box[1])
+            self.__setting_frame.lift()
+
+
 
 class OutputLabel(DataLabel):
-    def __init__(self, master, id, pluginview_object, pluginframe_object, canvas_object):
-        super().__init__(master, id, pluginview_object, pluginframe_object, canvas_object)
+    def __init__(self, master, id, pluginframe_object, canvas_object):
+        super().__init__(master, id, pluginframe_object, canvas_object)
         self.__output_id = f"{self.plugin_id_get()}:{self.id_get()}"
         self.__line_id = None
         self._lbl_data.bind('<Button-1>', self.__dnd_start)
