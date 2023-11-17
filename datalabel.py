@@ -51,7 +51,7 @@ class DataLabel(ttk.Frame):
 
     def box_set(self, event=None):
         pluginframe_box = self.__canvas.bbox(f"{self.__pluginframe.id_get()}*pluginframe")
-        plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # plugin geometry
+        plugin_geometry = self.master.winfo_geometry().replace('x', '+').split("+") # [width, height, x, y] plugin geometry
         datalabel_geometry = self.winfo_geometry().replace('x', '+').split("+")     # [width, height, x, y] frame contains icons and value
 
         x1 = int(pluginframe_box[0]) + int(plugin_geometry[2]) + int(datalabel_geometry[2])
@@ -138,7 +138,7 @@ class InputLabel(DataLabel):
             self.__setting_frame.place_forget()
         else:
             box = self.box_plugin_get()
-            self.__setting_frame.place(x=box[2], y=box[1])
+            self.__setting_frame.place(x=box[2], y=box[1] - style.widget_padding / 2)
             self.__setting_frame.lift()
 
 

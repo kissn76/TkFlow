@@ -468,7 +468,7 @@ class Pluginbase(ttk.Frame):
         input_row_counter = 1
 
         for input_id, input_object in self.__input_container.items():
-            input_object.grid(row=input_row_counter, column=self.__gridcoulmn_input)
+            input_object.grid(row=input_row_counter, column=self.__gridcoulmn_input, sticky="n, s, w, e")
             input_row_counter += 1
 
 
