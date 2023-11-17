@@ -339,10 +339,19 @@ class Pluginbase(ttk.Frame):
     # Input functions
     ##
 
-    def inputlist_init(self, input_id_prefix, max_element=0):
+    def inputlist_init(self, input_id_prefix, max_element=0, setting_enabled=True):
         if not input_id_prefix in self.__inputlist_counter.keys():
             self.__inputlist_counter.update({input_id_prefix: 0})
-            self.inputlist_max_element_set(input_id_prefix, max_element)
+
+            settingvariable_id = f"__system_inputlist_max_element_{input_id_prefix}"
+            if self.settingvariable_get(settingvariable_id) == None:
+                self.settingvariable_init(settingvariable_id, max_element)
+
+                if setting_enabled:
+                    self.settingrow_init("entry", settingvariable_id, f"Max number of {input_id_prefix}")
+
+                self.inputlist_max_element_set(input_id_prefix, max_element)
+
             self.inputlist_append(input_id_prefix)
 
 

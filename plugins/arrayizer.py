@@ -14,7 +14,7 @@ class Plugin(pluginbase.Pluginbase):
         super().__init__(pluginframe_object, canvas_object, model, **kwargs)
 
         # init input, output, setting variables
-        self.inputlist_init("input")
+        self.inputlist_init(input_id_prefix="input", max_element=0, setting_enabled=True)
         self.outputvariable_init("result", [])
 
         # init own plugin view
