@@ -340,55 +340,22 @@ class Pluginbase(ttk.Frame):
     ##
 
     def inputlist_init(self, input_id_prefix, max_element=0, setting_enabled=True):
-        if not input_id_prefix in self.__inputlist_counter.keys():
+        if not input_id_prefix in self.__inputlist_counter.keys():  # a prefix még nem létezik
             self.__inputlist_counter.update({input_id_prefix: 0})
 
-            settingvariable_id = f"__system_inputlist_max_element_{input_id_prefix}"
-            if self.settingvariable_get(settingvariable_id) == None:
-                self.settingvariable_init(settingvariable_id, max_element)
-
-                if setting_enabled:
-                    self.settingrow_init("entry", settingvariable_id, f"Max number of {input_id_prefix}")
-
-                self.inputlist_max_element_set(input_id_prefix, max_element)
+            self.inputlist_max_element_set(input_id_prefix, max_element)
+            if setting_enabled:
+                settingvariable_id = f"__system_inputlist_max_element_{input_id_prefix}"
+                self.settingrow_init("entry", settingvariable_id, f"Max number of {input_id_prefix}")
 
             self.inputlist_append(input_id_prefix)
 
 
     def inputlist_max_element_set(self, input_id_prefix, max_element=0):
-        # TODO
-        # Inputlabel-ek kezelése
-        #   - csökkentéskor inputlabelek törlése
-        #       - ha üresek
-        #       - mi van ha van bennük érték?
-
         settingvariable_id = f"__system_inputlist_max_element_{input_id_prefix}"
-
         if self.settingvariable_get(settingvariable_id) == None:
-            self.settingvariable_init(settingvariable_id, max_element)
-            self.settingrow_init("entry", settingvariable_id, f"Max number of {input_id_prefix}")
+            self.settingvariable_init(settingvariable_id, int(max_element))
         else:
-            if max_element == 'e':
-                self.inputlist_clean(input_id_prefix)
-                max_element = 1
-                self.settingvariable_set(settingvariable_id, int(max_element))
-
-            if max_element == None or int(max_element) <= 0:
-                max_element = 0
-                self.settingvariable_set(settingvariable_id, int(max_element))
-
-            if int(max_element) > 0 and len(self.inputlist_get(input_id_prefix)) > int(max_element): # több az inputlabel mint amennyi kéne
-                max_element = len(self.inputlist_get(input_id_prefix))
-                print("WARNING - too much input element exists")
-            elif int(max_element) == 0 or len(self.inputlist_get(input_id_prefix)) < int(max_element): # kevesebb az inputlabel, mint amennyit szeretnénk
-                # van-e üres inputlabel?
-                #   igen, nem kell csinálni semmit
-                #   nem, kell egyet hozzáadni
-                if not len(self.inputlist_empty_get(input_id_prefix)) > 0:
-                    self.inputlist_append(input_id_prefix)
-            else: # pont annyi inputlabel van amennyit szeretnénk, nem kell csinálni semmit
-                pass
-
             self.settingvariable_set(settingvariable_id, int(max_element))
 
 
