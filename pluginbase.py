@@ -360,15 +360,16 @@ class Pluginbase(ttk.Frame):
 
 
     def inputlist_append(self, input_id_prefix):
-        max_element_id = f"__system_inputlist_max_element_{input_id_prefix}"
+        if len(self.inputlist_empty_get(input_id_prefix)) == 0:
+            max_element_id = f"__system_inputlist_max_element_{input_id_prefix}"
 
-        if input_id_prefix in self.__inputlist_counter.keys():
-            if self.settingvariable_get(max_element_id) == None \
-                    or int(self.settingvariable_get(max_element_id)) <= 0 \
-                    or len(self.inputlist_get(input_id_prefix)) < int(self.settingvariable_get(max_element_id)):
-                input_id = f"{input_id_prefix}.{self.__inputlist_counter[input_id_prefix]}"
-                self.inputvariable_init(input_id)
-                self.__inputlist_counter[input_id_prefix] += 1
+            if input_id_prefix in self.__inputlist_counter.keys():
+                if self.settingvariable_get(max_element_id) == None \
+                        or int(self.settingvariable_get(max_element_id)) <= 0 \
+                        or len(self.inputlist_get(input_id_prefix)) < int(self.settingvariable_get(max_element_id)):
+                    input_id = f"{input_id_prefix}.{self.__inputlist_counter[input_id_prefix]}"
+                    self.inputvariable_init(input_id)
+                    self.__inputlist_counter[input_id_prefix] += 1
 
 
     def inputlist_pop(self, input_id):
@@ -399,6 +400,9 @@ class Pluginbase(ttk.Frame):
 
 
     def inputlist_empty_get(self, input_id_prefix):
+        '''
+        Return empty inputlist elements
+        '''
         ret = {}
         input_elements = self.inputlist_get(input_id_prefix)
         for input_id, input_value in input_elements.items():
